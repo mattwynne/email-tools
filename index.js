@@ -1,6 +1,6 @@
 const { ImapFlow } = require('imapflow');
 const pino = require('pino');
-const logger = pino({ level: 'fatal' })
+const logger = pino({ level: process.env.LOG_LEVEL || 'fatal' })
 const fs = require('fs/promises')
 
 const client = new ImapFlow({
