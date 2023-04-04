@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     env: 
       GITHUB_TOKEN: ${{ secrets.GIT_PUSH_TOKEN }}
+      FASTMAIL_PASSWORD: ${{ secrets.FASTMAIL_PASSWORD }}
 
     steps:
       - uses: actions/checkout@v2
