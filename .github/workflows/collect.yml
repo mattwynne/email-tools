@@ -4,14 +4,12 @@ on:
   schedule:
     - cron: 0 0 * * *
   workflow_dispatch:
-  push:
-  pull_request:
 
 jobs:
   collect-reports:
     runs-on: ubuntu-latest
     env: 
-      GITHUB_TOKEN: ${{ secrets.GIT_PUSH_TOKEN }}
+      GH_TOKEN: ${{ secrets.GIT_PUSH_TOKEN }}
       FASTMAIL_PASSWORD: ${{ secrets.FASTMAIL_PASSWORD }}
       LOG_LEVEL: 'debug'
 
@@ -30,7 +28,4 @@ jobs:
         with:
           commit_message: |
             Update stats for ${{ steps.date.outputs.date }}
-      - uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GIT_PUSH_TOKEN }}
-          branch: main
+      - run: gh repo sync
