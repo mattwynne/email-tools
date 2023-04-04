@@ -1,0 +1,34 @@
+name: Collect reports
+
+on:
+  schedule:
+    - cron: 0 0 * * *
+  workflow_dispatch:
+  push:
+  pull_request:
+
+jobs:
+  collect-reports:
+    runs-on: ubuntu-latest
+    env: 
+      GITHUB_TOKEN: ${{ secrets.GIT_PUSH_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - run: npm install
+      - run: node index.js
+      - run: git add .
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+      - uses: zwaldowski/git-commit-action@v1
+        with:
+          commit_message: |
+            Update stats for ${{ steps.date.outputs.date }}
+      - uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GIT_PUSH_TOKEN }}
+          branch: main
