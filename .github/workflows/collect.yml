@@ -13,6 +13,7 @@ jobs:
     env: 
       GITHUB_TOKEN: ${{ secrets.GIT_PUSH_TOKEN }}
       FASTMAIL_PASSWORD: ${{ secrets.FASTMAIL_PASSWORD }}
+      LOG_LEVEL: 'debug'
 
     steps:
       - uses: actions/checkout@v3
