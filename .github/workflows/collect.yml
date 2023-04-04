@@ -7,11 +7,13 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: write
+
 jobs:
   collect-reports:
     runs-on: ubuntu-latest
     env: 
-      GITHUB_TOKEN: ${{ secrets.GIT_PUSH_TOKEN }}
       FASTMAIL_PASSWORD: ${{ secrets.FASTMAIL_PASSWORD }}
       LOG_LEVEL: 'debug'
 
@@ -32,5 +34,5 @@ jobs:
             Update stats for ${{ steps.date.outputs.date }}
       - uses: ad-m/github-push-action@master
         with:
-          github_token: ${{ secrets.GIT_PUSH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: main
