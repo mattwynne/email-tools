@@ -7,7 +7,7 @@ const client = new ImapFlow({
   host: 'imap.fastmail.com',
   port: 993,
   auth: {
-    user: 'mattwynne@fastmail.fm',
+    user: process.env.FASTMAIL_USER,
     pass: process.env.FASTMAIL_PASSWORD
   },
   logger
