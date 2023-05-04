@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     env: 
       FASTMAIL_PASSWORD: ${{ secrets.FASTMAIL_PASSWORD }}
+      FASTMAIL_USER: ${{ secrets.FASTMAIL_USER }}
       LOG_LEVEL: 'debug'
 
     steps:
