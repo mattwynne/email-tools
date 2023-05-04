@@ -34,6 +34,13 @@
           data: stats.map(stat => stat.totals.messages),
           borderWidth: 1
         }]
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
       }
     });
   }
