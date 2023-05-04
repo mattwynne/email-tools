@@ -78,4 +78,4 @@ const main = async () => {
   await client.logout();
 };
 
-main().catch(err => console.error(err));
+main().catch(err => { console.error(err) && exit(1) });
