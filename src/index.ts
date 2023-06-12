@@ -40,7 +40,7 @@ const subscribe = async (
     const source = new EventSource(url + "types=*", { headers })
     source.addEventListener("state", (e) => {
       const changes: StateChange = JSON.parse(e.data).changed
-      console.log(changes)
+      console.log("StateChange event", changes)
       for (const accountId in changes) {
         const email = changes[accountId].Email
         onChange(accountId, email)
@@ -89,14 +89,14 @@ const run = async () => {
   const accountId = session.primaryAccounts["urn:ietf:params:jmap:mail"]
   await subscribe(eventsUrl, (accountId: string, emailChange: string) => {
     emailChanges(apiUrl, accountId, emailChange).then((result) => {
+      console.log("Email/changes", result)
       if (result.updated.length > 0) {
         emailGet(apiUrl, accountId, result.updated[0]).then(
           (getEmailResult) => {
-            console.log(getEmailResult.list)
+            console.log("Email/get", getEmailResult.list)
           }
         )
       }
-      console.log("result", result)
     })
   })
 }
