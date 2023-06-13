@@ -25,60 +25,66 @@ const getSession = async () => {
   return response.json()
 }
 
+type DataType = "Email" | "Thread" | "Mailbox"
+
+type AccountChanges = { [DT in DataType]: string }
+
 type StateChange = {
-  [accountId: string]: {
-    Email: string
-  }
+  [accountId: string]: AccountChanges
 }
 
 const subscribe = async (
   url: string,
-  onChange: (accountId: string, emailChange: string) => void
+  onChange: (accountId: string, changes: AccountChanges) => void
 ) =>
   new Promise((resolve) => {
-    console.log("Connecting to " + url)
     const source = new EventSource(url + "types=*", { headers })
     source.addEventListener("state", (e) => {
       const changes: StateChange = JSON.parse(e.data).changed
-      console.log("StateChange event", changes)
       for (const accountId in changes) {
-        const email = changes[accountId].Email
-        onChange(accountId, email)
+        onChange(accountId, changes[accountId])
       }
     })
     source.onerror = (e) => console.error("error!", e)
   })
 
-const emailChanges = async (
+type ApiMethod =
+  | "Email/get"
+  | "Email/changes"
+  | "Thread/changes"
+  | "Thread/get"
+  | "Mailbox/changes"
+  | "Mailbox/get"
+
+const methodCall = async (
   apiUrl: string,
-  accountId: string,
-  change: string
+  method: ApiMethod,
+  params: Object
 ) => {
   const response = await fetch(apiUrl, {
     method: "POST",
     headers,
     body: JSON.stringify({
       using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      methodCalls: [["Email/changes", { accountId, sinceState: change }, "a"]],
+      methodCalls: [[method, params, "a"]],
     }),
   })
   const data = await response.json()
+  const result = data["methodResponses"][0][1]
+  console.log(method, result)
+  return result
+}
 
-  return await data["methodResponses"][0][1]
+const emailChanges = async (
+  apiUrl: string,
+  accountId: string,
+  change: string
+) => {
+  return methodCall(apiUrl, "Email/changes", { accountId, sinceState: change })
 }
 
 const emailGet = async (apiUrl: string, accountId: string, id: string) => {
-  const response = await fetch(apiUrl, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      methodCalls: [["Email/get", { accountId, ids: [id] }, "a"]],
-    }),
-  })
-  const data = await response.json()
-
-  return await data["methodResponses"][0][1]
+  return methodCall(apiUrl, "Email/get", { accountId, ids: [id] })
 }
 
 const run = async () => {
@@ -87,15 +93,31 @@ const run = async () => {
   const apiUrl = session.apiUrl
   const eventsUrl = session.eventSourceUrl
   const accountId = session.primaryAccounts["urn:ietf:params:jmap:mail"]
-  await subscribe(eventsUrl, (accountId: string, emailChange: string) => {
-    emailChanges(apiUrl, accountId, emailChange).then((result) => {
-      console.log("Email/changes", result)
+  let currentState: AccountChanges
+  await subscribe(eventsUrl, (accountId: string, changes: AccountChanges) => {
+    console.log("Something changed!", "from:", currentState, "to:", changes)
+    currentState = changes
+    const emailChange = changes.Email
+
+    methodCall(apiUrl, "Thread/changes", {
+      accountId,
+      sinceState: changes.Thread,
+    }).then((result) => {
       if (result.updated.length > 0) {
-        emailGet(apiUrl, accountId, result.updated[0]).then(
-          (getEmailResult) => {
-            console.log("Email/get", getEmailResult.list)
-          }
-        )
+        methodCall(apiUrl, "Thread/get", { accountId, ids: result.updated })
+      }
+    })
+    methodCall(apiUrl, "Mailbox/changes", {
+      accountId,
+      sinceState: changes.Mailbox,
+    }).then((result) => {
+      if (result.updated.length > 0) {
+        methodCall(apiUrl, "Mailbox/get", { accountId, ids: result.updated })
+      }
+    })
+    emailChanges(apiUrl, accountId, emailChange).then((result) => {
+      if (result.updated.length > 0) {
+        emailGet(apiUrl, accountId, result.updated[0])
       }
     })
   })
