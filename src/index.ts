@@ -2,6 +2,7 @@
 
 import { P } from "pino"
 import EventSource from "eventsource"
+import util from "util"
 
 // bail if we don't have our ENV set:
 if (!process.env.FASTMAIL_API_TOKEN) {
@@ -71,20 +72,41 @@ const methodCall = async (
   })
   const data = await response.json()
   const result = data["methodResponses"][0][1]
-  console.log(method, result)
+  console.log(method, util.inspect(result, { depth: Infinity }))
   return result
 }
 
-const emailChanges = async (
+const handleChanges = async (
   apiUrl: string,
   accountId: string,
-  change: string
+  changes: AccountChanges
 ) => {
-  return methodCall(apiUrl, "Email/changes", { accountId, sinceState: change })
-}
-
-const emailGet = async (apiUrl: string, accountId: string, id: string) => {
-  return methodCall(apiUrl, "Email/get", { accountId, ids: [id] })
+  const mailboxChanges = await methodCall(apiUrl, "Mailbox/changes", {
+    accountId,
+    sinceState: changes.Mailbox,
+  })
+  if (mailboxChanges.updated.length > 0) {
+    const mailboxes = await methodCall(apiUrl, "Mailbox/get", {
+      accountId,
+      ids: mailboxChanges.updated,
+    })
+    for (const mailbox of mailboxes.list) {
+      console.log(mailbox.name)
+    }
+  }
+  const emailChanges = await methodCall(apiUrl, "Email/changes", {
+    accountId,
+    sinceState: changes.Email,
+  })
+  if (emailChanges.updated.length > 0) {
+    const emails = await methodCall(apiUrl, "Email/get", {
+      accountId,
+      ids: emailChanges.updated,
+    })
+    for (const email of emails.list) {
+      console.log(email.subject)
+    }
+  }
 }
 
 const run = async () => {
@@ -97,29 +119,7 @@ const run = async () => {
   await subscribe(eventsUrl, (accountId: string, changes: AccountChanges) => {
     console.log("Something changed!", "from:", currentState, "to:", changes)
     currentState = changes
-    const emailChange = changes.Email
-
-    methodCall(apiUrl, "Thread/changes", {
-      accountId,
-      sinceState: changes.Thread,
-    }).then((result) => {
-      if (result.updated.length > 0) {
-        methodCall(apiUrl, "Thread/get", { accountId, ids: result.updated })
-      }
-    })
-    methodCall(apiUrl, "Mailbox/changes", {
-      accountId,
-      sinceState: changes.Mailbox,
-    }).then((result) => {
-      if (result.updated.length > 0) {
-        methodCall(apiUrl, "Mailbox/get", { accountId, ids: result.updated })
-      }
-    })
-    emailChanges(apiUrl, accountId, emailChange).then((result) => {
-      if (result.updated.length > 0) {
-        emailGet(apiUrl, accountId, result.updated[0])
-      }
-    })
+    handleChanges(apiUrl, accountId, changes).catch(console.error)
   })
 }
 
