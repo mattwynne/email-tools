@@ -52,6 +52,8 @@ const subscribe = async (
 type ApiMethod =
   | "Email/get"
   | "Email/changes"
+  | "Email/query"
+  | "Email/queryChanges"
   | "Thread/changes"
   | "Thread/get"
   | "Mailbox/changes"
@@ -72,7 +74,13 @@ const methodCall = async (
   })
   const data = await response.json()
   const result = data["methodResponses"][0][1]
-  console.log(method, util.inspect(result, { depth: Infinity }))
+  console.log(
+    method,
+    "params:",
+    params,
+    "response:",
+    util.inspect(result, { depth: Infinity })
+  )
   return result
 }
 
@@ -94,6 +102,16 @@ const handleChanges = async (
       console.log(mailbox.name)
     }
   }
+  const threadChanges = await methodCall(apiUrl, "Thread/changes", {
+    accountId,
+    sinceState: changes.Thread,
+  })
+  if (threadChanges.updated.length > 0) {
+    const threads = await methodCall(apiUrl, "Thread/get", {
+      accountId,
+      ids: threadChanges.updated,
+    })
+  }
   const emailChanges = await methodCall(apiUrl, "Email/changes", {
     accountId,
     sinceState: changes.Email,
@@ -105,6 +123,11 @@ const handleChanges = async (
     })
     for (const email of emails.list) {
       console.log(email.subject)
+      const emailQueryChanges = await methodCall(apiUrl, "Email/queryChanges", {
+        accountId,
+        sinceQueryState: emailChanges.oldState,
+        maxChanges: 1,
+      })
     }
   }
 }
@@ -116,6 +139,38 @@ const run = async () => {
   const eventsUrl = session.eventSourceUrl
   const accountId = session.primaryAccounts["urn:ietf:params:jmap:mail"]
   let currentState: AccountChanges
+  const mailboxes = await methodCall(apiUrl, "Mailbox/get", {
+    accountId,
+    ids: null,
+  })
+  const inbox = mailboxes.list.find(
+    (mailbox: { name: string }) => mailbox.name === "Inbox"
+  )
+  const inboxChildren = mailboxes.list.filter(
+    (mailbox: { parentId: string }) => mailbox.parentId === inbox.id
+  )
+  const emailsByMailbox = new Map<String, String[]>()
+  const mailboxesByEmail = new Map<String, String[]>()
+  const inboxes = [inbox, ...inboxChildren]
+  for (const mailbox of inboxes) {
+    console.log(mailbox.name)
+    const emails = await methodCall(apiUrl, "Email/query", {
+      accountId,
+      filter: {
+        inMailbox: mailbox.id,
+      },
+    })
+    emailsByMailbox.set(mailbox.id, emails.ids)
+    for (const emailId of emails.ids) {
+      if (!mailboxesByEmail.has(emailId))
+        mailboxesByEmail.set(
+          emailId,
+          (mailboxesByEmail.get(emailId) || []).concat([mailbox.id])
+        )
+    }
+  }
+  console.log(emailsByMailbox)
+  console.log(mailboxesByEmail)
   await subscribe(eventsUrl, (accountId: string, changes: AccountChanges) => {
     console.log("Something changed!", "from:", currentState, "to:", changes)
     currentState = changes
