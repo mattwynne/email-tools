@@ -87,3 +87,4 @@
 {"date":"2023-06-22T00:25:45.406Z","totals":{"unseen":27,"messages":490},"mailboxes":[{"name":"INBOX","messages":259,"unseen":27},{"name":"#kmc-exec","messages":187,"unseen":0},{"name":"#kmc-website","messages":44,"unseen":0}]}
 {"date":"2023-06-23T00:28:32.493Z","totals":{"unseen":21,"messages":493},"mailboxes":[{"name":"INBOX","messages":262,"unseen":21},{"name":"#kmc-exec","messages":187,"unseen":0},{"name":"#kmc-website","messages":44,"unseen":0}]}
 {"date":"2023-06-24T00:28:25.131Z","totals":{"unseen":21,"messages":497},"mailboxes":[{"name":"INBOX","messages":266,"unseen":21},{"name":"#kmc-exec","messages":187,"unseen":0},{"name":"#kmc-website","messages":44,"unseen":0}]}
+{"date":"2023-06-24T06:16:13.634Z","totals":{"unseen":23,"messages":485},"mailboxes":[{"name":"INBOX","messages":254,"unseen":23},{"name":"#kmc-exec","messages":187,"unseen":0},{"name":"#kmc-website","messages":44,"unseen":0}]}
