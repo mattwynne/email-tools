@@ -6,7 +6,7 @@ import {
   Before,
 } from "@cucumber/cucumber"
 import { assertThat, equalTo } from "hamjest"
-import { Mailbox } from "../../src/core/Mailbox"
+import { MailboxName } from "../../src/core/MailboxName"
 import { ContactsGroup } from "../../src/core/ContactsGroup"
 import { ContactsProvider } from "../../src/infrastructure/ContactsProvider"
 import { EmailAddress } from "../../src/core/EmailAddress"
@@ -39,7 +39,7 @@ class Application {
 defineParameterType({
   name: "mailbox",
   regexp: /(Inbox\/\w+)/,
-  transformer: (name) => Mailbox.named(name),
+  transformer: (name) => MailboxName.of(name),
 })
 
 defineParameterType({
@@ -56,7 +56,7 @@ defineParameterType({
 
 Given(
   "an email in {mailbox} from {email address}",
-  function (this: World, mailbox: Mailbox, sender: EmailAddress) {
+  function (this: World, mailbox: MailboxName, sender: EmailAddress) {
     console.log("TODO: stub an email from", sender, "in", mailbox)
     this.theEmail = { from: sender }
   }
@@ -64,7 +64,7 @@ Given(
 
 When(
   "Matt drags the email into the {mailbox} folder",
-  function (this: World, toMailbox: Mailbox) {
+  function (this: World, toMailbox: MailboxName) {
     console.log(
       "TODO: simulate the email moving into the",
       toMailbox,

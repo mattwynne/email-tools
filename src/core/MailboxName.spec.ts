@@ -1,11 +1,11 @@
 import { assertThat, equalTo } from "hamjest"
-import { Mailbox } from "./Mailbox"
+import { MailboxName } from "./MailboxName"
 import { ContactsGroup } from "./ContactsGroup"
 
-describe(Mailbox.name, () => {
+describe(MailboxName.name, () => {
   describe("mapping to contacts group", () => {
     it("Removes the 'Inbox/' prefix", () => {
-      const mailbox = Mailbox.named("Inbox/Paperwork")
+      const mailbox = MailboxName.of("Inbox/Paperwork")
       assertThat(
         mailbox.contactsGroup,
         equalTo(ContactsGroup.named("Paperwork"))
