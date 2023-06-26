@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "cucumber-js"
+    "test": "npm run test:unit && npm run test:acceptance",
+    "test:unit": "ts-mocha",
+    "test:acceptance": "cucumber-js"
   },
   "author": "",
   "license": "MIT",
@@ -13,9 +15,12 @@
     "eventsource": "^2.0.2",
     "hamjest": "^4.0.1",
     "imapflow": "^1.0.123",
-    "pino": "^8.11.0"
+    "mocha": "^10.2.0",
+    "pino": "^8.11.0",
+    "ts-mocha": "^10.0.0"
   },
   "devDependencies": {
+    "@types/mocha": "^10.0.1",
     "@types/node": "^20.2.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4"
