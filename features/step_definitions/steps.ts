@@ -39,6 +39,10 @@ type ContactsChange = {
   group: ContactsGroup
 }
 
+type Email = {
+  from: EmailAddress
+}
+
 const CHANGE_EVENT = "change"
 
 class ContactsProvider {
@@ -46,6 +50,10 @@ class ContactsProvider {
 
   static createNull() {
     return new this()
+  }
+
+
+  addToGroup(from: EmailAddress, contactGroup: string) {
   }
 
   trackChanges(): OutputTracker<ContactsChange> {
@@ -96,19 +104,22 @@ When(
       toMailbox,
       "mailbox"
     )
+    this.contactsProvider.addToGroup(this.theEmail.from, toMailbox.contactsGroup)
   }
 )
 
 type World = {
+  contactsProvider: ContactsProvider
   contactsChanges: ContactsChange[]
   app: Application
+  theEmail: Email
 }
 
 Before(function (this: World) {
-  const contactsProvider = ContactsProvider.createNull()
   const emailProvider = EmailProvider.createNull()
-  this.app = new Application(emailProvider, contactsProvider)
-  this.contactsChanges = contactsProvider.trackChanges().data
+  this.contactsProvider = ContactsProvider.createNull()
+  this.app = new Application(emailProvider, this.contactsProvider)
+  this.contactsChanges = this.contactsProvider.trackChanges().data
 })
 
 Then(
