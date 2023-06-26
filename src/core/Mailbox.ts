@@ -8,6 +8,6 @@ export class Mailbox {
   private constructor(public readonly name: string) {}
 
   public get contactsGroup(): ContactsGroup {
-    throw new Error("Not implemented")
+    return ContactsGroup.named(this.name.replace(/^Inbox\//, ""))
   }
 }
