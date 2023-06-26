@@ -5,35 +5,13 @@ import {
   defineParameterType,
   Before,
 } from "@cucumber/cucumber"
-import EventEmitter from "events"
 import { assertThat, equalTo } from "hamjest"
-import { OutputTracker } from "../../src/OutputTracker"
+import { Mailbox } from "../../src/core/Mailbox"
+import { ContactsGroup } from "../../src/core/ContactsGroup"
+import { ContactsProvider } from "../../src/infrastructure/ContactsProvider"
+import { EmailAddress } from "../../src/core/EmailAddress"
 
-class Mailbox {
-  static named(name: string) {
-    return new this(name)
-  }
-
-  private constructor(public readonly name: string) {}
-}
-
-class EmailAddress {
-  static of(value: string) {
-    return new this(value)
-  }
-
-  private constructor(public readonly address: string) {}
-}
-
-class ContactsGroup {
-  static named(value: string) {
-    return new this(value)
-  }
-
-  private constructor(public readonly name: string) {}
-}
-
-type ContactsChange = {
+export type ContactsChange = {
   action: "add" | "remove"
   email: EmailAddress
   group: ContactsGroup
@@ -43,23 +21,7 @@ type Email = {
   from: EmailAddress
 }
 
-const CHANGE_EVENT = "change"
-
-class ContactsProvider {
-  private readonly emitter = new EventEmitter()
-
-  static createNull() {
-    return new this()
-  }
-
-
-  addToGroup(from: EmailAddress, contactGroup: string) {
-  }
-
-  trackChanges(): OutputTracker<ContactsChange> {
-    return OutputTracker.create<ContactsChange>(this.emitter, CHANGE_EVENT)
-  }
-}
+export const CHANGE_EVENT = "change"
 
 class EmailProvider {
   static createNull() {
@@ -92,19 +54,26 @@ defineParameterType({
   transformer: (name) => ContactsGroup.named(name),
 })
 
-Given("an email in {mailbox} from {email address}", function (mailbox, sender) {
-  console.log("TODO: stub an email from", sender, "in", mailbox)
-})
+Given(
+  "an email in {mailbox} from {email address}",
+  function (this: World, mailbox: Mailbox, sender: EmailAddress) {
+    console.log("TODO: stub an email from", sender, "in", mailbox)
+    this.theEmail = { from: sender }
+  }
+)
 
 When(
   "Matt drags the email into the {mailbox} folder",
-  function (this: World, toMailbox) {
+  function (this: World, toMailbox: Mailbox) {
     console.log(
       "TODO: simulate the email moving into the",
       toMailbox,
       "mailbox"
     )
-    this.contactsProvider.addToGroup(this.theEmail.from, toMailbox.contactsGroup)
+    this.contactsProvider.addToGroup(
+      this.theEmail.from,
+      toMailbox.contactsGroup
+    )
   }
 )
 
