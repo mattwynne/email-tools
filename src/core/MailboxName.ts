@@ -1,7 +1,7 @@
 import { ContactsGroup } from "./ContactsGroup"
 
-export class Mailbox {
-  static named(name: string) {
+export class MailboxName {
+  static of(name: string) {
     return new this(name)
   }
 
