@@ -10,18 +10,11 @@ import { MailboxName } from "../../src/core/MailboxName"
 import { ContactsGroup } from "../../src/core/ContactsGroup"
 import { ContactsProvider } from "../../src/infrastructure/ContactsProvider"
 import { EmailAddress } from "../../src/core/EmailAddress"
-
-export type ContactsChange = {
-  action: "add" | "remove"
-  email: EmailAddress
-  group: ContactsGroup
-}
+import { ContactsChange } from "../../src/infrastructure/ContactsChange"
 
 type Email = {
   from: EmailAddress
 }
-
-export const CHANGE_EVENT = "change"
 
 class EmailProvider {
   static createNull() {
