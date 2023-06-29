@@ -27,6 +27,13 @@ class Application {
     private readonly emailProvider: EmailProvider,
     private readonly contactsProvider: ContactsProvider
   ) {}
+
+  handleEmailAddedToMailbox(toMailbox: MailboxName, email: Email) {
+    this.contactsProvider.addToGroup(
+      email.from,
+      toMailbox.contactsGroup
+    )
+  }
 }
 
 defineParameterType({
@@ -56,17 +63,9 @@ Given(
 )
 
 When(
-  "Matt drags the email into the {mailbox} folder",
+  "the email is added to {mailbox}",
   function (this: World, toMailbox: MailboxName) {
-    console.log(
-      "TODO: simulate the email moving into the",
-      toMailbox,
-      "mailbox"
-    )
-    this.contactsProvider.addToGroup(
-      this.theEmail.from,
-      toMailbox.contactsGroup
-    )
+    this.app.handleEmailAddedToMailbox(toMailbox, this.theEmail)
   }
 )
 
