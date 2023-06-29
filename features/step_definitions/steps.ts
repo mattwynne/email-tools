@@ -28,10 +28,11 @@ class Application {
     private readonly contactsProvider: ContactsProvider
   ) {}
 
-  handleEmailAddedToMailbox(toMailbox: MailboxName, email: Email) {
+  processNewMailboxState(state: MailboxState) {
+    state.mailboxes[0]
     this.contactsProvider.addToGroup(
-      email.from,
-      toMailbox.contactsGroup
+      state.mailboxes[0].emails[0].from,
+      state.mailboxes[0].name.contactsGroup
     )
   }
 }
@@ -54,18 +55,33 @@ defineParameterType({
   transformer: (name) => ContactsGroup.named(name),
 })
 
+class MailboxState {
+  constructor(public readonly mailboxes: Mailbox[]) {}
+}
+
+class Mailbox {
+  constructor(
+    public readonly name: MailboxName,
+    public readonly emails: Email[]
+  ) {}
+}
+
 Given(
   "an email in {mailbox} from {email address}",
-  function (this: World, mailbox: MailboxName, sender: EmailAddress) {
-    console.log("TODO: stub an email from", sender, "in", mailbox)
+  function (this: World, mailboxName: MailboxName, sender: EmailAddress) {
     this.theEmail = { from: sender }
+    const mailbox = new Mailbox(mailboxName, [this.theEmail])
+    const mailboxState: MailboxState = new MailboxState([mailbox])
+    this.app.processNewMailboxState(mailboxState)
   }
 )
 
 When(
   "the email is added to {mailbox}",
   function (this: World, toMailbox: MailboxName) {
-    this.app.handleEmailAddedToMailbox(toMailbox, this.theEmail)
+    const mailbox = new Mailbox(toMailbox, [this.theEmail])
+    const mailboxState: MailboxState = new MailboxState([mailbox])
+    this.app.processNewMailboxState(mailboxState)
   }
 )
 
@@ -84,11 +100,8 @@ Before(function (this: World) {
 })
 
 Then(
-  "{email address} should be added to the {contacts group}",
+  "{email address} should only have been added to the {contacts group}",
   function (this: World, email, group) {
-    assertThat(
-      this.contactsChanges[0],
-      equalTo({ action: "add", email, group })
-    )
+    assertThat(this.contactsChanges, equalTo([{ action: "add", email, group }]))
   }
 )
