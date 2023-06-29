@@ -5,7 +5,7 @@ import {
   defineParameterType,
   Before,
 } from "@cucumber/cucumber"
-import { assertThat, equalTo } from "hamjest"
+import { assertThat, containsInAnyOrder, equalTo } from "hamjest"
 import { MailboxName } from "../../src/core/MailboxName"
 import { ContactsGroup } from "../../src/core/ContactsGroup"
 import { ContactsProvider } from "../../src/infrastructure/ContactsProvider"
@@ -87,6 +87,9 @@ Before(function (this: World) {
 Then(
   "{email address} should be added to the {contacts group}",
   function (this: World, email, group) {
-    assertThat(this.contactsChanges, equalTo({ action: "add", email, group }))
+    assertThat(
+      this.contactsChanges[0],
+      equalTo({ action: "add", email, group })
+    )
   }
 )
