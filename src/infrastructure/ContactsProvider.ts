@@ -14,11 +14,14 @@ export class ContactsProvider {
   }
 
   addToGroup(from: EmailAddress, contactGroup: ContactsGroup) {
-    this.emitter.emit(CHANGE_EVENT, {
-      action: "add",
-      email: from,
-      group: contactGroup,
-    })
+    this.emitter.emit(
+      CHANGE_EVENT,
+      ContactsChange.of({
+        action: "add",
+        emailAddress: from,
+        group: contactGroup,
+      })
+    )
   }
 
   trackChanges(): OutputTracker<ContactsChange> {
