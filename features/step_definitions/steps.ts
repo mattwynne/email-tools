@@ -11,29 +11,14 @@ import { ContactsGroup } from "../../src/core/ContactsGroup"
 import { ContactsProvider } from "../../src/infrastructure/ContactsProvider"
 import { EmailAddress } from "../../src/core/EmailAddress"
 import { ContactsChange } from "../../src/infrastructure/ContactsChange"
+import { Application } from "../../src/Application"
+import { MailboxState } from "../../src/core/MailboxState"
+import { Mailbox } from "../../src/core/Mailbox"
+import { Email } from "../../src/core/Email"
 
-type Email = {
-  from: EmailAddress
-}
-
-class EmailProvider {
+export class EmailProvider {
   static createNull() {
     return new this()
-  }
-}
-
-class Application {
-  constructor(
-    private readonly emailProvider: EmailProvider,
-    private readonly contactsProvider: ContactsProvider
-  ) {}
-
-  processNewMailboxState(state: MailboxState) {
-    state.mailboxes[0]
-    this.contactsProvider.addToGroup(
-      state.mailboxes[0].emails[0].from,
-      state.mailboxes[0].name.contactsGroup
-    )
   }
 }
 
@@ -54,17 +39,6 @@ defineParameterType({
   regexp: /(\w+) contacts group/,
   transformer: (name) => ContactsGroup.named(name),
 })
-
-class MailboxState {
-  constructor(public readonly mailboxes: Mailbox[]) {}
-}
-
-class Mailbox {
-  constructor(
-    public readonly name: MailboxName,
-    public readonly emails: Email[]
-  ) {}
-}
 
 Given(
   "an email in {mailbox} from {email address}",
@@ -101,7 +75,10 @@ Before(function (this: World) {
 
 Then(
   "{email address} should only have been added to the {contacts group}",
-  function (this: World, email, group) {
-    assertThat(this.contactsChanges, equalTo([{ action: "add", email, group }]))
+  function (this: World, emailAddress, group) {
+    assertThat(
+      this.contactsChanges,
+      equalTo([ContactsChange.of({ action: "add", emailAddress, group })])
+    )
   }
 )

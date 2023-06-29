@@ -2,6 +2,7 @@ import { assertThat, equalTo } from "hamjest"
 import { ContactsGroup } from "../core/ContactsGroup"
 import { EmailAddress } from "../core/EmailAddress"
 import { ContactsProvider } from "./ContactsProvider"
+import { ContactsChange } from "./ContactsChange"
 
 describe(ContactsProvider.name, () => {
   describe("in null mode", () => {
@@ -13,7 +14,13 @@ describe(ContactsProvider.name, () => {
       provider.addToGroup(from, contactsGroup)
       assertThat(
         changes.data,
-        equalTo([{ action: "add", email: from, group: contactsGroup }])
+        equalTo([
+          ContactsChange.of({
+            action: "add",
+            emailAddress: from,
+            group: contactsGroup,
+          }),
+        ])
       )
     })
   })
