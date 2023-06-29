@@ -1,11 +1,10 @@
 import EventEmitter from "events"
 import { OutputTracker } from "./OutputTracker"
 import { ContactsGroup } from "../core/ContactsGroup"
-import {
-  ContactsChange,
-  CHANGE_EVENT,
-} from "../../features/step_definitions/steps"
+import { ContactsChange } from "./ContactsChange"
 import { EmailAddress } from "../core/EmailAddress"
+
+export const CHANGE_EVENT = "change"
 
 export class ContactsProvider {
   private readonly emitter = new EventEmitter()
