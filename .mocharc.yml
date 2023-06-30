@@ -1,2 +1,9 @@
 spec: 
   - src/**/*.spec.ts
+watch-files:
+  - src
+  - features
+require:
+  - ts-node/register
+extensions:
+  - ts
