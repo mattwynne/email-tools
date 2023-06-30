@@ -43,7 +43,7 @@ defineParameterType({
 Given(
   "an email in {mailbox} from {email address}",
   function (this: World, mailboxName: MailboxName, sender: EmailAddress) {
-    this.theEmail = { from: sender }
+    this.theEmail = Email.from(sender)
     const mailbox = new Mailbox(mailboxName, [this.theEmail])
     const mailboxState: MailboxState = new MailboxState([mailbox])
     this.app.processNewMailboxState(mailboxState)
