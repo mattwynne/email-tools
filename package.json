@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "npm run test:unit && npm run test:acceptance",
-    "test:unit": "ts-mocha",
+    "test:unit": "mocha",
     "test:acceptance": "cucumber-js"
   },
   "author": "",
@@ -16,8 +16,7 @@
     "hamjest": "^4.0.1",
     "imapflow": "^1.0.123",
     "mocha": "^10.2.0",
-    "pino": "^8.11.0",
-    "ts-mocha": "^10.0.0"
+    "pino": "^8.11.0"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.1",
