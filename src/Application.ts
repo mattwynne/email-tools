@@ -1,6 +1,6 @@
 import { ContactsProvider } from "./infrastructure/ContactsProvider"
-import { EmailProvider } from "../features/step_definitions/steps"
 import { MailboxState } from "./core/MailboxState"
+import { EmailProvider } from "./infrastructure/EmailProvider"
 
 export class Application {
   private currentState?: MailboxState

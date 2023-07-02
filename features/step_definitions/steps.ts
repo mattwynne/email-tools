@@ -15,12 +15,7 @@ import { Application } from "../../src/Application"
 import { MailboxState } from "../../src/core/MailboxState"
 import { Mailbox } from "../../src/core/Mailbox"
 import { Email } from "../../src/core/Email"
-
-export class EmailProvider {
-  static createNull() {
-    return new this()
-  }
-}
+import { EmailProvider } from "../../src/infrastructure/EmailProvider"
 
 defineParameterType({
   name: "mailbox",
