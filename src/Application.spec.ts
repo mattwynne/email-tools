@@ -8,6 +8,7 @@ import { Email } from "./core/Email"
 import { ContactsChange } from "./infrastructure/ContactsChange"
 import { ContactsGroup } from "./core/ContactsGroup"
 import assert from "assert"
+import { EmailProvider } from "./infrastructure/EmailProvider"
 
 describe(Application.name, () => {
   describe("processing new mailbox state", () => {
@@ -15,7 +16,10 @@ describe(Application.name, () => {
       it("doesn't change any contacts", () => {
         const contactsProvider = ContactsProvider.createNull()
         const changes = contactsProvider.trackChanges()
-        const app = new Application({}, contactsProvider)
+        const app = new Application(
+          EmailProvider.createNull(),
+          contactsProvider
+        )
         app.processNewMailboxState(new MailboxState([]))
         assertThat(changes.data, isEmpty())
       })
@@ -25,7 +29,10 @@ describe(Application.name, () => {
       it("adds the contact to Paperwork when the email is moved to the Inbox/Paperwork mailbox", () => {
         const contactsProvider = ContactsProvider.createNull()
         const changes = contactsProvider.trackChanges()
-        const app = new Application({}, contactsProvider)
+        const app = new Application(
+          EmailProvider.createNull(),
+          contactsProvider
+        )
         const theEmail: Email = { from: { address: "sender@example.com" } }
         const initialState = new MailboxState([
           new Mailbox(MailboxName.of("Inbox/Screener"), [theEmail]),
