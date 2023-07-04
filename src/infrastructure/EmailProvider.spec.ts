@@ -7,13 +7,14 @@ import { EmailProvider } from "./EmailProvider"
 
 describe(EmailProvider.name, () => {
   describe("null mode", () => {
-    it("can be created with a stubbed MailboxState", () => {
+    it("can be created with a stubbed MailboxState", async () => {
       const mailboxState = new MailboxState([
         new Mailbox(MailboxName.of("Inbox/Paperwork"), [
           Email.from(EmailAddress.of("someone@example.com")),
         ]),
       ])
       const provider = EmailProvider.createNull({ mailboxState })
+      const actual = await provider.getMailboxState()
     })
   })
 

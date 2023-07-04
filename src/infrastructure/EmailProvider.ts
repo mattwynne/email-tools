@@ -14,4 +14,8 @@ export class EmailProvider {
   }: NullEmailProviderConfiguration = defaultNullConfiguration) {
     return new this()
   }
+
+  getMailboxState() {
+    throw new Error("Method not implemented.")
+  }
 }
