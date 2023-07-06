@@ -3,7 +3,8 @@ import { MailboxState } from "../core/MailboxState"
 import { Mailbox } from "../core/Mailbox"
 import { EmailAddress } from "../core/EmailAddress"
 import { MailboxName } from "../core/MailboxName"
-import { EmailProvider } from "./EmailProvider"
+import { EmailProvider, FastmailConfig } from "./EmailProvider"
+import { assertThat, equalTo } from "hamjest"
 
 describe(EmailProvider.name, () => {
   describe("null mode", () => {
@@ -15,10 +16,17 @@ describe(EmailProvider.name, () => {
       ])
       const provider = EmailProvider.createNull({ mailboxState })
       const actual = await provider.getMailboxState()
+      assertThat(actual, equalTo(mailboxState))
     })
   })
 
   describe("fastmail mode", () => {
-    it("connects to a real fastmail inbox", () => {})
+    it("connects to a real fastmail inbox", async () => {
+      const fastmailConfig: FastmailConfig = {
+        token: process.env.FASTMAIL_API_TOKEN || "", // TODO: make env nullable infrastructure too
+      }
+      const provider = await EmailProvider.create(fastmailConfig)
+      console.log((await provider.getMailboxState()).mailboxes[0])
+    })
   })
 })
