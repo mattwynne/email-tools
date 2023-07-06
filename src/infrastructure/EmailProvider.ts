@@ -1,3 +1,5 @@
+import { Email } from "../core/Email"
+import { EmailAddress } from "../core/EmailAddress"
 import { Mailbox } from "../core/Mailbox"
 import { MailboxName } from "../core/MailboxName"
 import { MailboxState } from "../core/MailboxState"
@@ -61,15 +63,42 @@ class FastmailEmailAccount implements EmailAccount {
     return result
   }
 
-  private async getMailboxes(): Promise<Mailbox[]> {
-    return (
-      await this.methodCall(this.session.apiUrl, "Mailbox/get", {
+  private async getEmailsIn(mailboxId: string): Promise<Email[]> {
+    const ids = (
+      await this.methodCall(this.session.apiUrl, "Email/query", {
         accountId: this.session.accountId,
-        ids: null,
+        filter: {
+          inMailbox: mailboxId,
+        },
       })
-    ).list.map(
-      (mailbox: { name: string }) =>
-        new Mailbox(MailboxName.of(mailbox.name), [])
+    ).ids
+    const emails = (
+      await this.methodCall(this.session.apiUrl, "Email/get", {
+        accountId: this.session.accountId,
+        ids,
+      })
+    ).list
+    // console.log(emails)
+    // console.log(emails[0].from[0].email)
+    return emails.map((email: { from: { email: string }[] }) =>
+      Email.from(EmailAddress.of(email.from[0].email))
+    )
+  }
+
+  private async getMailboxes(): Promise<Mailbox[]> {
+    return Promise.all(
+      (
+        await this.methodCall(this.session.apiUrl, "Mailbox/get", {
+          accountId: this.session.accountId,
+          ids: null,
+        })
+      ).list.map(
+        async (mailbox: { id: string; name: string }) =>
+          new Mailbox(
+            MailboxName.of(mailbox.name),
+            await this.getEmailsIn(mailbox.id)
+          )
+      )
     )
   }
 

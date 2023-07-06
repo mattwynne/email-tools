@@ -5,6 +5,7 @@ import { EmailAddress } from "../core/EmailAddress"
 import { MailboxName } from "../core/MailboxName"
 import { EmailProvider, FastmailConfig } from "./EmailProvider"
 import { assertThat, equalTo } from "hamjest"
+import util from "util"
 
 describe(EmailProvider.name, () => {
   describe("null mode", () => {
@@ -26,7 +27,11 @@ describe(EmailProvider.name, () => {
         token: process.env.FASTMAIL_API_TOKEN || "", // TODO: make env nullable infrastructure too
       }
       const provider = await EmailProvider.create(fastmailConfig)
-      console.log((await provider.getMailboxState()).mailboxes[0])
+      console.log(
+        util.inspect((await provider.getMailboxState()).mailboxes[0], {
+          depth: 5,
+        })
+      )
     })
   })
 })
