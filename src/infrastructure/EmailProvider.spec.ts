@@ -22,7 +22,8 @@ describe(EmailProvider.name, () => {
   })
 
   describe("fastmail mode", () => {
-    it("connects to a real fastmail inbox", async () => {
+    it("connects to a real fastmail inbox", async function () {
+      this.timeout(5000)
       const fastmailConfig: FastmailConfig = {
         token: process.env.FASTMAIL_API_TOKEN || "", // TODO: make env nullable infrastructure too
       }
