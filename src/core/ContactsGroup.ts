@@ -1,7 +1,7 @@
-export class ContactsGroup {
+import { TinyTypeOf } from "tiny-types"
+
+export class ContactsGroup extends TinyTypeOf<string>() {
   static named(value: string) {
     return new this(value)
   }
-
-  private constructor(public readonly name: string) {}
 }
