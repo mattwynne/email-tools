@@ -54,41 +54,24 @@ const deleteAllEmails = async (token: string) => {
   const api = await FastmailSession.create(token)
   await api.calls([
     [
-      "Mailbox/get",
-      {
-        accountId: api.accountId,
-        ids: null,
-      },
-      "0",
-    ],
-    [
       "Email/query",
       {
         accountId: api.accountId,
-        filter: {
-          operator: "OR",
-          conditions: {
-            "#inMailboxes": {
-              resultOf: "0",
-              name: "Mailbox/get",
-              path: "list/*/id",
-            },
-          },
-        },
+        filter: null,
       },
-      "1",
+      "0",
     ],
     [
       "Email/set",
       {
         accountId: api.accountId,
         "#destroy": {
-          resultOf: "1",
+          resultOf: "0",
           name: "Email/query",
           path: "/ids",
         },
       },
-      "2",
+      "1",
     ],
   ])
 }
