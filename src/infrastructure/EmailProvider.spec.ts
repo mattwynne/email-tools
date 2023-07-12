@@ -28,11 +28,20 @@ describe(EmailProvider.name, () => {
         token: process.env.FASTMAIL_API_TOKEN || "", // TODO: make env nullable infrastructure too
       }
       const provider = await EmailProvider.create(fastmailConfig)
-      console.log(
-        util.inspect((await provider.getMailboxState()).mailboxes[0], {
-          depth: 5,
-        })
-      )
+      renderMailboxState(await provider.getMailboxState())
     })
   })
 })
+
+const renderMailboxState: (mailboxState: MailboxState) => void = (
+  mailboxState
+) => {
+  for (const mailbox of mailboxState.mailboxes) {
+    console.log(mailbox.name.toString())
+    console.log("=".repeat(mailbox.name.length))
+    for (const email of mailbox.emails) {
+      console.log("-", email.from.toString())
+    }
+    console.log()
+  }
+}

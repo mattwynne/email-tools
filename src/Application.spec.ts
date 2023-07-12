@@ -9,6 +9,7 @@ import { ContactsChange } from "./infrastructure/ContactsChange"
 import { ContactsGroup } from "./core/ContactsGroup"
 import assert from "assert"
 import { EmailProvider } from "./infrastructure/EmailProvider"
+import { EmailAddress } from "./core/EmailAddress"
 
 describe(Application.name, () => {
   describe("processing new mailbox state", () => {
@@ -33,7 +34,7 @@ describe(Application.name, () => {
           EmailProvider.createNull(),
           contactsProvider
         )
-        const theEmail: Email = { from: { address: "sender@example.com" } }
+        const theEmail: Email = { from: EmailAddress.of("sender@example.com") }
         const initialState = new MailboxState([
           new Mailbox(MailboxName.of("Inbox/Screener"), [theEmail]),
         ])
