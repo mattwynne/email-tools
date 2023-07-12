@@ -1,5 +1,6 @@
 import { Email } from "../core/Email"
 import { EmailAddress } from "../core/EmailAddress"
+import { EmailSubject } from "../core/EmailSubject"
 import { Mailbox } from "../core/Mailbox"
 import { MailboxName } from "../core/MailboxName"
 import { MailboxState } from "../core/MailboxState"
@@ -80,8 +81,10 @@ class FastmailEmailAccount implements EmailAccount {
     ).list
     // console.log(emails)
     // console.log(emails[0].from[0].email)
-    return emails.map((email: { from: { email: string }[] }) =>
-      Email.from(EmailAddress.of(email.from[0].email))
+    return emails.map((email: { subject: string; from: { email: string }[] }) =>
+      Email.from(EmailAddress.of(email.from[0].email)).about(
+        EmailSubject.of(email.subject)
+      )
     )
   }
 

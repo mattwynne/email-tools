@@ -6,13 +6,16 @@ import { MailboxName } from "../core/MailboxName"
 import { EmailProvider, FastmailConfig } from "./EmailProvider"
 import { assertThat, equalTo } from "hamjest"
 import util from "util"
+import { EmailSubject } from "../core/EmailSubject"
 
 describe(EmailProvider.name, () => {
   describe("null mode", () => {
     it("can be created with a stubbed MailboxState", async () => {
       const mailboxState = new MailboxState([
         new Mailbox(MailboxName.of("Inbox/Paperwork"), [
-          Email.from(EmailAddress.of("someone@example.com")),
+          Email.from(EmailAddress.of("someone@example.com")).about(
+            EmailSubject.of("a subject")
+          ),
         ]),
       ])
       const provider = EmailProvider.createNull({ mailboxState })
@@ -38,9 +41,9 @@ const renderMailboxState: (mailboxState: MailboxState) => void = (
 ) => {
   for (const mailbox of mailboxState.mailboxes) {
     console.log(mailbox.name.toString())
-    console.log("=".repeat(mailbox.name.length))
+    console.log("=".repeat(mailbox.name.value.length))
     for (const email of mailbox.emails) {
-      console.log("-", email.from.toString())
+      console.log(`- ${email}`)
     }
     console.log()
   }

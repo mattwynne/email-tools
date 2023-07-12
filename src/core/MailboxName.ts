@@ -1,16 +1,12 @@
-import { inherits } from "util"
 import { ContactsGroup } from "./ContactsGroup"
+import { TinyTypeOf } from "tiny-types"
 
-export class MailboxName extends String {
+export class MailboxName extends TinyTypeOf<string>() {
   static of(name: string) {
     return new this(name)
   }
 
-  private constructor(private readonly name: string) {
-    super(name)
-  }
-
   public get contactsGroup(): ContactsGroup {
-    return ContactsGroup.named(this.name.replace(/^Inbox\//, ""))
+    return ContactsGroup.named(this.value.replace(/^Inbox\//, ""))
   }
 }

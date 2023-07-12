@@ -16,7 +16,8 @@
     "hamjest": "^4.0.1",
     "imapflow": "^1.0.123",
     "mocha": "^10.2.0",
-    "pino": "^8.11.0"
+    "pino": "^8.11.0",
+    "tiny-types": "^1.20.0"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.1",

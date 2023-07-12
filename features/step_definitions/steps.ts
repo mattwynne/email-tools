@@ -16,6 +16,7 @@ import { MailboxState } from "../../src/core/MailboxState"
 import { Mailbox } from "../../src/core/Mailbox"
 import { Email } from "../../src/core/Email"
 import { EmailProvider } from "../../src/infrastructure/EmailProvider"
+import { EmailSubject } from "../../src/core/EmailSubject"
 
 defineParameterType({
   name: "mailbox",
@@ -38,7 +39,7 @@ defineParameterType({
 Given(
   "an email in {mailbox} from {email address}",
   function (this: World, mailboxName: MailboxName, sender: EmailAddress) {
-    this.theEmail = Email.from(sender)
+    this.theEmail = Email.from(sender).about(EmailSubject.of("a subject"))
     const mailbox = new Mailbox(mailboxName, [this.theEmail])
     const mailboxState: MailboxState = new MailboxState([mailbox])
     this.app.processNewMailboxState(mailboxState)
