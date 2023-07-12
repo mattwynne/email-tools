@@ -9,4 +9,8 @@ export class MailboxName extends TinyTypeOf<string>() {
   public get contactsGroup(): ContactsGroup {
     return ContactsGroup.named(this.value.replace(/^Inbox\//, ""))
   }
+
+  public toString() {
+    return this.value
+  }
 }
