@@ -52,25 +52,43 @@ const renderMailboxState: (mailboxState: MailboxState) => void = (
 
 const deleteAllEmails = async (token: string) => {
   const api = await FastmailSession.create(token)
-  const mailboxes = (
-    await api.call("Mailbox/get", {
-      accountId: api.accountId,
-      ids: null,
-    })
-  ).list
-  const emails = (
-    await api.call("Email/query", {
-      accountId: api.accountId,
-      filter: {
-        operator: "OR",
-        conditions: mailboxes.map((mailbox: { id: string }) => ({
-          inMailboxes: mailbox.id,
-        })),
+  await api.calls([
+    [
+      "Mailbox/get",
+      {
+        accountId: api.accountId,
+        ids: null,
       },
-    })
-  ).ids
-  await api.call("Email/set", {
-    accountId: api.accountId,
-    destroy: emails,
-  })
+      "0",
+    ],
+    [
+      "Email/query",
+      {
+        accountId: api.accountId,
+        filter: {
+          operator: "OR",
+          conditions: {
+            "#inMailboxes": {
+              resultOf: "0",
+              name: "Mailbox/get",
+              path: "list/*/id",
+            },
+          },
+        },
+      },
+      "1",
+    ],
+    [
+      "Email/set",
+      {
+        accountId: api.accountId,
+        "#destroy": {
+          resultOf: "1",
+          name: "Email/query",
+          path: "/ids",
+        },
+      },
+      "2",
+    ],
+  ])
 }
