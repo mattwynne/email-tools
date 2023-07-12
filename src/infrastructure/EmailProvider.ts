@@ -4,7 +4,6 @@ import { EmailSubject } from "../core/EmailSubject"
 import { Mailbox } from "../core/Mailbox"
 import { MailboxName } from "../core/MailboxName"
 import { MailboxState } from "../core/MailboxState"
-import util from "util"
 
 const defaultNullConfiguration = {
   mailboxState: new MailboxState([]),
@@ -41,46 +40,23 @@ type ApiMethod =
   | "Mailbox/get"
 
 class FastmailEmailAccount implements EmailAccount {
-  constructor(private readonly session: FastmailSession) {}
-
-  private async methodCall(apiUrl: string, method: ApiMethod, params: Object) {
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: this.session.headers,
-      body: JSON.stringify({
-        using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-        methodCalls: [[method, params, "a"]],
-      }),
-    })
-    const data = await response.json()
-    const result = data["methodResponses"][0][1]
-    // console.log(
-    //   method,
-    //   "params:",
-    //   params,
-    //   "response:",
-    //   util.inspect(result, { depth: Infinity })
-    // )
-    return result
-  }
+  constructor(private readonly api: FastmailSession) {}
 
   private async getEmailsIn(mailboxId: string): Promise<Email[]> {
     const ids = (
-      await this.methodCall(this.session.apiUrl, "Email/query", {
-        accountId: this.session.accountId,
+      await this.api.call("Email/query", {
+        accountId: this.api.accountId,
         filter: {
           inMailbox: mailboxId,
         },
       })
     ).ids
     const emails = (
-      await this.methodCall(this.session.apiUrl, "Email/get", {
-        accountId: this.session.accountId,
+      await this.api.call("Email/get", {
+        accountId: this.api.accountId,
         ids,
       })
     ).list
-    // console.log(emails)
-    // console.log(emails[0].from[0].email)
     return emails.map((email: { subject: string; from: { email: string }[] }) =>
       Email.from(EmailAddress.of(email.from[0].email)).about(
         EmailSubject.of(email.subject)
@@ -91,8 +67,8 @@ class FastmailEmailAccount implements EmailAccount {
   private async getMailboxes(): Promise<Mailbox[]> {
     return Promise.all(
       (
-        await this.methodCall(this.session.apiUrl, "Mailbox/get", {
-          accountId: this.session.accountId,
+        await this.api.call("Mailbox/get", {
+          accountId: this.api.accountId,
           ids: null,
         })
       ).list.map(
@@ -107,9 +83,9 @@ class FastmailEmailAccount implements EmailAccount {
 
   async getMailboxState() {
     const mailboxes = await this.getMailboxes()
-    const inbox = mailboxes.find(
-      (mailbox) => mailbox.name === MailboxName.of("Inbox")
-    )
+    // const inbox = mailboxes.find(
+    //   (mailbox) => mailbox.name === MailboxName.of("Inbox")
+    // )
     // const inboxChildren = mailboxes.filter(
     //   (mailbox: { parentId: string }) => mailbox.parentId === inbox.id
     // )
@@ -147,6 +123,27 @@ class FastmailSession {
 
   get accountId(): string {
     return this.data.primaryAccounts["urn:ietf:params:jmap:mail"]
+  }
+
+  public async call(method: ApiMethod, params: any) {
+    const response = await fetch(this.apiUrl, {
+      method: "POST",
+      headers: this.headers,
+      body: JSON.stringify({
+        using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+        methodCalls: [[method, params, "a"]],
+      }),
+    })
+    const data = await response.json()
+    const result = data["methodResponses"][0][1]
+    // console.log(
+    //   method,
+    //   "params:",
+    //   params,
+    //   "response:",
+    //   util.inspect(result, { depth: Infinity })
+    // )
+    return result
   }
 }
 
