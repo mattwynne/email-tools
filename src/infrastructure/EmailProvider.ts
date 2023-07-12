@@ -30,7 +30,13 @@ export type FastmailConfig = {
   token: string
 }
 
-type ApiMethod = "Email/get" | "Email/set" | "Email/query" | "Mailbox/get"
+type ApiMethod =
+  | "Email/get"
+  | "Email/set"
+  | "Email/query"
+  | "Mailbox/get"
+  | "Mailbox/set"
+  | "Mailbox/query"
 
 type MethodCall = [method: ApiMethod, params: any, index: string]
 
@@ -138,7 +144,7 @@ export class FastmailSession {
       throw new Error(await response.text())
     }
     const result = await response.json()
-    console.log(util.inspect({ methodCalls, result }, { depth: Infinity }))
+    // console.log(util.inspect({ methodCalls, result }, { depth: Infinity }))
     return result["methodResponses"]
   }
 }
