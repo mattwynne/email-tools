@@ -32,10 +32,7 @@ export type FastmailConfig = {
 
 type ApiMethod = "Email/get" | "Email/set" | "Email/query" | "Mailbox/get"
 
-type MethodCall = {
-  method: ApiMethod
-  params: any
-}
+type MethodCall = [method: ApiMethod, params: any, index: string]
 
 class FastmailEmailAccount implements EmailAccount {
   constructor(private readonly api: FastmailSession) {}
@@ -124,16 +121,11 @@ export class FastmailSession {
   }
 
   public async call(method: ApiMethod, params: any) {
-    const responses = await this.calls([{ method, params }])
+    const responses = await this.calls([[method, params, "0"]])
     return responses[0][1]
   }
 
-  public async calls(calls: MethodCall[]) {
-    const methodCalls = calls.map(({ method, params }, index) => [
-      method,
-      params,
-      String(index),
-    ])
+  public async calls(methodCalls: MethodCall[]) {
     const response = await fetch(this.apiUrl, {
       method: "POST",
       headers: this.headers,
@@ -142,8 +134,11 @@ export class FastmailSession {
         methodCalls,
       }),
     })
+    if (!response.ok) {
+      throw new Error(await response.text())
+    }
     const result = await response.json()
-    console.log(util.inspect({ methodCalls, result }, { depth: Infinity }))
+    // console.log(util.inspect({ methodCalls, result }, { depth: Infinity }))
     return result["methodResponses"]
   }
 }
