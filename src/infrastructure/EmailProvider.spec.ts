@@ -3,7 +3,7 @@ import { MailboxState } from "../core/MailboxState"
 import { Mailbox } from "../core/Mailbox"
 import { EmailAddress } from "../core/EmailAddress"
 import { MailboxName } from "../core/MailboxName"
-import { EmailProvider, FastmailConfig } from "./EmailProvider"
+import { EmailProvider, FastmailConfig, FastmailSession } from "./EmailProvider"
 import { assertThat, equalTo } from "hamjest"
 import util from "util"
 import { EmailSubject } from "../core/EmailSubject"
@@ -26,10 +26,11 @@ describe(EmailProvider.name, () => {
 
   describe("fastmail mode", () => {
     it("connects to a real fastmail inbox", async function () {
-      this.timeout(5000)
+      this.timeout(10000)
       const fastmailConfig: FastmailConfig = {
         token: process.env.FASTMAIL_API_TOKEN || "", // TODO: make env nullable infrastructure too
       }
+      await deleteAllEmails(fastmailConfig.token)
       const provider = await EmailProvider.create(fastmailConfig)
       renderMailboxState(await provider.getMailboxState())
     })
@@ -47,4 +48,29 @@ const renderMailboxState: (mailboxState: MailboxState) => void = (
     }
     console.log()
   }
+}
+
+const deleteAllEmails = async (token: string) => {
+  const api = await FastmailSession.create(token)
+  const mailboxes = (
+    await api.call("Mailbox/get", {
+      accountId: api.accountId,
+      ids: null,
+    })
+  ).list
+  const emails = (
+    await api.call("Email/query", {
+      accountId: api.accountId,
+      filter: {
+        operator: "OR",
+        conditions: mailboxes.map((mailbox: { id: string }) => ({
+          inMailboxes: mailbox.id,
+        })),
+      },
+    })
+  ).ids
+  await api.call("Email/set", {
+    accountId: api.accountId,
+    destroy: emails,
+  })
 }

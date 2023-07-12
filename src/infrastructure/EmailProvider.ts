@@ -4,6 +4,7 @@ import { EmailSubject } from "../core/EmailSubject"
 import { Mailbox } from "../core/Mailbox"
 import { MailboxName } from "../core/MailboxName"
 import { MailboxState } from "../core/MailboxState"
+import util from "util"
 
 const defaultNullConfiguration = {
   mailboxState: new MailboxState([]),
@@ -29,15 +30,12 @@ export type FastmailConfig = {
   token: string
 }
 
-type ApiMethod =
-  | "Email/get"
-  | "Email/changes"
-  | "Email/query"
-  | "Email/queryChanges"
-  | "Thread/changes"
-  | "Thread/get"
-  | "Mailbox/changes"
-  | "Mailbox/get"
+type ApiMethod = "Email/get" | "Email/set" | "Email/query" | "Mailbox/get"
+
+type MethodCall = {
+  method: ApiMethod
+  params: any
+}
 
 class FastmailEmailAccount implements EmailAccount {
   constructor(private readonly api: FastmailSession) {}
@@ -93,7 +91,7 @@ class FastmailEmailAccount implements EmailAccount {
   }
 }
 
-class FastmailSession {
+export class FastmailSession {
   static async create(token: string) {
     const headers = {
       "Content-Type": "application/json",
@@ -126,24 +124,27 @@ class FastmailSession {
   }
 
   public async call(method: ApiMethod, params: any) {
+    const responses = await this.calls([{ method, params }])
+    return responses[0][1]
+  }
+
+  public async calls(calls: MethodCall[]) {
+    const methodCalls = calls.map(({ method, params }, index) => [
+      method,
+      params,
+      String(index),
+    ])
     const response = await fetch(this.apiUrl, {
       method: "POST",
       headers: this.headers,
       body: JSON.stringify({
         using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-        methodCalls: [[method, params, "a"]],
+        methodCalls,
       }),
     })
-    const data = await response.json()
-    const result = data["methodResponses"][0][1]
-    // console.log(
-    //   method,
-    //   "params:",
-    //   params,
-    //   "response:",
-    //   util.inspect(result, { depth: Infinity })
-    // )
-    return result
+    const result = await response.json()
+    console.log(util.inspect({ methodCalls, result }, { depth: Infinity }))
+    return result["methodResponses"]
   }
 }
 
