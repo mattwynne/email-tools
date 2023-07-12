@@ -5,7 +5,6 @@ import { EmailAddress } from "../core/EmailAddress"
 import { MailboxName } from "../core/MailboxName"
 import { EmailProvider, FastmailConfig, FastmailSession } from "./EmailProvider"
 import { assertThat, equalTo } from "hamjest"
-import util from "util"
 import { EmailSubject } from "../core/EmailSubject"
 
 describe(EmailProvider.name, () => {
@@ -30,27 +29,26 @@ describe(EmailProvider.name, () => {
       const fastmailConfig: FastmailConfig = {
         token: process.env.FASTMAIL_API_TOKEN || "", // TODO: make env nullable infrastructure too
       }
-      await deleteAllEmails(fastmailConfig.token)
+      await reset(fastmailConfig.token)
       const provider = await EmailProvider.create(fastmailConfig)
-      renderMailboxState(await provider.getMailboxState())
+      assertThat(
+        await provider.getMailboxState(),
+        equalTo(
+          new MailboxState([
+            Mailbox.named("Inbox"),
+            Mailbox.named("Archive"),
+            Mailbox.named("Drafts"),
+            Mailbox.named("Sent"),
+            Mailbox.named("Spam"),
+            Mailbox.named("Trash"),
+          ])
+        )
+      )
     })
   })
 })
 
-const renderMailboxState: (mailboxState: MailboxState) => void = (
-  mailboxState
-) => {
-  for (const mailbox of mailboxState.mailboxes) {
-    console.log(mailbox.name.toString())
-    console.log("=".repeat(mailbox.name.value.length))
-    for (const email of mailbox.emails) {
-      console.log(`- ${email}`)
-    }
-    console.log()
-  }
-}
-
-const deleteAllEmails = async (token: string) => {
+const reset = async (token: string) => {
   const api = await FastmailSession.create(token)
   await api.calls([
     [
@@ -72,6 +70,28 @@ const deleteAllEmails = async (token: string) => {
         },
       },
       "1",
+    ],
+    [
+      "Mailbox/query",
+      {
+        accountId: api.accountId,
+        filter: {
+          hasAnyRole: false,
+        },
+      },
+      "2",
+    ],
+    [
+      "Mailbox/set",
+      {
+        accountId: api.accountId,
+        "#destroy": {
+          resultOf: "2",
+          name: "Mailbox/query",
+          path: "/ids",
+        },
+      },
+      "3",
     ],
   ])
 }
