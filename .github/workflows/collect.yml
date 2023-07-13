@@ -1,4 +1,4 @@
-name: Collect reports
+name: Collect stats
 
 on:
   schedule:
@@ -14,8 +14,7 @@ jobs:
   collect-reports:
     runs-on: ubuntu-latest
     env: 
-      FASTMAIL_PASSWORD: ${{ secrets.FASTMAIL_PASSWORD }}
-      FASTMAIL_USER: ${{ secrets.FASTMAIL_USER }}
+      FASTMAIL_API_TOKEN: ${{ secrets.FASTMAIL_API_TOKEN }}
       LOG_LEVEL: 'debug'
 
     steps:
