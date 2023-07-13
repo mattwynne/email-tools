@@ -4,7 +4,6 @@ import { EmailSubject } from "../core/EmailSubject"
 import { Mailbox } from "../core/Mailbox"
 import { MailboxName } from "../core/MailboxName"
 import { MailboxState } from "../core/MailboxState"
-import util from "util"
 
 const defaultNullConfiguration = {
   mailboxState: new MailboxState([]),
@@ -15,14 +14,19 @@ type NullEmailProviderConfiguration = {
 }
 
 interface EmailAccount {
-  getMailboxState: () => Promise<MailboxState>
+  getMailboxState: (onlyMailboxNames?: MailboxName[]) => Promise<MailboxState>
 }
 
 class NullEmailAccount implements EmailAccount {
   constructor(private readonly mailboxState: MailboxState) {}
 
-  async getMailboxState() {
-    return this.mailboxState
+  async getMailboxState(onlyMailboxNames?: MailboxName[]) {
+    if (!onlyMailboxNames) return this.mailboxState
+    return new MailboxState(
+      this.mailboxState.mailboxes.filter((mailbox) =>
+        onlyMailboxNames.some((name) => name.equals(mailbox.name))
+      )
+    )
   }
 }
 
@@ -40,7 +44,7 @@ type ApiMethod =
 
 type MethodCall = [method: ApiMethod, params: any, index: string]
 
-class FastmailEmailAccount implements EmailAccount {
+export class FastmailAccount implements EmailAccount {
   constructor(private readonly api: FastmailSession) {}
 
   private async getEmailsIn(mailboxId: string): Promise<Email[]> {
@@ -58,32 +62,49 @@ class FastmailEmailAccount implements EmailAccount {
         ids,
       })
     ).list
-    return emails.map((email: { subject: string; from: { email: string }[] }) =>
-      Email.from(EmailAddress.of(email.from[0].email)).about(
-        EmailSubject.of(email.subject)
-      )
+    if (!emails) {
+      throw new Error("No emails found for mailbox " + mailboxId)
+    }
+    return emails.map(
+      (email: { subject: string; from: { email: string }[] }) => {
+        const sender = email.from ? email.from[0].email : "unknown@example.com"
+        return Email.from(EmailAddress.of(sender)).about(
+          EmailSubject.of(email.subject)
+        )
+      }
     )
   }
 
-  private async getMailboxes(): Promise<Mailbox[]> {
+  private async getMailboxes(
+    onlyMailboxes?: MailboxName[]
+  ): Promise<Mailbox[]> {
+    const filter = onlyMailboxes
+      ? (mailbox: { name: string }) =>
+          onlyMailboxes.some((name) =>
+            name.equals(MailboxName.of(mailbox.name))
+          )
+      : () => true
+
     return Promise.all(
       (
         await this.api.call("Mailbox/get", {
           accountId: this.api.accountId,
           ids: null,
         })
-      ).list.map(
-        async (mailbox: { id: string; name: string }) =>
-          new Mailbox(
-            MailboxName.of(mailbox.name),
-            await this.getEmailsIn(mailbox.id)
-          )
-      )
+      ).list
+        .filter(filter)
+        .map(
+          async (mailbox: { id: string; name: string }) =>
+            new Mailbox(
+              MailboxName.of(mailbox.name),
+              await this.getEmailsIn(mailbox.id)
+            )
+        )
     )
   }
 
-  async getMailboxState() {
-    const mailboxes = await this.getMailboxes()
+  async getMailboxState(onlyMailboxes?: MailboxName[]) {
+    const mailboxes = await this.getMailboxes(onlyMailboxes)
     // const inbox = mailboxes.find(
     //   (mailbox) => mailbox.name === MailboxName.of("Inbox")
     // )
@@ -116,6 +137,10 @@ export class FastmailSession {
 
   get apiUrl(): string {
     return this.data.apiUrl
+  }
+
+  get username(): string {
+    return this.data.username
   }
 
   get primaryAccounts(): { [urn: string]: string } {
@@ -152,7 +177,7 @@ export class FastmailSession {
 export class EmailProvider {
   static async create(config: FastmailConfig) {
     const session = await FastmailSession.create(config.token)
-    return new this(new FastmailEmailAccount(session))
+    return new this(new FastmailAccount(session))
   }
 
   static createNull({
@@ -163,7 +188,7 @@ export class EmailProvider {
 
   constructor(private readonly account: EmailAccount) {}
 
-  getMailboxState() {
-    return this.account.getMailboxState()
+  getMailboxState(onlyMailboxNames?: MailboxName[]) {
+    return this.account.getMailboxState(onlyMailboxNames)
   }
 }
