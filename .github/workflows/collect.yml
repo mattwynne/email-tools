@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: 16
       - run: npm install
-      - run: node index.js
+      - run: npx ts-node src/count.ts
       - run: git add .
       - name: Get current date
         id: date
