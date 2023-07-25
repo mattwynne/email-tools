@@ -39,11 +39,11 @@ describe(Application.name, () => {
           EmailAddress.of("sender@example.com")
         ).about(EmailSubject.of("A subject"))
         const initialState = new MailboxState([
-          new Mailbox(MailboxName.of("Inbox/Screener"), [theEmail]),
+          Mailbox.named("Inbox/Screener").withEmails([theEmail]),
         ])
         app.processNewMailboxState(initialState)
         const newState = new MailboxState([
-          new Mailbox(MailboxName.of("Inbox/Paperwork"), [theEmail]),
+          Mailbox.named("Inbox/Paperwork").withEmails([theEmail]),
         ])
         app.processNewMailboxState(newState)
         assertThat(

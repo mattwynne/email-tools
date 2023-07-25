@@ -10,18 +10,20 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@cucumber/cucumber": "^9.2.0",
     "@types/eventsource": "^1.1.11",
     "eventsource": "^2.0.2",
-    "hamjest": "^4.0.1",
-    "imapflow": "^1.0.123",
-    "mocha": "^10.2.0",
     "pino": "^8.11.0",
-    "tiny-types": "^1.20.0"
+    "tiny-types": "^1.20.0",
+    "ts-eventually": "^1.0.6"
   },
   "devDependencies": {
+    "@cucumber/cucumber": "^9.2.0",
     "@types/mocha": "^10.0.1",
     "@types/node": "^20.2.1",
+    "@types/nodemailer": "^6.4.8",
+    "hamjest": "^4.0.1",
+    "mocha": "^10.2.0",
+    "nodemailer": "^6.9.4",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4"
   },
