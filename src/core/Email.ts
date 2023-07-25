@@ -1,12 +1,11 @@
 import { TinyType } from "tiny-types"
 import { EmailAddress } from "./EmailAddress"
 import { EmailSubject } from "./EmailSubject"
+import { P } from "pino"
 
 export class Email extends TinyType {
   static from(sender: EmailAddress) {
-    return {
-      about: (subject: EmailSubject) => new Email(sender, subject),
-    }
+    return new Email(sender, EmailSubject.unknown())
   }
 
   private constructor(
@@ -14,6 +13,10 @@ export class Email extends TinyType {
     public readonly subject: EmailSubject
   ) {
     super()
+  }
+
+  public about(subject: EmailSubject) {
+    return new Email(this.from, subject)
   }
 
   toString() {
