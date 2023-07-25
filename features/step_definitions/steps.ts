@@ -40,7 +40,7 @@ Given(
   "an email in {mailbox} from {email address}",
   function (this: World, mailboxName: MailboxName, sender: EmailAddress) {
     this.theEmail = Email.from(sender).about(EmailSubject.of("a subject"))
-    const mailbox = new Mailbox(mailboxName, [this.theEmail])
+    const mailbox = Mailbox.named(mailboxName).withEmails([this.theEmail])
     const mailboxState: MailboxState = new MailboxState([mailbox])
     this.app.processNewMailboxState(mailboxState)
   }
@@ -49,7 +49,7 @@ Given(
 When(
   "the email is added to {mailbox}",
   function (this: World, toMailbox: MailboxName) {
-    const mailbox = new Mailbox(toMailbox, [this.theEmail])
+    const mailbox = Mailbox.named(toMailbox).withEmails([this.theEmail])
     const mailboxState: MailboxState = new MailboxState([mailbox])
     this.app.processNewMailboxState(mailboxState)
   }

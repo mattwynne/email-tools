@@ -93,12 +93,10 @@ export class FastmailAccount implements EmailAccount {
         })
       ).list
         .filter(filter)
-        .map(
-          async (mailbox: { id: string; name: string }) =>
-            new Mailbox(
-              MailboxName.of(mailbox.name),
-              await this.getEmailsIn(mailbox.id)
-            )
+        .map(async (mailbox: { id: string; name: string }) =>
+          Mailbox.named(mailbox.name).withEmails(
+            await this.getEmailsIn(mailbox.id)
+          )
         )
     )
   }
