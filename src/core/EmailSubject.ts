@@ -1,4 +1,5 @@
 import { TinyTypeOf } from "tiny-types"
+import { UnknownValue } from "./UnknownValue"
 
 export class EmailSubject extends TinyTypeOf<string>() {
   static of(value: string) {
@@ -6,24 +7,10 @@ export class EmailSubject extends TinyTypeOf<string>() {
   }
 
   static unknown() {
-    return new UnknownValue()
+    return new UnknownValue<string>()
   }
 
   toString() {
     return this.value
-  }
-}
-
-class UnknownValue implements EmailSubject {
-  public get value(): string {
-    throw new Error("Uknown value!")
-  }
-
-  public toJSON(): string {
-    throw new Error("Uknown value!")
-  }
-
-  public equals(): boolean {
-    throw new Error("Uknown value!")
   }
 }
