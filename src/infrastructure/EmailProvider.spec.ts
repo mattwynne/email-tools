@@ -11,26 +11,41 @@ import nodemailer from "nodemailer"
 
 describe(EmailProvider.name, () => {
   describe("null mode", () => {
-    it("can be created with a stubbed MailboxState", async () => {
-      const mailboxState = new MailboxState([
-        Mailbox.named("Inbox/Paperwork").withEmails([
-          Email.from(EmailAddress.of("someone@example.com")).about(
-            EmailSubject.of("a subject")
-          ),
+    it("can be created with stubbed MailboxStates", async () => {
+      const mailboxStates = [
+        new MailboxState([
+          Mailbox.named("Inbox/Screener").withEmails([
+            Email.from(EmailAddress.of("someone@example.com")).about(
+              EmailSubject.of("a subject")
+            ),
+          ]),
         ]),
-      ])
-      const provider = EmailProvider.createNull({ mailboxState })
-      const actual = await provider.getMailboxState()
-      assertThat(actual, equalTo(mailboxState))
+        new MailboxState([
+          Mailbox.named("Inbox/Paperwork").withEmails([
+            Email.from(EmailAddress.of("someone@example.com")).about(
+              EmailSubject.of("a subject")
+            ),
+          ]),
+        ]),
+      ]
+      const provider = EmailProvider.createNull({
+        mailboxStates,
+      })
+      assertThat(
+        [await provider.getMailboxState(), await provider.getMailboxState()],
+        equalTo(mailboxStates)
+      )
     })
 
-    it("returns only mailboxes matching the given names", async () => {
+    it("can return only mailboxes matching the given names", async () => {
       const mailboxState = new MailboxState([
         Mailbox.named("Inbox/Paperwork"),
         Mailbox.named("Inbox/Screener"),
         Mailbox.named("Sent"),
       ])
-      const provider = EmailProvider.createNull({ mailboxState })
+      const provider = EmailProvider.createNull({
+        mailboxStates: [mailboxState],
+      })
       const actual = await provider.getMailboxState([
         MailboxName.of("Inbox/Paperwork"),
         MailboxName.of("Inbox/Screener"),

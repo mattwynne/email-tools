@@ -6,11 +6,11 @@ import { MailboxName } from "../core/MailboxName"
 import { MailboxState } from "../core/MailboxState"
 
 const defaultNullConfiguration = {
-  mailboxState: new MailboxState([]),
+  mailboxStates: [],
 }
 
 type NullEmailProviderConfiguration = {
-  mailboxState: MailboxState
+  mailboxStates: MailboxState[]
 }
 
 interface EmailAccount {
@@ -18,12 +18,15 @@ interface EmailAccount {
 }
 
 class NullEmailAccount implements EmailAccount {
-  constructor(private readonly mailboxState: MailboxState) {}
+  constructor(private readonly mailboxStates: MailboxState[]) {}
 
   async getMailboxState(onlyMailboxNames?: MailboxName[]) {
-    if (!onlyMailboxNames) return this.mailboxState
+    const nextMailboxState = this.mailboxStates.shift()
+    if (!nextMailboxState)
+      throw new Error("You don't have any more configured MailboxStates")
+    if (!onlyMailboxNames) return nextMailboxState
     return new MailboxState(
-      this.mailboxState.mailboxes.filter((mailbox) =>
+      nextMailboxState.mailboxes.filter((mailbox) =>
         onlyMailboxNames.some((name) => name.equals(mailbox.name))
       )
     )
@@ -179,9 +182,9 @@ export class EmailProvider {
   }
 
   static createNull({
-    mailboxState,
+    mailboxStates,
   }: NullEmailProviderConfiguration = defaultNullConfiguration) {
-    return new this(new NullEmailAccount(mailboxState))
+    return new this(new NullEmailAccount(mailboxStates.slice()))
   }
 
   constructor(private readonly account: EmailAccount) {}
