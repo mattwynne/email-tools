@@ -4,7 +4,9 @@
   "main": "index.js",
   "scripts": {
     "test": "npm run test:unit && npm run test:acceptance",
+    "test:airplane": "npm run test:unit:airplane && npm run test:acceptance",
     "test:unit": "mocha",
+    "test:unit:airplane": "mocha -f @online -i",
     "test:acceptance": "cucumber-js"
   },
   "author": "",
