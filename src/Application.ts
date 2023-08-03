@@ -10,7 +10,8 @@ export class Application {
     private readonly contactsProvider: ContactsProvider
   ) {}
 
-  processNewMailboxState(state: MailboxState) {
+  async processNewMailboxState() {
+    const state = await this.emailProvider.getMailboxState()
     if (this.currentState) {
       this.contactsProvider.addToGroup(
         state.mailboxes[0].emails[0].from,
@@ -18,5 +19,6 @@ export class Application {
       )
     }
     this.currentState = state
+    return this
   }
 }
