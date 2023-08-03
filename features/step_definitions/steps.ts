@@ -42,31 +42,39 @@ Given(
     this.theEmail = Email.from(sender)
     const mailbox = Mailbox.named(mailboxName).withEmails([this.theEmail])
     const mailboxState: MailboxState = new MailboxState([mailbox])
-    this.app.processNewMailboxState(mailboxState)
+    this.mailboxStates.push(mailboxState)
   }
 )
 
 When(
   "the email is added to {mailbox}",
-  function (this: World, toMailbox: MailboxName) {
+  async function (this: World, toMailbox: MailboxName) {
     const mailbox = Mailbox.named(toMailbox).withEmails([this.theEmail])
     const mailboxState: MailboxState = new MailboxState([mailbox])
-    this.app.processNewMailboxState(mailboxState)
+    this.mailboxStates.push(mailboxState)
+
+    const app = this.app()
+    await app.processNewMailboxState()
+    await app.processNewMailboxState()
   }
 )
 
 type World = {
   contactsProvider: ContactsProvider
   contactsChanges: ContactsChange[]
-  app: Application
+  app: () => Application
   theEmail: Email
+  mailboxStates: MailboxState[]
 }
 
 Before(function (this: World) {
-  const emailProvider = EmailProvider.createNull()
   this.contactsProvider = ContactsProvider.createNull()
-  this.app = new Application(emailProvider, this.contactsProvider)
   this.contactsChanges = this.contactsProvider.trackChanges().data
+  const emailProvider = () => EmailProvider.createNull(this)
+  this.app = () => {
+    return new Application(emailProvider(), this.contactsProvider)
+  }
+  this.mailboxStates = []
 })
 
 Then(

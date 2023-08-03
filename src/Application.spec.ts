@@ -22,30 +22,32 @@ describe(Application.name, () => {
           EmailProvider.createNull(),
           contactsProvider
         )
-        app.processNewMailboxState(new MailboxState([]))
+        app.processNewMailboxState()
         assertThat(changes.data, isEmpty())
       })
     })
 
     context("with an email in Inbox/Screener", () => {
-      it("adds the contact to Paperwork when the email is moved to the Inbox/Paperwork mailbox", () => {
+      it("adds the contact to Paperwork when the email is moved to the Inbox/Paperwork mailbox", async () => {
         const contactsProvider = ContactsProvider.createNull()
         const changes = contactsProvider.trackChanges()
-        const app = new Application(
-          EmailProvider.createNull(),
-          contactsProvider
-        )
         const theEmail: Email = Email.from(
           EmailAddress.of("sender@example.com")
         ).about(EmailSubject.of("A subject"))
-        const initialState = new MailboxState([
+        const inScreener = new MailboxState([
           Mailbox.named("Inbox/Screener").withEmails([theEmail]),
         ])
-        app.processNewMailboxState(initialState)
-        const newState = new MailboxState([
+        const movedToPaperwork = new MailboxState([
           Mailbox.named("Inbox/Paperwork").withEmails([theEmail]),
         ])
-        app.processNewMailboxState(newState)
+        const app = new Application(
+          EmailProvider.createNull({
+            mailboxStates: [inScreener, movedToPaperwork],
+          }),
+          contactsProvider
+        )
+        await app.processNewMailboxState()
+        await app.processNewMailboxState()
         assertThat(
           changes.data,
           equalTo([
