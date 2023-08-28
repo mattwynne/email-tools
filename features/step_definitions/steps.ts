@@ -8,7 +8,7 @@ import {
 import { assertThat, containsInAnyOrder, equalTo } from "hamjest"
 import { MailboxName } from "../../src/core/MailboxName"
 import { ContactsGroup } from "../../src/core/ContactsGroup"
-import { ContactsProvider } from "../../src/infrastructure/ContactsProvider"
+import { Contacts } from "../../src/infrastructure/Contacts"
 import { EmailAddress } from "../../src/core/EmailAddress"
 import { ContactsChange } from "../../src/infrastructure/ContactsChange"
 import { Application } from "../../src/Application"
@@ -60,7 +60,7 @@ When(
 )
 
 type World = {
-  contactsProvider: ContactsProvider
+  contactsProvider: Contacts
   contactsChanges: ContactsChange[]
   app: () => Application
   theEmail: Email
@@ -68,7 +68,7 @@ type World = {
 }
 
 Before(function (this: World) {
-  this.contactsProvider = ContactsProvider.createNull()
+  this.contactsProvider = Contacts.createNull()
   this.contactsChanges = this.contactsProvider.trackChanges().data
   const emailProvider = () => EmailProvider.createNull(this)
   this.app = () => {

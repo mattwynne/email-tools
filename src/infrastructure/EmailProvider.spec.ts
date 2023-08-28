@@ -62,9 +62,9 @@ describe(EmailProvider.name, () => {
     })
   })
 
-  const TIMEOUT = 10000
   describe("fastmail mode @online", function () {
-    this.timeout(TIMEOUT)
+    this.timeout(process.env.SLOW_TEST_TIMEOUT || 10000)
+
     const fastmailConfig: FastmailConfig = {
       token: process.env.FASTMAIL_API_TOKEN || "", // TODO: make env nullable infrastructure too
     }
