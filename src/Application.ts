@@ -1,4 +1,4 @@
-import { ContactsProvider } from "./infrastructure/ContactsProvider"
+import { Contacts } from "./infrastructure/Contacts"
 import { MailboxState } from "./core/MailboxState"
 import { EmailProvider } from "./infrastructure/EmailProvider"
 
@@ -7,7 +7,7 @@ export class Application {
 
   constructor(
     private readonly emailProvider: EmailProvider,
-    private readonly contactsProvider: ContactsProvider
+    private readonly contactsProvider: Contacts
   ) {}
 
   async processNewMailboxState() {
