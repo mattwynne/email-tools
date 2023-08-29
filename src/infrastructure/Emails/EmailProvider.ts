@@ -1,9 +1,8 @@
 import { MailboxName } from "../../core/MailboxName"
 import { MailboxState } from "../../core/MailboxState"
-import { EmailAccount } from "./EmailAccount"
+import { EmailAccount, NullEmailAccount } from "./EmailAccount"
 import { FastmailAccount } from "./FastmailAccount"
 import { FastmailConfig, FastmailSession } from "./FastmailSession"
-import { NullEmailAccount } from "./NullEmailAccount"
 
 export class EmailProvider {
   static async create(config: FastmailConfig) {
