@@ -5,23 +5,14 @@ import { FastmailAccount } from "./FastmailAccount"
 import { FastmailConfig, FastmailSession } from "./FastmailSession"
 import { NullEmailAccount } from "./NullEmailAccount"
 
-const defaultNullConfiguration = {
-  mailboxStates: [],
-}
-
-type NullEmailProviderConfiguration = {
-  mailboxStates: MailboxState[]
-}
-
 export class EmailProvider {
   static async create(config: FastmailConfig) {
     const session = await FastmailSession.create(config.token)
     return new this(new FastmailAccount(session))
   }
 
-  static createNull({
-    mailboxStates,
-  }: NullEmailProviderConfiguration = defaultNullConfiguration) {
+  static createNull(config?: { mailboxStates?: MailboxState[] }) {
+    const { mailboxStates } = { mailboxStates: [], ...config }
     return new this(new NullEmailAccount(mailboxStates.slice()))
   }
 
