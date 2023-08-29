@@ -20,8 +20,8 @@ export class ContactsGroup extends TinyType {
     super()
   }
 
-  public withId(id: string) {
-    return new ContactsGroup(this.name, new UniqueIdentifier(id))
+  public withId(id: string | UniqueIdentifier) {
+    return new ContactsGroup(this.name, UniqueIdentifier.of(id))
   }
 
   public withName(name: ContactsGroupName) {

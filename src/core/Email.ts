@@ -3,8 +3,8 @@ import { EmailAddress } from "./EmailAddress"
 import { EmailSubject } from "./EmailSubject"
 
 export class Email extends TinyType {
-  static from(sender: EmailAddress) {
-    return new Email(sender, EmailSubject.unknown())
+  static from(sender: string | EmailAddress) {
+    return new Email(EmailAddress.of(sender), EmailSubject.unknown())
   }
 
   private constructor(

@@ -1,6 +1,7 @@
 spec: 
   - src/**/*.spec.ts
 watch-files:
+  - src/**/*.spec.ts
   - src
   - features
 require:
