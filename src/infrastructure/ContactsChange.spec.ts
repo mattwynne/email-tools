@@ -8,13 +8,13 @@ describe(ContactsChange.name, () => {
     it("is equal to another instance with the same name", () => {
       assertThat(
         ContactsChange.of({
-          action: "add",
+          action: "add-to-group",
           emailAddress: EmailAddress.of("someone@example.com"),
           group: ContactsGroupName.of("Friends"),
         }),
         equalTo(
           ContactsChange.of({
-            action: "add",
+            action: "add-to-group",
             emailAddress: EmailAddress.of("someone@example.com"),
             group: ContactsGroupName.of("Friends"),
           })

@@ -7,8 +7,11 @@ export class ContactsChange {
   }
 
   private constructor(
-    public readonly action: "add" | "remove",
-    public readonly emailAddress: EmailAddress,
-    public readonly group: ContactsGroupName
+    public readonly action:
+      | "add-to-group"
+      | "remove-from-group"
+      | "create-group",
+    public readonly emailAddress?: EmailAddress,
+    public readonly group?: ContactsGroupName
   ) {}
 }

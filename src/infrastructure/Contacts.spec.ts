@@ -15,43 +15,65 @@ import { EmailAddress } from "../core/EmailAddress"
 import { Contacts, FastmailCredentials } from "./Contacts"
 import { ContactsChange } from "./ContactsChange"
 
-describe(Contacts.name, () => {
+describe.only(Contacts.name, () => {
   describe("in null mode", () => {
-    it("throws an error when creating a group fails", async () => {
-      const contacts = Contacts.createNull()
-      await promiseThat(
-        contacts.createGroup(ContactsGroupName.of("Fails")),
-        rejected(hasProperty("message", equalTo("Failure")))
-      )
-    })
-
-    it("throws an error when creating a contact fails", async () => {
-      const contacts = Contacts.createNull()
-      await promiseThat(
-        contacts.createContact(EmailAddress.of("fail@example.com")),
-        rejected(hasProperty("message", equalTo("Failure")))
-      )
-    })
-
-    it("emits a change event when a contact is added to a group", async () => {
-      const from = EmailAddress.of("somebody@example.com")
-      const group = ContactsGroupName.of("Friends")
-      const provider = Contacts.createNull({
-        groups: [ContactsGroup.named(group).withId("1")],
-        contacts: [Contact.withEmail(from).withId("2")],
+    describe("creating groups", () => {
+      it("throws an error when creating a group fails", async () => {
+        const contacts = Contacts.createNull()
+        await promiseThat(
+          contacts.createGroup(ContactsGroupName.of("Fails")),
+          rejected(hasProperty("message", equalTo("Failure")))
+        )
       })
-      const changes = provider.trackChanges()
-      await provider.addToGroup(from, group)
-      assertThat(
-        changes.data,
-        equalTo([
-          ContactsChange.of({
-            action: "add",
-            emailAddress: from,
-            group,
-          }),
-        ])
-      )
+
+      it("emits an event when a group is created", async () => {
+        const contacts = Contacts.createNull()
+        const changes = contacts.trackChanges()
+        const group = ContactsGroupName.of("Friends")
+        await contacts.createGroup(group)
+        assertThat(
+          changes.data,
+          equalTo([
+            ContactsChange.of({
+              action: "create-group",
+              group,
+            }),
+          ])
+        )
+      })
+    })
+
+    describe("creating contacts", () => {
+      it("throws an error when creating a contact fails", async () => {
+        const contacts = Contacts.createNull()
+        await promiseThat(
+          contacts.createContact(EmailAddress.of("fail@example.com")),
+          rejected(hasProperty("message", equalTo("Failure")))
+        )
+      })
+    })
+
+    describe("adding a contact to a group", () => {
+      it("emits a change event when a contact is added to a group", async () => {
+        const from = EmailAddress.of("somebody@example.com")
+        const group = ContactsGroupName.of("Friends")
+        const provider = Contacts.createNull({
+          groups: [ContactsGroup.named(group).withId("1")],
+          contacts: [Contact.withEmail(from).withId("2")],
+        })
+        const changes = provider.trackChanges()
+        await provider.addToGroup(from, group)
+        assertThat(
+          changes.data,
+          equalTo([
+            ContactsChange.of({
+              action: "add-to-group",
+              emailAddress: from,
+              group,
+            }),
+          ])
+        )
+      })
     })
 
     it("returns stubbed groups", async () => {
