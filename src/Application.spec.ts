@@ -7,9 +7,9 @@ import { EmailSubject } from "./core/EmailSubject"
 import { Mailbox } from "./core/Mailbox"
 import { MailboxState } from "./core/MailboxState"
 import { Contacts } from "./infrastructure/Contacts"
-import { ContactsChange } from "./infrastructure/ContactsChange"
-import { EmailProvider } from "./infrastructure/EmailProvider"
 import { UniqueIdentifier } from "./core/UniqueIdentifier"
+import { ContactsChange } from "./infrastructure/Contacts/ContactsChange"
+import { EmailProvider } from "./infrastructure/Emails/EmailProvider"
 
 describe(Application.name, () => {
   describe("processing new mailbox state", () => {

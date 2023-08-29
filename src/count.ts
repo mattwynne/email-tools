@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
+import fs from "fs/promises"
+import { MailboxName } from "./core/MailboxName"
 import {
   FastmailAccount,
   FastmailSession,
-} from "./infrastructure/EmailProvider"
-import { MailboxName } from "./core/MailboxName"
-import fs from "fs/promises"
+} from "./infrastructure/Emails/EmailProvider"
 
 const run = async () => {
   const token = process.env.FASTMAIL_API_TOKEN

@@ -1,13 +1,13 @@
-import { Email } from "../core/Email"
-import { MailboxState } from "../core/MailboxState"
-import { Mailbox } from "../core/Mailbox"
-import { EmailAddress } from "../core/EmailAddress"
-import { MailboxName } from "../core/MailboxName"
-import { EmailProvider, FastmailConfig, FastmailSession } from "./EmailProvider"
-import { assertThat, equalTo, promiseThat } from "hamjest"
-import { EmailSubject } from "../core/EmailSubject"
-import { eventually } from "ts-eventually"
+import { assertThat, equalTo } from "hamjest"
 import nodemailer from "nodemailer"
+import { eventually } from "ts-eventually"
+import { Email } from "../../core/Email"
+import { EmailAddress } from "../../core/EmailAddress"
+import { EmailSubject } from "../../core/EmailSubject"
+import { Mailbox } from "../../core/Mailbox"
+import { MailboxName } from "../../core/MailboxName"
+import { MailboxState } from "../../core/MailboxState"
+import { EmailProvider, FastmailConfig, FastmailSession } from "./EmailProvider"
 
 describe(EmailProvider.name, () => {
   describe("null mode", () => {

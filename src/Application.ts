@@ -1,6 +1,6 @@
 import { Contacts } from "./infrastructure/Contacts"
 import { MailboxState } from "./core/MailboxState"
-import { EmailProvider } from "./infrastructure/EmailProvider"
+import { EmailProvider } from "./infrastructure/Emails/EmailProvider"
 
 export class Application {
   private currentState?: MailboxState
