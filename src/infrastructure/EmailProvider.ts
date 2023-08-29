@@ -170,7 +170,6 @@ export class FastmailSession {
       throw new Error(await response.text())
     }
     const result = await response.json()
-    // console.log(util.inspect({ methodCalls, result }, { depth: Infinity }))
     return result["methodResponses"]
   }
 }
