@@ -1,21 +1,20 @@
 import {
-  Given,
-  When,
-  Then,
-  defineParameterType,
   Before,
+  Given,
+  Then,
+  When,
+  defineParameterType,
 } from "@cucumber/cucumber"
-import { assertThat, containsInAnyOrder, equalTo } from "hamjest"
-import { MailboxName } from "../../src/core/MailboxName"
-import { ContactsGroupName } from "../../src/core/ContactsGroup"
-import { EmailAddress } from "../../src/core/EmailAddress"
+import { assertThat, equalTo } from "hamjest"
 import { Application } from "../../src/Application"
-import { MailboxState } from "../../src/core/MailboxState"
-import { Mailbox } from "../../src/core/Mailbox"
+import { ContactsGroupName } from "../../src/core/ContactsGroup"
 import { Email } from "../../src/core/Email"
-import { Contacts } from "../../src/infrastructure/Contacts"
-import { ContactsChange } from "../../src/infrastructure/Contacts/ContactsChange"
-import { EmailProvider } from "../../src/infrastructure/Emails/EmailProvider"
+import { EmailAddress } from "../../src/core/EmailAddress"
+import { Mailbox } from "../../src/core/Mailbox"
+import { MailboxName } from "../../src/core/MailboxName"
+import { MailboxState } from "../../src/core/MailboxState"
+import { Contacts, ContactsChange } from "../../src/infrastructure/Contacts"
+import { EmailProvider } from "../../src/infrastructure/Emails"
 
 defineParameterType({
   name: "mailbox",
