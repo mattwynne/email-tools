@@ -7,7 +7,8 @@ import { EmailSubject } from "../../core/EmailSubject"
 import { Mailbox } from "../../core/Mailbox"
 import { MailboxName } from "../../core/MailboxName"
 import { MailboxState } from "../../core/MailboxState"
-import { EmailProvider, FastmailConfig, FastmailSession } from "./EmailProvider"
+import { EmailProvider } from "./EmailProvider"
+import { FastmailConfig, FastmailSession } from "./FastmailSession"
 
 describe(EmailProvider.name, () => {
   describe("null mode", () => {
