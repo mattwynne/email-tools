@@ -1,5 +1,5 @@
-import { ContactsGroupName } from "../core/ContactsGroup"
-import { EmailAddress } from "../core/EmailAddress"
+import { ContactsGroupName } from "../../core/ContactsGroup"
+import { EmailAddress } from "../../core/EmailAddress"
 
 export class ContactsChange {
   public static of({ action, emailAddress, group }: ContactsChange) {
@@ -10,7 +10,8 @@ export class ContactsChange {
     public readonly action:
       | "add-to-group"
       | "remove-from-group"
-      | "create-group",
+      | "create-group"
+      | "create-contact",
     public readonly emailAddress?: EmailAddress,
     public readonly group?: ContactsGroupName
   ) {}

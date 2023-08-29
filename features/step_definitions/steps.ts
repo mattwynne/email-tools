@@ -8,15 +8,14 @@ import {
 import { assertThat, containsInAnyOrder, equalTo } from "hamjest"
 import { MailboxName } from "../../src/core/MailboxName"
 import { ContactsGroupName } from "../../src/core/ContactsGroup"
-import { Contacts } from "../../src/infrastructure/Contacts"
 import { EmailAddress } from "../../src/core/EmailAddress"
-import { ContactsChange } from "../../src/infrastructure/ContactsChange"
 import { Application } from "../../src/Application"
 import { MailboxState } from "../../src/core/MailboxState"
 import { Mailbox } from "../../src/core/Mailbox"
 import { Email } from "../../src/core/Email"
-import { EmailProvider } from "../../src/infrastructure/EmailProvider"
-import { EmailSubject } from "../../src/core/EmailSubject"
+import { Contacts } from "../../src/infrastructure/Contacts"
+import { ContactsChange } from "../../src/infrastructure/Contacts/ContactsChange"
+import { EmailProvider } from "../../src/infrastructure/Emails/EmailProvider"
 
 defineParameterType({
   name: "mailbox",

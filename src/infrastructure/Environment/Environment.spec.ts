@@ -5,7 +5,7 @@ import {
   matchesPattern,
   throws,
 } from "hamjest"
-import { Environment } from "./Environment"
+import { Environment } from "."
 
 describe(Environment.name, () => {
   context("null mode", () => {

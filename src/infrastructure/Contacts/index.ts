@@ -1,12 +1,12 @@
 import EventEmitter from "events"
-import { DAVClient, DAVVCard } from "tsdav"
-import { ContactsGroup, ContactsGroupName } from "../core/ContactsGroup"
-import { EmailAddress } from "../core/EmailAddress"
+import { DAVVCard } from "tsdav"
 import { ContactsChange } from "./ContactsChange"
-import { Environment } from "./Environment"
-import { OutputTracker } from "./OutputTracker"
+import { Credentials, Fastmail } from "./Fastmail"
 import { parseDavContact, parseDavGroup } from "./parseDav"
-import { Contact } from "../core/Contact"
+import { Contact } from "../../core/Contact"
+import { ContactsGroup, ContactsGroupName } from "../../core/ContactsGroup"
+import { EmailAddress } from "../../core/EmailAddress"
+import { OutputTracker } from "../OutputTracker"
 
 export const CHANGE_EVENT = "change"
 
@@ -60,26 +60,6 @@ class NullDavAddressBook implements DavAddressBook {
   public url: string = "https://whatever.com"
 }
 
-interface Credentials {
-  username: string
-  password: string
-}
-
-export class FastmailCredentials implements Credentials {
-  static create(env: Environment = Environment.create()) {
-    return new this(env.FASTMAIL_USERNAME, env.FASTMAIL_DAV_PASSWORD)
-  }
-
-  static createNull(env: Environment = Environment.createNull()) {
-    return this.create(env)
-  }
-
-  private constructor(
-    public readonly username: string,
-    public readonly password: string
-  ) {}
-}
-
 export class Contacts {
   private readonly emitter = new EventEmitter()
 
@@ -127,16 +107,7 @@ export class Contacts {
   }
 
   static async create(config: Credentials): Promise<Contacts> {
-    const dav = new DAVClient({
-      authMethod: "Basic",
-      serverUrl: `https://carddav.fastmail.com/dav/addressbooks/user/${config.username}/Default`,
-      credentials: {
-        username: config.username.replace("@", "+Default@"),
-        password: config.password,
-      },
-      defaultAccountType: "carddav",
-    })
-    await dav.login()
+    const dav = await Fastmail.createDavClient(config)
     const addressBooks = await dav.fetchAddressBooks()
     return new this(dav, addressBooks[0])
   }
@@ -171,7 +142,7 @@ export class Contacts {
     })
   }
 
-  async createContact(email: EmailAddress) {
+  async createContact(emailAddress: EmailAddress) {
     const uuid = crypto.randomUUID()
     const rev = new Date().toISOString()
     const result = await this.dav.createVCard({
@@ -180,7 +151,7 @@ export class Contacts {
         "BEGIN:VCARD\r\n" +
         "VERSION:3.0\r\n" +
         `UID:${uuid}\r\n` +
-        `EMAIL:${email}\r\n` +
+        `EMAIL:${emailAddress}\r\n` +
         `N:\r\n` +
         `FN:\r\n` +
         `REV:${rev}\r\n` +
@@ -190,7 +161,10 @@ export class Contacts {
     if (!result.ok) {
       throw new Error(result.statusText)
     }
-    // TODO: raise event too
+    this.emit({
+      action: "create-contact",
+      emailAddress,
+    })
   }
 
   async groups(): Promise<ContactsGroup[]> {

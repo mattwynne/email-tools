@@ -9,13 +9,14 @@ import {
   rejected,
 } from "hamjest"
 import { DAVClient } from "tsdav"
-import { Contact } from "../core/Contact"
-import { ContactsGroup, ContactsGroupName } from "../core/ContactsGroup"
-import { EmailAddress } from "../core/EmailAddress"
-import { Contacts, FastmailCredentials } from "./Contacts"
+import { Contact } from "../../core/Contact"
+import { ContactsGroup, ContactsGroupName } from "../../core/ContactsGroup"
+import { EmailAddress } from "../../core/EmailAddress"
+import { Contacts } from "."
+import { Fastmail, FastmailCredentials } from "./Fastmail"
 import { ContactsChange } from "./ContactsChange"
 
-describe.only(Contacts.name, () => {
+describe(Contacts.name, () => {
   describe("in null mode", () => {
     describe("creating groups", () => {
       it("throws an error when creating a group fails", async () => {
@@ -49,6 +50,22 @@ describe.only(Contacts.name, () => {
         await promiseThat(
           contacts.createContact(EmailAddress.of("fail@example.com")),
           rejected(hasProperty("message", equalTo("Failure")))
+        )
+      })
+
+      it("emits an event", async () => {
+        const contacts = Contacts.createNull()
+        const changes = contacts.trackChanges()
+        const emailAddress = EmailAddress.of("test@example.com")
+        await contacts.createContact(emailAddress)
+        assertThat(
+          changes.data,
+          equalTo([
+            ContactsChange.of({
+              action: "create-contact",
+              emailAddress,
+            }),
+          ])
         )
       })
     })
@@ -111,16 +128,7 @@ describe.only(Contacts.name, () => {
 
     beforeEach(async () => {
       const config = FastmailCredentials.create()
-      dav = new DAVClient({
-        authMethod: "Basic",
-        serverUrl: `https://carddav.fastmail.com/dav/addressbooks/user/${config.username}/Default`,
-        credentials: {
-          username: config.username.replace("@", "+Default@"),
-          password: config.password,
-        },
-        defaultAccountType: "carddav",
-      })
-      await dav.login()
+      dav = await Fastmail.createDavClient(config)
       const books = await dav.fetchAddressBooks()
       const cards = await dav.fetchVCards({ addressBook: books[0] })
       for (const vCard of cards) {
