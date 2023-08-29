@@ -1,16 +1,14 @@
 import { assertThat, equalTo, isEmpty } from "hamjest"
-import { MailboxState } from "./core/MailboxState"
 import { Application } from "./Application"
-import { Contacts } from "./infrastructure/Contacts"
-import { Mailbox } from "./core/Mailbox"
-import { MailboxName } from "./core/MailboxName"
+import { ContactsGroupName } from "./core/ContactsGroup"
 import { Email } from "./core/Email"
-import { ContactsChange } from "./infrastructure/ContactsChange"
-import { ContactsGroup } from "./core/ContactsGroup"
-import assert from "assert"
-import { EmailProvider } from "./infrastructure/EmailProvider"
 import { EmailAddress } from "./core/EmailAddress"
 import { EmailSubject } from "./core/EmailSubject"
+import { Mailbox } from "./core/Mailbox"
+import { MailboxState } from "./core/MailboxState"
+import { Contacts } from "./infrastructure/Contacts"
+import { ContactsChange } from "./infrastructure/ContactsChange"
+import { EmailProvider } from "./infrastructure/EmailProvider"
 
 describe(Application.name, () => {
   describe("processing new mailbox state", () => {
@@ -54,7 +52,7 @@ describe(Application.name, () => {
             ContactsChange.of({
               action: "add",
               emailAddress: theEmail.from,
-              group: ContactsGroup.named("Paperwork"),
+              group: ContactsGroupName.of("Paperwork"),
             }),
           ])
         )

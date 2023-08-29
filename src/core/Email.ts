@@ -1,7 +1,6 @@
 import { TinyType } from "tiny-types"
 import { EmailAddress } from "./EmailAddress"
 import { EmailSubject } from "./EmailSubject"
-import { P } from "pino"
 
 export class Email extends TinyType {
   static from(sender: EmailAddress) {

@@ -1,7 +1,30 @@
-import { TinyTypeOf } from "tiny-types"
+import { TinyType, TinyTypeOf } from "tiny-types"
+import { UniqueIdentifier } from "./UniqueIdentifier"
 
-export class ContactsGroup extends TinyTypeOf<string>() {
-  static named(value: string) {
+export class ContactsGroupName extends TinyTypeOf<string>() {
+  static of(value: string | ContactsGroupName) {
+    if (typeof value !== "string") return value
     return new this(value)
+  }
+}
+
+export class ContactsGroup extends TinyType {
+  static named(name: string | ContactsGroupName) {
+    return new this(ContactsGroupName.of(name), UniqueIdentifier.unknown())
+  }
+
+  private constructor(
+    public readonly name: ContactsGroupName,
+    public readonly id: UniqueIdentifier
+  ) {
+    super()
+  }
+
+  public withId(id: string) {
+    return new ContactsGroup(this.name, new UniqueIdentifier(id))
+  }
+
+  public withName(name: ContactsGroupName) {
+    return new ContactsGroup(name, this.id)
   }
 }

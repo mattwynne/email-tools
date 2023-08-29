@@ -7,7 +7,7 @@ import {
 } from "@cucumber/cucumber"
 import { assertThat, containsInAnyOrder, equalTo } from "hamjest"
 import { MailboxName } from "../../src/core/MailboxName"
-import { ContactsGroup } from "../../src/core/ContactsGroup"
+import { ContactsGroupName } from "../../src/core/ContactsGroup"
 import { Contacts } from "../../src/infrastructure/Contacts"
 import { EmailAddress } from "../../src/core/EmailAddress"
 import { ContactsChange } from "../../src/infrastructure/ContactsChange"
@@ -33,7 +33,7 @@ defineParameterType({
 defineParameterType({
   name: "contacts group",
   regexp: /(\w+) contacts group/,
-  transformer: (name) => ContactsGroup.named(name),
+  transformer: (name) => ContactsGroupName.of(name),
 })
 
 Given(
