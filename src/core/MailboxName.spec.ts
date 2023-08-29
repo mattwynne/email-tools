@@ -1,6 +1,6 @@
 import { assertThat, equalTo, falsey, truthy } from "hamjest"
 import { MailboxName } from "./MailboxName"
-import { ContactsGroup } from "./ContactsGroup"
+import { ContactsGroupName } from "./ContactsGroup"
 
 describe(MailboxName.name, () => {
   describe("mapping to contacts group", () => {
@@ -8,7 +8,7 @@ describe(MailboxName.name, () => {
       const mailbox = MailboxName.of("Inbox/Paperwork")
       assertThat(
         mailbox.contactsGroup,
-        equalTo(ContactsGroup.named("Paperwork"))
+        equalTo(ContactsGroupName.of("Paperwork"))
       )
     })
   })

@@ -1,4 +1,4 @@
-import { ContactsGroup } from "./ContactsGroup"
+import { ContactsGroupName } from "./ContactsGroup"
 import { TinyTypeOf } from "tiny-types"
 
 export class MailboxName extends TinyTypeOf<string>() {
@@ -7,8 +7,8 @@ export class MailboxName extends TinyTypeOf<string>() {
     return new this(name)
   }
 
-  public get contactsGroup(): ContactsGroup {
-    return ContactsGroup.named(this.value.replace(/^Inbox\//, ""))
+  public get contactsGroup(): ContactsGroupName {
+    return ContactsGroupName.of(this.value.replace(/^Inbox\//, ""))
   }
 
   public toString() {

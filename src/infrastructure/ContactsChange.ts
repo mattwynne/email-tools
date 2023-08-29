@@ -1,4 +1,4 @@
-import { ContactsGroup } from "../core/ContactsGroup"
+import { ContactsGroupName } from "../core/ContactsGroup"
 import { EmailAddress } from "../core/EmailAddress"
 
 export class ContactsChange {
@@ -9,6 +9,6 @@ export class ContactsChange {
   private constructor(
     public readonly action: "add" | "remove",
     public readonly emailAddress: EmailAddress,
-    public readonly group: ContactsGroup
+    public readonly group: ContactsGroupName
   ) {}
 }

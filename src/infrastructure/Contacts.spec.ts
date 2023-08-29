@@ -6,19 +6,22 @@ import {
   promiseThat,
   hasProperty,
   matchesPattern,
+  containsInAnyOrder,
 } from "hamjest"
-import { ContactsGroup } from "../core/ContactsGroup"
+import { ContactsGroup, ContactsGroupName } from "../core/ContactsGroup"
 import { EmailAddress } from "../core/EmailAddress"
 import { Contacts, FastmailCredentials } from "./Contacts"
 import { ContactsChange } from "./ContactsChange"
 import { DAVClient, DAVNamespaceShort } from "tsdav"
+import { equal } from "assert"
+import { Contact } from "../core/Contact"
 
 describe(Contacts.name, () => {
   describe("in null mode", () => {
     it("throws an error when creating a group fails", async () => {
       const contacts = Contacts.createNull()
       await promiseThat(
-        contacts.createGroup(ContactsGroup.named("Fails")),
+        contacts.createGroup(ContactsGroupName.of("Fails")),
         rejected(hasProperty("message", equalTo("Failure")))
       )
     })
@@ -31,21 +34,51 @@ describe(Contacts.name, () => {
       )
     })
 
-    it("emits a change event when a contact is added to a group", () => {
-      const provider = Contacts.createNull()
+    it("emits a change event when a contact is added to a group", async () => {
       const from = EmailAddress.of("somebody@example.com")
-      const contactsGroup = ContactsGroup.named("Friends")
+      const group = ContactsGroupName.of("Friends")
+      const provider = Contacts.createNull({
+        groups: [ContactsGroup.named(group).withId("1")],
+        contacts: [Contact.withEmail(from).withId("2")],
+      })
       const changes = provider.trackChanges()
-      provider.addToGroup(from, contactsGroup)
+      await provider.addToGroup(from, group)
       assertThat(
         changes.data,
         equalTo([
           ContactsChange.of({
             action: "add",
             emailAddress: from,
-            group: contactsGroup,
+            group,
           }),
         ])
+      )
+    })
+
+    it("returns stubbed groups", async () => {
+      const provider = Contacts.createNull({
+        groups: [
+          ContactsGroup.named("Friends").withId("1"),
+          ContactsGroup.named("Family").withId("2"),
+        ],
+        contacts: [],
+      })
+      const groups = await provider.groups()
+      assertThat(
+        groups.map((group) => group.name.value),
+        containsInAnyOrder("Friends", "Family")
+      )
+    })
+
+    it("returns stubbed contacts", async () => {
+      const provider = Contacts.createNull({
+        groups: [],
+        contacts: [Contact.withEmail("test@test.com").withId("1")],
+      })
+      const actual = await provider.contacts()
+      assertThat(
+        actual.map((contact) => contact.email.value),
+        containsInAnyOrder("test@test.com")
       )
     })
   })
@@ -69,7 +102,6 @@ describe(Contacts.name, () => {
       await dav.login()
       const books = await dav.fetchAddressBooks()
       const cards = await dav.fetchVCards({ addressBook: books[0] })
-      console.log(cards)
       for (const vCard of cards) {
         await dav.deleteVCard({ vCard })
       }
@@ -78,7 +110,7 @@ describe(Contacts.name, () => {
     it("creates a group", async () => {
       const config = FastmailCredentials.create()
       const contacts = await Contacts.create(config)
-      contacts.createGroup(ContactsGroup.named("Feed"))
+      contacts.createGroup(ContactsGroupName.of("Feed"))
       const books = await dav.fetchAddressBooks()
       const cards = await dav.fetchVCards({ addressBook: books[0] })
       assertThat(cards.length, equalTo(1))
@@ -104,14 +136,43 @@ describe(Contacts.name, () => {
     it("lists groups", async () => {
       const config = FastmailCredentials.create()
       const contacts = await Contacts.create(config)
-      await contacts.createGroup(ContactsGroup.named("Friends"))
-      await contacts.createGroup(ContactsGroup.named("Family"))
+      await contacts.createGroup(ContactsGroupName.of("Friends"))
+      await contacts.createGroup(ContactsGroupName.of("Family"))
       await contacts.createContact(EmailAddress.of("test@test.com"))
       const groups = await contacts.groups()
       assertThat(groups.length, equalTo(2))
+      assertThat(
+        groups.map((group) => group.name.value),
+        containsInAnyOrder("Friends", "Family")
+      )
     })
 
-    it("adds a contact to an existing group")
+    it("lists contacts", async () => {
+      const config = FastmailCredentials.create()
+      const contacts = await Contacts.create(config)
+      await contacts.createGroup(ContactsGroupName.of("Friends"))
+      await contacts.createContact(EmailAddress.of("test@test.com"))
+      await contacts.createContact(EmailAddress.of("someone@test.com"))
+      const people = await contacts.contacts()
+      assertThat(people.length, equalTo(2))
+      assertThat(
+        people.map((person) => person.email.value),
+        containsInAnyOrder("test@test.com", "someone@test.com")
+      )
+    })
+
+    it("adds a contact to an existing group", async () => {
+      const config = FastmailCredentials.create()
+      const contacts = await Contacts.create(config)
+      const group = ContactsGroupName.of("Friends")
+      const email = EmailAddress.of("test@test.com")
+      await contacts.createGroup(group)
+      await contacts.createContact(email)
+      await contacts.addToGroup(email, group)
+      const books = await dav.fetchAddressBooks()
+      const cards = await dav.fetchVCards({ addressBook: books[0] })
+      console.log(cards)
+    })
 
     it("emits a change event when a contact is added to a group")
   })

@@ -1,11 +1,12 @@
 import EventEmitter from "events"
-import { DAVClient } from "tsdav"
-import { ContactsGroup } from "../core/ContactsGroup"
+import { DAVClient, DAVVCard } from "tsdav"
+import { ContactsGroup, ContactsGroupName } from "../core/ContactsGroup"
 import { EmailAddress } from "../core/EmailAddress"
 import { ContactsChange } from "./ContactsChange"
 import { Environment } from "./Environment"
 import { OutputTracker } from "./OutputTracker"
-import { parseDavGroup } from "./parseDavGroup"
+import { parseDavContact, parseDavGroup } from "./parseDav"
+import { Contact } from "../core/Contact"
 
 export const CHANGE_EVENT = "change"
 
@@ -29,6 +30,8 @@ type DavResponse = {
 type DavObject = { data?: string }
 
 class NullDavClient implements DavClient {
+  constructor(public readonly config: { cards: DAVVCard[] }) {}
+
   public async createVCard({ vCardString }: { vCardString: string }) {
     if (vCardString.match(/fail/i)) {
       return Promise.resolve({ ok: false, statusText: "Failure" })
@@ -37,7 +40,7 @@ class NullDavClient implements DavClient {
   }
 
   public async fetchVCards() {
-    return Promise.resolve([])
+    return Promise.resolve(this.config.cards)
   }
 }
 
@@ -68,8 +71,47 @@ export class FastmailCredentials implements Credentials {
 export class Contacts {
   private readonly emitter = new EventEmitter()
 
-  static createNull() {
-    return new this(new NullDavClient(), new NullDavAddressBook())
+  static createNull(
+    config: { groups: ContactsGroup[]; contacts: Contact[] } = {
+      groups: [],
+      contacts: [],
+    }
+  ) {
+    const addressBook = new NullDavAddressBook()
+    const cards = config.groups
+      .map((group) => ({
+        addressBook,
+        data:
+          "BEGIN:VCARD\r\n" +
+          "VERSION:3.0\r\n" +
+          `UID:${group.id.value}\r\n` +
+          `N:${group.name.value}\r\n` +
+          `FN:${group.name.value}\r\n` +
+          "X-ADDRESSBOOKSERVER-KIND:group\r\n" +
+          `REV:${new Date()}\r\n` +
+          "END:VCARD",
+        filename: `${group.id.value}.vcf`,
+        etag: "an-etag",
+        url: "a-url",
+      }))
+      .concat(
+        config.contacts.map((contact) => ({
+          addressBook,
+          data:
+            "BEGIN:VCARD\r\n" +
+            "VERSION:3.0\r\n" +
+            `UID:${contact.id.value}\r\n` +
+            `EMAIL:${contact.email.value}\r\n` +
+            `N:\r\n` +
+            `FN:\r\n` +
+            `REV:${new Date()}\r\n` +
+            "END:VCARD",
+          filename: `${contact.id.value}.vcf`,
+          etag: "an-etag",
+          url: "a-url",
+        }))
+      )
+    return new this(new NullDavClient({ cards }), addressBook)
   }
 
   static async create(config: Credentials): Promise<Contacts> {
@@ -92,7 +134,7 @@ export class Contacts {
     private readonly addressBook: DavAddressBook
   ) {}
 
-  async createGroup(contactsGroup: ContactsGroup) {
+  async createGroup(contactsGroup: ContactsGroupName) {
     const uuid = crypto.randomUUID()
     const rev = new Date().toISOString()
     const result = await this.dav.createVCard({
@@ -137,6 +179,7 @@ export class Contacts {
   }
 
   async groups(): Promise<ContactsGroup[]> {
+    // TODO: figure out how to use filters in the query for efficiency?
     const cards = await this.dav.fetchVCards({ addressBook: this.addressBook })
     const groups = cards.filter((card) =>
       card.data?.match(/X-ADDRESSBOOKSERVER-KIND:group\r\n/)
@@ -144,13 +187,47 @@ export class Contacts {
     return groups.map((group) => parseDavGroup(group.data || ""))
   }
 
-  async addToGroup(from: EmailAddress, contactGroup: ContactsGroup) {
+  async contacts(): Promise<Contact[]> {
+    const cards = await this.dav.fetchVCards({ addressBook: this.addressBook })
+    const contacts = cards.filter(
+      (card) => !card.data?.match(/X-ADDRESSBOOKSERVER-KIND:group\r\n/)
+    )
+    return contacts.map((contact) => parseDavContact(contact.data || ""))
+  }
+
+  async addToGroup(from: EmailAddress, groupName: ContactsGroupName) {
+    const group = (await this.groups()).find((group) =>
+      group.name.equals(groupName)
+    )
+    if (!group) throw new Error("Group does not exist!")
+    const contact = (await this.contacts()).find((contact) =>
+      contact.email.equals(from)
+    )
+    if (!contact) throw new Error("Contact does not exist!")
+    const rev = new Date().toISOString()
+    const result = await this.dav.createVCard({
+      addressBook: this.addressBook,
+      vCardString:
+        "BEGIN:VCARD\r\n" +
+        "VERSION:3.0\r\n" +
+        `UID:${group.id.value}\r\n` +
+        `N:${groupName.value}\r\n` +
+        `FN:${groupName.value}\r\n` +
+        "X-ADDRESSBOOKSERVER-KIND:group\r\n" +
+        `X-ADDRESSBOOKSERVER-MEMBER:urn:uuid:${contact.id}\r\n` +
+        `REV:${rev}\r\n` +
+        "END:VCARD",
+      filename: `${group.id.value}.vcf`,
+    })
+    if (!result.ok) {
+      throw new Error(result.statusText)
+    }
     this.emitter.emit(
       CHANGE_EVENT,
       ContactsChange.of({
         action: "add",
         emailAddress: from,
-        group: contactGroup,
+        group: groupName,
       })
     )
   }

@@ -1,7 +1,7 @@
 import { assertThat, equalTo } from "hamjest"
 import { ContactsChange } from "./ContactsChange"
 import { EmailAddress } from "../core/EmailAddress"
-import { ContactsGroup } from "../core/ContactsGroup"
+import { ContactsGroupName } from "../core/ContactsGroup"
 
 describe(ContactsChange.name, () => {
   describe("equality", () => {
@@ -10,13 +10,13 @@ describe(ContactsChange.name, () => {
         ContactsChange.of({
           action: "add",
           emailAddress: EmailAddress.of("someone@example.com"),
-          group: ContactsGroup.named("Friends"),
+          group: ContactsGroupName.of("Friends"),
         }),
         equalTo(
           ContactsChange.of({
             action: "add",
             emailAddress: EmailAddress.of("someone@example.com"),
-            group: ContactsGroup.named("Friends"),
+            group: ContactsGroupName.of("Friends"),
           })
         )
       )
