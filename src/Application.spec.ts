@@ -2,14 +2,11 @@ import { assertThat, equalTo, isEmpty } from "hamjest"
 import { Application } from "./Application"
 import { ContactsGroup, ContactsGroupName } from "./core/ContactsGroup"
 import { Email } from "./core/Email"
-import { EmailAddress } from "./core/EmailAddress"
-import { EmailSubject } from "./core/EmailSubject"
 import { Mailbox } from "./core/Mailbox"
 import { MailboxState } from "./core/MailboxState"
-import { Contacts } from "./infrastructure/Contacts"
 import { UniqueIdentifier } from "./core/UniqueIdentifier"
-import { ContactsChange } from "./infrastructure/Contacts/ContactsChange"
-import { EmailProvider } from "./infrastructure/Emails/EmailProvider"
+import { Contacts, ContactsChange } from "./infrastructure/Contacts"
+import { EmailProvider } from "./infrastructure/Emails"
 
 describe(Application.name, () => {
   describe("processing new mailbox state", () => {

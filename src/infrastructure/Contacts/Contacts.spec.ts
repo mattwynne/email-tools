@@ -12,7 +12,7 @@ import { DAVClient } from "tsdav"
 import { Contact } from "../../core/Contact"
 import { ContactsGroup, ContactsGroupName } from "../../core/ContactsGroup"
 import { EmailAddress } from "../../core/EmailAddress"
-import { Contacts } from "."
+import { Contacts } from "./Contacts"
 import { Fastmail, FastmailCredentials } from "./Fastmail"
 import { ContactsChange } from "./ContactsChange"
 
