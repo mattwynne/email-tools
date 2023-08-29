@@ -1,7 +1,5 @@
 import { assertThat, equalTo } from "hamjest"
-import { Email } from "./Email"
-import { EmailAddress } from "./EmailAddress"
-import { EmailSubject } from "./EmailSubject"
+import { Email, EmailAddress, EmailSubject } from "."
 
 describe(Email.name, () => {
   it("renders to a string", () => {

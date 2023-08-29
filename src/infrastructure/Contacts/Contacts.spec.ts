@@ -9,12 +9,15 @@ import {
   rejected,
 } from "hamjest"
 import { DAVClient } from "tsdav"
-import { Contact } from "../../core/Contact"
-import { ContactsGroup, ContactsGroupName } from "../../core/ContactsGroup"
-import { EmailAddress } from "../../core/EmailAddress"
 import { Contacts } from "./Contacts"
 import { Fastmail, FastmailCredentials } from "./Fastmail"
 import { ContactsChange } from "./ContactsChange"
+import {
+  ContactsGroupName,
+  EmailAddress,
+  ContactsGroup,
+  Contact,
+} from "../../Core"
 
 describe(Contacts.name, () => {
   describe("in null mode", () => {

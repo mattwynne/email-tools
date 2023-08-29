@@ -1,5 +1,5 @@
 import { TinyType, TinyTypeOf } from "tiny-types"
-import { UniqueIdentifier } from "./UniqueIdentifier"
+import { UniqueIdentifier } from "."
 
 export class ContactsGroupName extends TinyTypeOf<string>() {
   static of(value: string | ContactsGroupName) {

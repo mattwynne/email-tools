@@ -1,6 +1,5 @@
 import { assertThat, equalTo, falsey, truthy } from "hamjest"
-import { MailboxName } from "./MailboxName"
-import { ContactsGroupName } from "./ContactsGroup"
+import { ContactsGroupName, MailboxName } from "."
 
 describe(MailboxName.name, () => {
   describe("mapping to contacts group", () => {

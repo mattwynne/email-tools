@@ -1,14 +1,16 @@
 import { assertThat, equalTo } from "hamjest"
 import nodemailer from "nodemailer"
 import { eventually } from "ts-eventually"
-import { Email } from "../../core/Email"
-import { EmailAddress } from "../../core/EmailAddress"
-import { EmailSubject } from "../../core/EmailSubject"
-import { Mailbox } from "../../core/Mailbox"
-import { MailboxName } from "../../core/MailboxName"
-import { MailboxState } from "../../core/MailboxState"
 import { EmailProvider } from "./EmailProvider"
 import { FastmailConfig, FastmailSession } from "./FastmailSession"
+import {
+  MailboxState,
+  Mailbox,
+  Email,
+  EmailAddress,
+  EmailSubject,
+  MailboxName,
+} from "../../Core"
 
 describe(EmailProvider.name, () => {
   describe("null mode", () => {

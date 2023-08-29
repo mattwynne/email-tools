@@ -1,5 +1,5 @@
-import { ContactsGroupName } from "./ContactsGroup"
 import { assertThat, equalTo } from "hamjest"
+import { ContactsGroupName } from "."
 
 describe(ContactsGroupName.name, () => {
   describe("equality", () => {

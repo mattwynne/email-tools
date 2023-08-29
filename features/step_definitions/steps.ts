@@ -7,12 +7,14 @@ import {
 } from "@cucumber/cucumber"
 import { assertThat, equalTo } from "hamjest"
 import { Application } from "../../src/Application"
-import { ContactsGroupName } from "../../src/core/ContactsGroup"
-import { Email } from "../../src/core/Email"
-import { EmailAddress } from "../../src/core/EmailAddress"
-import { Mailbox } from "../../src/core/Mailbox"
-import { MailboxName } from "../../src/core/MailboxName"
-import { MailboxState } from "../../src/core/MailboxState"
+import {
+  ContactsGroupName,
+  Email,
+  EmailAddress,
+  Mailbox,
+  MailboxName,
+  MailboxState,
+} from "../../src/Core"
 import { Contacts, ContactsChange } from "../../src/infrastructure/Contacts"
 import { EmailProvider } from "../../src/infrastructure/Emails"
 

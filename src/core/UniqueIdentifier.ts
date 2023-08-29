@@ -1,5 +1,5 @@
 import { TinyTypeOf } from "tiny-types"
-import { UnknownValue } from "./UnknownValue"
+import { UnknownValue } from "."
 
 export class UniqueIdentifier extends TinyTypeOf<string>() {
   static of(value: string | UniqueIdentifier): UniqueIdentifier {

@@ -1,12 +1,15 @@
 import EventEmitter from "events"
 import { DAVVCard } from "tsdav"
+import {
+  Contact,
+  ContactsGroup,
+  ContactsGroupName,
+  EmailAddress,
+} from "../../Core"
+import { OutputTracker } from "../OutputTracker"
 import { ContactsChange } from "./ContactsChange"
 import { Credentials, Fastmail } from "./Fastmail"
 import { parseDavContact, parseDavGroup } from "./parseDav"
-import { Contact } from "../../core/Contact"
-import { ContactsGroup, ContactsGroupName } from "../../core/ContactsGroup"
-import { EmailAddress } from "../../core/EmailAddress"
-import { OutputTracker } from "../OutputTracker"
 
 export const CHANGE_EVENT = "change"
 

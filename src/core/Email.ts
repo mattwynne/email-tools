@@ -1,6 +1,5 @@
 import { TinyType } from "tiny-types"
-import { EmailAddress } from "./EmailAddress"
-import { EmailSubject } from "./EmailSubject"
+import { EmailAddress, EmailSubject } from "."
 
 export class Email extends TinyType {
   static from(sender: string | EmailAddress) {

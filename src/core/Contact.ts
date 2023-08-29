@@ -1,6 +1,5 @@
-import { TinyType, TinyTypeOf } from "tiny-types"
-import { UniqueIdentifier } from "./UniqueIdentifier"
-import { EmailAddress } from "./EmailAddress"
+import { TinyType } from "tiny-types"
+import { EmailAddress, UniqueIdentifier } from "."
 
 export class Contact extends TinyType {
   static withEmail(email: EmailAddress | string) {
