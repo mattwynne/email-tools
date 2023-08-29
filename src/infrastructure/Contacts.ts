@@ -146,7 +146,7 @@ export class Contacts {
     private readonly addressBook: DavAddressBook
   ) {}
 
-  async createGroup(group: ContactsGroupName) {
+  async createGroupNamed(group: ContactsGroupName) {
     const uuid = crypto.randomUUID()
     const rev = new Date().toISOString()
     const result = await this.dav.createVCard({

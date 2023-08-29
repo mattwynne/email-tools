@@ -21,16 +21,16 @@ describe.only(Contacts.name, () => {
       it("throws an error when creating a group fails", async () => {
         const contacts = Contacts.createNull()
         await promiseThat(
-          contacts.createGroup(ContactsGroupName.of("Fails")),
+          contacts.createGroupNamed(ContactsGroupName.of("Fails")),
           rejected(hasProperty("message", equalTo("Failure")))
         )
       })
 
-      it("emits an event when a group is created", async () => {
+      it("emits an event", async () => {
         const contacts = Contacts.createNull()
         const changes = contacts.trackChanges()
         const group = ContactsGroupName.of("Friends")
-        await contacts.createGroup(group)
+        await contacts.createGroupNamed(group)
         assertThat(
           changes.data,
           equalTo([
@@ -131,7 +131,7 @@ describe.only(Contacts.name, () => {
     it("creates a group", async () => {
       const config = FastmailCredentials.create()
       const contacts = await Contacts.create(config)
-      contacts.createGroup(ContactsGroupName.of("Feed"))
+      contacts.createGroupNamed(ContactsGroupName.of("Feed"))
       const books = await dav.fetchAddressBooks()
       const cards = await dav.fetchVCards({ addressBook: books[0] })
       assertThat(cards.length, equalTo(1))
@@ -157,8 +157,8 @@ describe.only(Contacts.name, () => {
     it("lists groups", async () => {
       const config = FastmailCredentials.create()
       const contacts = await Contacts.create(config)
-      await contacts.createGroup(ContactsGroupName.of("Friends"))
-      await contacts.createGroup(ContactsGroupName.of("Family"))
+      await contacts.createGroupNamed(ContactsGroupName.of("Friends"))
+      await contacts.createGroupNamed(ContactsGroupName.of("Family"))
       await contacts.createContact(EmailAddress.of("test@test.com"))
       const groups = await contacts.groups()
       assertThat(groups.length, equalTo(2))
@@ -171,7 +171,7 @@ describe.only(Contacts.name, () => {
     it("lists contacts", async () => {
       const config = FastmailCredentials.create()
       const contacts = await Contacts.create(config)
-      await contacts.createGroup(ContactsGroupName.of("Friends"))
+      await contacts.createGroupNamed(ContactsGroupName.of("Friends"))
       await contacts.createContact(EmailAddress.of("test@test.com"))
       await contacts.createContact(EmailAddress.of("someone@test.com"))
       const people = await contacts.contacts()
@@ -187,7 +187,7 @@ describe.only(Contacts.name, () => {
       const contacts = await Contacts.create(config)
       const group = ContactsGroupName.of("Friends")
       const email = EmailAddress.of("test@test.com")
-      await contacts.createGroup(group)
+      await contacts.createGroupNamed(group)
       await contacts.createContact(email)
       await contacts.addToGroup(email, group)
       const books = await dav.fetchAddressBooks()
