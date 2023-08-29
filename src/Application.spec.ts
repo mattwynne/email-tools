@@ -1,10 +1,13 @@
 import { assertThat, equalTo, isEmpty } from "hamjest"
 import { Application } from "./Application"
-import { ContactsGroup, ContactsGroupName } from "./core/ContactsGroup"
-import { Email } from "./core/Email"
-import { Mailbox } from "./core/Mailbox"
-import { MailboxState } from "./core/MailboxState"
-import { UniqueIdentifier } from "./core/UniqueIdentifier"
+import {
+  ContactsGroup,
+  ContactsGroupName,
+  Email,
+  Mailbox,
+  MailboxState,
+  UniqueIdentifier,
+} from "./Core"
 import { Contacts, ContactsChange } from "./infrastructure/Contacts"
 import { EmailProvider } from "./infrastructure/Emails"
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import fs from "fs/promises"
-import { MailboxName } from "./core/MailboxName"
+import { MailboxName } from "./Core"
 import { FastmailSession } from "./infrastructure/Emails/FastmailSession"
 import { FastmailAccount } from "./infrastructure/Emails/FastmailAccount"
 

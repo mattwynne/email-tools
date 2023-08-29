@@ -1,5 +1,5 @@
-import { ContactsGroupName } from "./ContactsGroup"
 import { TinyTypeOf } from "tiny-types"
+import { ContactsGroupName } from "."
 
 export class MailboxName extends TinyTypeOf<string>() {
   static of(name: string | MailboxName) {

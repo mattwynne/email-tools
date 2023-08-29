@@ -1,5 +1,5 @@
 import { TinyTypeOf } from "tiny-types"
-import { UnknownValue } from "./UnknownValue"
+import { UnknownValue } from "."
 
 export class EmailSubject extends TinyTypeOf<string>() {
   static of(value: string) {

@@ -1,5 +1,4 @@
-import { MailboxName } from "../../core/MailboxName"
-import { MailboxState } from "../../core/MailboxState"
+import { MailboxName, MailboxState } from "../../Core"
 import { EmailAccount, NullEmailAccount } from "./EmailAccount"
 import { FastmailAccount } from "./FastmailAccount"
 import { FastmailConfig, FastmailSession } from "./FastmailSession"

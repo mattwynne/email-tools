@@ -1,5 +1,4 @@
-import { MailboxName } from "./MailboxName"
-import { Email } from "./Email"
+import { MailboxName, Email } from "."
 
 export class Mailbox {
   static named(name: string | MailboxName) {

@@ -1,7 +1,9 @@
-import { Contact } from "../../core/Contact"
-import { ContactsGroup } from "../../core/ContactsGroup"
-import { EmailAddress } from "../../core/EmailAddress"
-import { UniqueIdentifier } from "../../core/UniqueIdentifier"
+import {
+  ContactsGroup,
+  Contact,
+  EmailAddress,
+  UniqueIdentifier,
+} from "../../Core"
 
 export function parseDavGroup(data: string): ContactsGroup {
   const fields = parseFields(data)
