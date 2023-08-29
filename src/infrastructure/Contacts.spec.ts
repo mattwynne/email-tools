@@ -1,20 +1,19 @@
 import {
   assertThat,
+  containsInAnyOrder,
   containsString,
   equalTo,
-  rejected,
-  promiseThat,
   hasProperty,
   matchesPattern,
-  containsInAnyOrder,
+  promiseThat,
+  rejected,
 } from "hamjest"
+import { DAVClient } from "tsdav"
+import { Contact } from "../core/Contact"
 import { ContactsGroup, ContactsGroupName } from "../core/ContactsGroup"
 import { EmailAddress } from "../core/EmailAddress"
 import { Contacts, FastmailCredentials } from "./Contacts"
 import { ContactsChange } from "./ContactsChange"
-import { DAVClient, DAVNamespaceShort } from "tsdav"
-import { equal } from "assert"
-import { Contact } from "../core/Contact"
 
 describe(Contacts.name, () => {
   describe("in null mode", () => {
@@ -83,7 +82,7 @@ describe(Contacts.name, () => {
     })
   })
 
-  describe("in connected mode", function () {
+  describe("in connected mode @online", function () {
     this.timeout(process.env.SLOW_TEST_TIMEOUT || 10000)
 
     let dav: DAVClient
@@ -171,7 +170,15 @@ describe(Contacts.name, () => {
       await contacts.addToGroup(email, group)
       const books = await dav.fetchAddressBooks()
       const cards = await dav.fetchVCards({ addressBook: books[0] })
-      console.log(cards)
+      assertThat(cards.length, equalTo(2))
+      const groups = cards.filter((card) =>
+        card.data?.match(/X-ADDRESSBOOKSERVER-KIND:group\r\n/)
+      )
+      assertThat(groups.length, equalTo(1))
+      assertThat(
+        groups[0].data,
+        matchesPattern(/X-ADDRESSBOOKSERVER-MEMBER:urn:uuid:/)
+      )
     })
 
     it("emits a change event when a contact is added to a group")

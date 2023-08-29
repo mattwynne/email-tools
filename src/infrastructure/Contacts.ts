@@ -19,6 +19,14 @@ type DavClient = {
     vCardString: string
   }) => Promise<DavResponse>
 
+  updateVCard: (params: {
+    vCard: {
+      url: string
+      data: string
+      etag: string
+    }
+  }) => Promise<DavResponse>
+
   fetchVCards: (params: { addressBook: DavAddressBook }) => Promise<DavObject[]>
 }
 
@@ -36,6 +44,10 @@ class NullDavClient implements DavClient {
     if (vCardString.match(/fail/i)) {
       return Promise.resolve({ ok: false, statusText: "Failure" })
     }
+    return Promise.resolve({ ok: true, statusText: "OK" })
+  }
+
+  public async updateVCard() {
     return Promise.resolve({ ok: true, statusText: "OK" })
   }
 
@@ -205,19 +217,22 @@ export class Contacts {
     )
     if (!contact) throw new Error("Contact does not exist!")
     const rev = new Date().toISOString()
-    const result = await this.dav.createVCard({
-      addressBook: this.addressBook,
-      vCardString:
-        "BEGIN:VCARD\r\n" +
-        "VERSION:3.0\r\n" +
-        `UID:${group.id.value}\r\n` +
-        `N:${groupName.value}\r\n` +
-        `FN:${groupName.value}\r\n` +
-        "X-ADDRESSBOOKSERVER-KIND:group\r\n" +
-        `X-ADDRESSBOOKSERVER-MEMBER:urn:uuid:${contact.id}\r\n` +
-        `REV:${rev}\r\n` +
-        "END:VCARD",
-      filename: `${group.id.value}.vcf`,
+    const result = await this.dav.updateVCard({
+      vCard: {
+        data:
+          "BEGIN:VCARD\r\n" +
+          "VERSION:3.0\r\n" +
+          `UID:${group.id.value}\r\n` +
+          `N:${groupName.value}\r\n` +
+          `FN:${groupName.value}\r\n` +
+          "X-ADDRESSBOOKSERVER-KIND:group\r\n" +
+          `X-ADDRESSBOOKSERVER-MEMBER:urn:uuid:${contact.id.value}\r\n` +
+          `REV:${rev}\r\n` +
+          "END:VCARD",
+        // TODO: remember URL from when we look up the group before
+        url: `https://carddav.fastmail.com/dav/addressbooks/user/test@levain.codes/Default/${group.id.value}.vcf`,
+        etag: "",
+      },
     })
     if (!result.ok) {
       throw new Error(result.statusText)
