@@ -146,7 +146,7 @@ export class Contacts {
     private readonly addressBook: DavAddressBook
   ) {}
 
-  async createGroup(contactsGroup: ContactsGroupName) {
+  async createGroup(group: ContactsGroupName) {
     const uuid = crypto.randomUUID()
     const rev = new Date().toISOString()
     const result = await this.dav.createVCard({
@@ -155,8 +155,8 @@ export class Contacts {
         "BEGIN:VCARD\r\n" +
         "VERSION:3.0\r\n" +
         `UID:${uuid}\r\n` +
-        `N:${contactsGroup.value}\r\n` +
-        `FN:${contactsGroup.value}\r\n` +
+        `N:${group.value}\r\n` +
+        `FN:${group.value}\r\n` +
         "X-ADDRESSBOOKSERVER-KIND:group\r\n" +
         `REV:${rev}\r\n` +
         "END:VCARD",
@@ -165,7 +165,10 @@ export class Contacts {
     if (!result.ok) {
       throw new Error(result.statusText)
     }
-    // TODO: raise event too
+    this.emit({
+      action: "create-group",
+      group,
+    })
   }
 
   async createContact(email: EmailAddress) {
@@ -237,17 +240,18 @@ export class Contacts {
     if (!result.ok) {
       throw new Error(result.statusText)
     }
-    this.emitter.emit(
-      CHANGE_EVENT,
-      ContactsChange.of({
-        action: "add",
-        emailAddress: from,
-        group: groupName,
-      })
-    )
+    this.emit({
+      action: "add-to-group",
+      emailAddress: from,
+      group: groupName,
+    })
   }
 
   trackChanges(): OutputTracker<ContactsChange> {
     return OutputTracker.create<ContactsChange>(this.emitter, CHANGE_EVENT)
+  }
+
+  private emit(event: ContactsChange) {
+    this.emitter.emit(CHANGE_EVENT, ContactsChange.of(event))
   }
 }

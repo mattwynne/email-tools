@@ -82,7 +82,9 @@ Then(
   function (this: World, emailAddress, group) {
     assertThat(
       this.contactsChanges,
-      equalTo([ContactsChange.of({ action: "add", emailAddress, group })])
+      equalTo([
+        ContactsChange.of({ action: "add-to-group", emailAddress, group }),
+      ])
     )
   }
 )

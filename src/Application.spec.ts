@@ -54,7 +54,7 @@ describe(Application.name, () => {
           changes.data,
           equalTo([
             ContactsChange.of({
-              action: "add",
+              action: "add-to-group",
               emailAddress: theEmail.from,
               group: ContactsGroupName.of("Paperwork"),
             }),
