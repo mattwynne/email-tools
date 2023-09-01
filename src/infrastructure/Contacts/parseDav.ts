@@ -3,7 +3,7 @@ import {
   Contact,
   EmailAddress,
   UniqueIdentifier,
-} from "../../Core"
+} from "../../core"
 
 export function parseDavGroup(data: string): ContactsGroup {
   const fields = parseFields(data)

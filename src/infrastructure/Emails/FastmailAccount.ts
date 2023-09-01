@@ -1,6 +1,6 @@
-import { EmailAddress, EmailSubject, MailboxName, Mailbox } from "../../Core"
-import { Email } from "../../Core/Email"
-import { MailboxState } from "../../Core/MailboxState"
+import { EmailAddress, EmailSubject, MailboxName, Mailbox } from "../../core"
+import { Email } from "../../core/Email"
+import { MailboxState } from "../../core/MailboxState"
 import { EmailAccount } from "./EmailAccount"
 import { FastmailSession } from "./FastmailSession"
 

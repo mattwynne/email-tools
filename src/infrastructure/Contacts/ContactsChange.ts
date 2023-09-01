@@ -1,4 +1,4 @@
-import { ContactsGroupName, EmailAddress } from "../../Core"
+import { ContactsGroupName, EmailAddress } from "../../core"
 
 export class ContactsChange {
   public static of({ action, emailAddress, group }: ContactsChange) {

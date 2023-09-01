@@ -1,4 +1,4 @@
-import { MailboxName, MailboxState } from "../../Core"
+import { MailboxName, MailboxState } from "../../core"
 
 export interface EmailAccount {
   getMailboxState: (onlyMailboxNames?: MailboxName[]) => Promise<MailboxState>

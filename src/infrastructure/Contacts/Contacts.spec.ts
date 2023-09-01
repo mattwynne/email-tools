@@ -17,7 +17,7 @@ import {
   EmailAddress,
   ContactsGroup,
   Contact,
-} from "../../Core"
+} from "../../core"
 
 describe(Contacts.name, () => {
   describe("in null mode", () => {

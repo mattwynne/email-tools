@@ -10,7 +10,7 @@ import {
   EmailAddress,
   EmailSubject,
   MailboxName,
-} from "../../Core"
+} from "../../core"
 
 describe(EmailProvider.name, () => {
   describe("null mode", () => {

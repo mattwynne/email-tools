@@ -1,5 +1,5 @@
 import { DAVClient } from "tsdav"
-import { Environment } from "../Environment"
+import { Environment } from "../environment"
 
 export interface Credentials {
   username: string

@@ -14,9 +14,9 @@ import {
   Mailbox,
   MailboxName,
   MailboxState,
-} from "../../src/Core"
-import { Contacts, ContactsChange } from "../../src/infrastructure/Contacts"
-import { EmailProvider } from "../../src/infrastructure/Emails"
+} from "../../src/core"
+import { Contacts, ContactsChange } from "../../src/infrastructure/contacts"
+import { EmailProvider } from "../../src/infrastructure/emails"
 
 defineParameterType({
   name: "mailbox",
