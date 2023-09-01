@@ -21,6 +21,8 @@ jobs:
         with:
           node-version: 20
       - run: npm ci
+      - run: npx tsc --version
+      - run: npx tsc --build
       - run: npx ts-node src/count.ts
       - run: git add .
       - name: Get current date
