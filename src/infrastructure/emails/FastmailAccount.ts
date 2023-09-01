@@ -28,9 +28,7 @@ export class FastmailAccount implements EmailAccount {
     return emails.map(
       (email: { subject: string; from: { email: string }[] }) => {
         const sender = email.from ? email.from[0].email : "unknown@example.com"
-        return Email.from(EmailAddress.of(sender)).about(
-          EmailSubject.of(email.subject)
-        )
+        return Email.from(EmailAddress.of(sender))
       }
     )
   }
