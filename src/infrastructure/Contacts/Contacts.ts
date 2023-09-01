@@ -5,7 +5,7 @@ import {
   ContactsGroup,
   ContactsGroupName,
   EmailAddress,
-} from "../../Core"
+} from "../../core"
 import { OutputTracker } from "../OutputTracker"
 import { ContactsChange } from "./ContactsChange"
 import { Credentials, Fastmail } from "./Fastmail"
