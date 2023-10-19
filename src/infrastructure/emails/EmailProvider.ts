@@ -24,4 +24,8 @@ export class EmailProvider {
   onChange(handler: () => void) {
     this.account.onChange(handler)
   }
+
+  close() {
+    this.account.close()
+  }
 }
