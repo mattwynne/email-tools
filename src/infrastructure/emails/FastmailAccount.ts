@@ -4,11 +4,16 @@ import { MailboxState } from "../../core/MailboxState"
 import { EmailAccount } from "./EmailAccount"
 import { FastmailSession } from "./FastmailSession"
 
+// TODO: too many layers with the Provider, Account and Session. Need to flatten this somehow.
 export class FastmailAccount implements EmailAccount {
   constructor(private readonly api: FastmailSession) {}
 
   public onChange(handler: () => void) {
     this.api.subscribe(handler)
+  }
+
+  public close() {
+    this.api.close()
   }
 
   private async getEmailsIn(mailboxId: string): Promise<Email[]> {

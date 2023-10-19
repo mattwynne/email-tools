@@ -19,14 +19,41 @@ export type Headers = {
   Authorization: string
 }
 
-export class FastmailSession {
-  subscribe(handler: () => void) {
-    const source = new EventSource(this.data.eventSourceUrl + "types=*", this)
-    source.addEventListener("state", (e) => {
+type Listener = (event: MessageEvent<any>) => void
+
+class Subscriber {
+  private events: EventSource | undefined
+  private readonly listeners: Listener[] = []
+
+  constructor(
+    private readonly url: string,
+    private readonly headers: Headers
+  ) {}
+
+  public addEventListener(handler: () => void) {
+    if (!this.events) {
+      this.events = new EventSource(this.url, { headers: this.headers })
+    }
+    const listener = (e: MessageEvent<any>) => {
+      console.log(e.data)
       handler()
       // const changes: StateChange = JSON.parse(e.data).changed
-    })
+    }
+    this.listeners.push(listener)
+    this.events.addEventListener("state", listener)
   }
+
+  public close() {
+    if (this.events) {
+      for (const listener of this.listeners) {
+        this.events.removeEventListener("state", listener)
+      }
+      this.events.close()
+    }
+  }
+}
+
+export class FastmailSession {
   static async create(token: string) {
     const headers = {
       "Content-Type": "application/json",
@@ -41,10 +68,26 @@ export class FastmailSession {
     return new this(headers, (await response.json()) as FastmailSession)
   }
 
+  private readonly subscriber
+
   constructor(
     public readonly headers: Headers,
     private readonly data: FastmailSession
-  ) {}
+  ) {
+    this.subscriber = new Subscriber(
+      this.data.eventSourceUrl + "types=*",
+      headers
+    )
+  }
+
+  public close() {
+    this.subscriber.close()
+  }
+
+  subscribe(handler: () => void) {
+    // TODO - expose the subscriber through this method, then only people who use it have to close it.
+    this.subscriber.addEventListener(handler)
+  }
 
   get apiUrl(): string {
     return this.data.apiUrl

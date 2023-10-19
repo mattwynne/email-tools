@@ -142,6 +142,7 @@ describe(EmailProvider.name, () => {
         )
       )
       await eventually(async () => assertThat(eventReceived, is(truthy())))
+      fastmail.close()
     })
   })
 })

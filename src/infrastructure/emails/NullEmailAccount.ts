@@ -17,4 +17,5 @@ export class NullEmailAccount implements EmailAccount {
   }
 
   onChange(handler: () => void) {}
+  close() {}
 }
