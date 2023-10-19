@@ -27,7 +27,7 @@ describe(Application.name, () => {
     })
 
     context("with an email in Inbox/Screener", () => {
-      it("adds the contact to an existing Paperwork group when the email is moved to the Inbox/Paperwork mailbox", async () => {
+      it("@wip adds the contact to an existing Paperwork group when the email is moved to the Inbox/Paperwork mailbox", async () => {
         const contactsProvider = Contacts.createNull({
           groups: [
             ContactsGroup.named("Paperwork").withId(UniqueIdentifier.create()),

@@ -1,4 +1,4 @@
-import { assertThat, equalTo } from "hamjest"
+import { assertThat, equalTo, is, truthy } from "hamjest"
 import nodemailer from "nodemailer"
 import { eventually } from "ts-eventually"
 import { EmailProvider } from "./EmailProvider"
@@ -66,7 +66,7 @@ describe(EmailProvider.name, () => {
   })
 
   describe("fastmail mode @online", function () {
-    this.timeout(process.env.SLOW_TEST_TIMEOUT || 10000)
+    this.timeout(process.env.SLOW_TEST_TIMEOUT || 30000)
 
     const fastmailConfig: FastmailConfig = {
       token: process.env.FASTMAIL_API_TOKEN || "", // TODO: make env nullable infrastructure too
@@ -127,6 +127,22 @@ describe(EmailProvider.name, () => {
         )
       )
     })
+
+    it("emits events when a new mail arrives", async () => {
+      let eventReceived = false
+      await reset(fastmailConfig.token)
+      const fastmail = await EmailProvider.create(fastmailConfig)
+      fastmail.onChange(() => {
+        eventReceived = true
+      })
+
+      await sendTestEmail(
+        Email.from(EmailAddress.of("someone@example.com")).about(
+          EmailSubject.of("a subject")
+        )
+      )
+      await eventually(async () => assertThat(eventReceived, is(truthy())))
+    })
   })
 })
 
@@ -183,13 +199,15 @@ const reset = async (token: string) => {
   ])
 }
 async function sendTestEmail(email: Email) {
+  const pass = process.env.FASTMAIL_SMTP_PASSWORD
+  if (!pass) throw new Error("please set FASTMAIL_SMTP_PASSWORD")
   const smtp = nodemailer.createTransport({
     host: "smtp.fastmail.com",
     port: 465,
     secure: true,
     auth: {
       user: "test@levain.codes",
-      pass: process.env.FASTMAIL_SMTP_PASSWORD,
+      pass,
     },
   })
   await smtp.sendMail({

@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import { P } from "pino"
 import EventSource from "eventsource"
 import util from "util"
 

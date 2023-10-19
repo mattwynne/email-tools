@@ -1,4 +1,4 @@
-import { EmailAddress, EmailSubject, MailboxName, Mailbox } from "../../core"
+import { EmailAddress, MailboxName, Mailbox, EmailSubject } from "../../core"
 import { Email } from "../../core/Email"
 import { MailboxState } from "../../core/MailboxState"
 import { EmailAccount } from "./EmailAccount"
@@ -6,6 +6,10 @@ import { FastmailSession } from "./FastmailSession"
 
 export class FastmailAccount implements EmailAccount {
   constructor(private readonly api: FastmailSession) {}
+
+  public onChange(handler: () => void) {
+    this.api.subscribe(handler)
+  }
 
   private async getEmailsIn(mailboxId: string): Promise<Email[]> {
     const ids = (
@@ -28,7 +32,9 @@ export class FastmailAccount implements EmailAccount {
     return emails.map(
       (email: { subject: string; from: { email: string }[] }) => {
         const sender = email.from ? email.from[0].email : "unknown@example.com"
-        return Email.from(EmailAddress.of(sender))
+        return Email.from(EmailAddress.of(sender)).about(
+          EmailSubject.of(email.subject)
+        )
       }
     )
   }
