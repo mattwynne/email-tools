@@ -1,3 +1,5 @@
+import EventSource from "eventsource"
+
 type ApiMethod =
   | "Email/get"
   | "Email/set"
@@ -12,7 +14,19 @@ export type FastmailConfig = {
   token: string
 }
 
+export type Headers = {
+  "Content-Type": string
+  Authorization: string
+}
+
 export class FastmailSession {
+  subscribe(handler: () => void) {
+    const source = new EventSource(this.data.eventSourceUrl + "types=*", this)
+    source.addEventListener("state", (e) => {
+      handler()
+      // const changes: StateChange = JSON.parse(e.data).changed
+    })
+  }
   static async create(token: string) {
     const headers = {
       "Content-Type": "application/json",
@@ -28,12 +42,16 @@ export class FastmailSession {
   }
 
   constructor(
-    public readonly headers: { [key: string]: string },
+    public readonly headers: Headers,
     private readonly data: FastmailSession
   ) {}
 
   get apiUrl(): string {
     return this.data.apiUrl
+  }
+
+  get eventSourceUrl(): string {
+    return this.data.eventSourceUrl
   }
 
   get username(): string {

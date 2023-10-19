@@ -5,7 +5,7 @@
   "scripts": {
     "test": "npm run test:unit && npm run test:acceptance",
     "test:airplane": "npm run test:unit:airplane && npm run test:acceptance",
-    "test:unit": "mocha",
+    "test:unit": "mocha -f @wip -i",
     "test:unit:airplane": "mocha -f @online -i",
     "test:acceptance": "cucumber-js"
   },
@@ -30,7 +30,7 @@
     "mocha-osx-reporter": "^0.1.2",
     "nodemailer": "^6.9.4",
     "ts-node": "^10.9.1",
-    "typescript": "^5.0.4"
+    "typescript": "^5.2.2"
   },
   "description": ""
 }
