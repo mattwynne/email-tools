@@ -199,6 +199,7 @@ const reset = async (token: string) => {
     ],
   ])
 }
+
 async function sendTestEmail(email: Email) {
   const pass = process.env.FASTMAIL_SMTP_PASSWORD
   if (!pass) throw new Error("please set FASTMAIL_SMTP_PASSWORD")
