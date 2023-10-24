@@ -17,20 +17,31 @@ export class FastmailAccount implements EmailAccount {
   }
 
   private async getEmailsIn(mailboxId: string): Promise<Email[]> {
-    const ids = (
-      await this.api.call("Email/query", {
-        accountId: this.api.accountId,
-        filter: {
-          inMailbox: mailboxId,
+    const result = await this.api.calls([
+      [
+        "Email/query",
+        {
+          accountId: this.api.accountId,
+          filter: {
+            inMailbox: mailboxId,
+          },
         },
-      })
-    ).ids
-    const emails = (
-      await this.api.call("Email/get", {
-        accountId: this.api.accountId,
-        ids,
-      })
-    ).list
+        "0",
+      ],
+      [
+        "Email/get",
+        {
+          accountId: this.api.accountId,
+          "#ids": {
+            resultOf: "0",
+            name: "Email/query",
+            path: "/ids",
+          },
+        },
+        "1",
+      ],
+    ])
+    const emails = result[1][1].list
     if (!emails) {
       throw new Error("No emails found for mailbox " + mailboxId)
     }
