@@ -15,17 +15,16 @@ export class FastmailAccount {
 
   static async connect(
     config: FastmailConfig,
-    onSubscribed?: (account: FastmailAccount) => Promise<void>
+    onReady: (account: FastmailAccount) => Promise<void>
   ) {
     const session = await FastmailSession.create(config.token)
     const subscriber = await session.subscribe()
     const result = new this(session, subscriber)
     await result.refresh()
-    if (onSubscribed) {
-      await onSubscribed(result)
+    if (onReady) {
+      await onReady(result)
       subscriber.close()
     }
-    return result
   }
 
   private currentState: MailboxState = new MailboxState([])
@@ -41,12 +40,6 @@ export class FastmailAccount {
 
   public async refresh() {
     const mailboxes = await this.getMailboxes()
-    // const inbox = mailboxes.find(
-    //   (mailbox) => mailbox.name === MailboxName.of("Inbox")
-    // )
-    // const inboxChildren = mailboxes.filter(
-    //   (mailbox: { parentId: string }) => mailbox.parentId === inbox.id
-    // )
     this.currentState = new MailboxState(mailboxes)
     return this
   }
@@ -112,10 +105,17 @@ export class FastmailAccount {
     }
     return emails.map(
       (email: { subject: string; from: { email: string }[] }) => {
-        const sender = email.from ? email.from[0].email : "unknown@example.com"
-        return Email.from(EmailAddress.of(sender)).about(
-          EmailSubject.of(email.subject)
-        )
+        try {
+          const sender = email.from
+            ? email.from[0].email
+            : "unknown@example.com"
+          return Email.from(EmailAddress.of(sender)).about(
+            EmailSubject.of(email.subject || "")
+          )
+        } catch (error) {
+          console.error(error)
+          return Email.from(EmailAddress.of("unknown"))
+        }
       }
     )
   }
