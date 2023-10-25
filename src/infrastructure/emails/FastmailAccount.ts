@@ -58,12 +58,36 @@ export class FastmailAccount {
   }
 
   private async getMailboxes(): Promise<Mailbox[]> {
-    const result = await this.session.call("Mailbox/get", {
+    const mailboxes = await this.session.call("Mailbox/get", {
       accountId: this.session.accountId,
       ids: null,
     })
-    return result.list.map((mailbox: { id: string; name: string }) =>
-      Mailbox.named(mailbox.name).withId(UniqueIdentifier.of(mailbox.id))
+
+    const ids = mailboxes.list.map(({ id }: { id: string }) => id)
+
+    const emails = await this.session.calls(
+      ids.map((id: string) => [
+        "Email/query",
+        {
+          accountId: this.session.accountId,
+          filter: {
+            inMailbox: id,
+          },
+        },
+        `emails-in-mailbox-${id}`,
+      ])
+    )
+    return mailboxes.list.map((mailbox: { id: string; name: string }) =>
+      Mailbox.named(mailbox.name)
+        .withId(UniqueIdentifier.of(mailbox.id))
+        .withEmails(
+          emails
+            .find(
+              (response: [unknown, unknown, string]) =>
+                response[2] === `emails-in-mailbox-${mailbox.id}`
+            )[1]
+            .ids.map((id: string) => Email.withId(UniqueIdentifier.of(id)))
+        )
     )
   }
 
