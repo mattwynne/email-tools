@@ -13,10 +13,18 @@ export class FastmailAccount {
     throw new Error("Method not implemented.")
   }
 
-  static async connect(config: FastmailConfig) {
+  static async connect(
+    config: FastmailConfig,
+    subscriber?: (account: FastmailAccount) => Promise<void>
+  ) {
     const session = await FastmailSession.create(config.token)
     const result = new this(session)
-    return result.refresh()
+    await result.refresh()
+    if (subscriber) {
+      await subscriber(result)
+      result.close()
+    }
+    return result
   }
 
   private currentState: MailboxState = new MailboxState([])
