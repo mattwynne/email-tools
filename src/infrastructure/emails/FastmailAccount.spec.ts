@@ -131,18 +131,19 @@ describe(FastmailAccount.name, () => {
     it("emits events when a new mail arrives", async () => {
       let eventReceived = false
       await reset(fastmailConfig.token)
-      const fastmail = await FastmailAccount.connect(fastmailConfig)
-      fastmail.onChange(() => {
-        eventReceived = true
+      await FastmailAccount.connect(fastmailConfig, async (account) => {
+        account.onChange(() => {
+          eventReceived = true
+        })
+
+        await sendTestEmail(
+          Email.from(EmailAddress.of("someone@example.com")).about(
+            EmailSubject.of("a subject")
+          )
+        )
       })
 
-      await sendTestEmail(
-        Email.from(EmailAddress.of("someone@example.com")).about(
-          EmailSubject.of("a subject")
-        )
-      )
       await eventually(async () => assertThat(eventReceived, is(truthy())))
-      fastmail.close()
     })
   })
 })
