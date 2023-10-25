@@ -2,17 +2,15 @@
 
 import fs from "fs/promises"
 import { MailboxName } from "./core"
-import { FastmailSession } from "./infrastructure/emails/FastmailSession"
-import { FastmailAccount } from "./infrastructure/emails/FastmailAccount"
+import { FastmailAccount } from "./infrastructure/emails"
 
 const run = async () => {
   const token = process.env.FASTMAIL_API_TOKEN
   if (!token) {
     throw new Error("Please set FASTMAIL_API_TOKEN")
   }
-  const session = await FastmailSession.create(token)
-  const account = new FastmailAccount(session)
-  const { mailboxes } = await account.getMailboxState([
+  const account = await FastmailAccount.connect({ token })
+  const { mailboxes } = await account.stateOf([
     MailboxName.of("Inbox"),
     MailboxName.of("Paperwork"),
     MailboxName.of("Screener"),

@@ -16,7 +16,7 @@ import {
   MailboxState,
 } from "../../src/core"
 import { Contacts, ContactsChange } from "../../src/infrastructure/contacts"
-import { EmailProvider } from "../../src/infrastructure/emails"
+import { FastmailAccount } from "../../src/infrastructure/emails"
 
 defineParameterType({
   name: "mailbox",
@@ -70,9 +70,9 @@ type World = {
 Before(function (this: World) {
   this.contactsProvider = Contacts.createNull()
   this.contactsChanges = this.contactsProvider.trackChanges().data
-  const emailProvider = () => EmailProvider.createNull(this)
+  const fastmailAccount = () => FastmailAccount.createNull(this)
   this.app = () => {
-    return new Application(emailProvider(), this.contactsProvider)
+    return new Application(fastmailAccount(), this.contactsProvider)
   }
   this.mailboxStates = []
 })

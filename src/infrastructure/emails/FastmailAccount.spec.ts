@@ -35,7 +35,7 @@ describe(FastmailAccount.name, () => {
         mailboxStates,
       })
       assertThat(
-        [await provider.getMailboxState(), await provider.getMailboxState()],
+        [await provider.refresh(), await provider.refresh()],
         equalTo(mailboxStates)
       )
     })
@@ -49,7 +49,7 @@ describe(FastmailAccount.name, () => {
       const provider = FastmailAccount.createNull({
         mailboxStates: [mailboxState],
       })
-      const actual = await provider.getMailboxState([
+      const actual = await provider.stateOf([
         MailboxName.of("Inbox/Paperwork"),
         MailboxName.of("Inbox/Screener"),
       ])
@@ -74,9 +74,9 @@ describe(FastmailAccount.name, () => {
 
     it("connects to a real, empty fastmail inbox", async function () {
       await reset(fastmailConfig.token)
-      const provider = await FastmailAccount.create(fastmailConfig)
+      const account = await FastmailAccount.connect(fastmailConfig)
       assertThat(
-        await provider.getMailboxState(),
+        account.state,
         equalTo(
           new MailboxState([
             Mailbox.named("Inbox"),
@@ -97,10 +97,10 @@ describe(FastmailAccount.name, () => {
           EmailSubject.of("a subject")
         )
       )
-      const provider = await FastmailAccount.create(fastmailConfig)
+      const account = await FastmailAccount.connect(fastmailConfig)
       await eventually(async () =>
         assertThat(
-          await provider.getMailboxState([MailboxName.of("Inbox")]),
+          await account.stateOf([MailboxName.of("Inbox")]),
           equalTo(
             new MailboxState([
               Mailbox.named("Inbox").withEmails([
@@ -116,9 +116,9 @@ describe(FastmailAccount.name, () => {
 
     it("fetches only specific mailboxes", async () => {
       await reset(fastmailConfig.token)
-      const provider = await FastmailAccount.create(fastmailConfig)
+      const provider = await FastmailAccount.connect(fastmailConfig)
       assertThat(
-        await provider.getMailboxState([
+        await provider.stateOf([
           MailboxName.of("Inbox"),
           MailboxName.of("Archive"),
         ]),
@@ -131,7 +131,7 @@ describe(FastmailAccount.name, () => {
     it("emits events when a new mail arrives", async () => {
       let eventReceived = false
       await reset(fastmailConfig.token)
-      const fastmail = await FastmailAccount.create(fastmailConfig)
+      const fastmail = await FastmailAccount.connect(fastmailConfig)
       fastmail.onChange(() => {
         eventReceived = true
       })

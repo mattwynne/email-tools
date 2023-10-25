@@ -1,1 +1,1 @@
-export { FastmailAccount as EmailProvider } from "./FastmailAccount"
+export { FastmailAccount } from "./FastmailAccount"
