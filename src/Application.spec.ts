@@ -9,7 +9,7 @@ import {
   UniqueIdentifier,
 } from "./core"
 import { Contacts, ContactsChange } from "./infrastructure/contacts"
-import { EmailProvider } from "./infrastructure/emails"
+import { FastmailAccount } from "./infrastructure/emails"
 
 describe.skip(Application.name, () => {
   describe("processing new mailbox state", () => {
@@ -18,7 +18,7 @@ describe.skip(Application.name, () => {
         const contactsProvider = Contacts.createNull()
         const changes = contactsProvider.trackChanges()
         const app = new Application(
-          EmailProvider.createNull(),
+          FastmailAccount.createNull(),
           contactsProvider
         )
         app.processNewMailboxState()
@@ -43,7 +43,7 @@ describe.skip(Application.name, () => {
           Mailbox.named("Inbox/Paperwork").withEmails([theEmail]),
         ])
         const app = new Application(
-          EmailProvider.createNull({
+          FastmailAccount.createNull({
             mailboxStates: [inScreener, movedToPaperwork],
           }),
           contactsProvider

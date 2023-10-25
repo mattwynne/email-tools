@@ -13,22 +13,40 @@ export class FastmailAccount {
     throw new Error("Method not implemented.")
   }
 
-  static async create(config: FastmailConfig) {
+  static async connect(config: FastmailConfig) {
     const session = await FastmailSession.create(config.token)
-    return new this(session)
+    const result = new this(session)
+    return result.refresh()
   }
+
+  private currentState: MailboxState = new MailboxState([])
 
   constructor(private readonly session: FastmailSession) {}
 
-  public async getMailboxState(onlyMailboxes?: MailboxName[]) {
-    const mailboxes = await this.getMailboxes(onlyMailboxes)
+  public get state() {
+    return this.currentState
+  }
+
+  public stateOf(onlyMailboxes: MailboxName[]) {
+    return new MailboxState(
+      this.currentState.mailboxes.filter((mailbox) =>
+        onlyMailboxes.some((onlyMailboxName) =>
+          onlyMailboxName.equals(mailbox.name)
+        )
+      )
+    )
+  }
+
+  public async refresh() {
+    const mailboxes = await this.getMailboxes()
     // const inbox = mailboxes.find(
     //   (mailbox) => mailbox.name === MailboxName.of("Inbox")
     // )
     // const inboxChildren = mailboxes.filter(
     //   (mailbox: { parentId: string }) => mailbox.parentId === inbox.id
     // )
-    return new MailboxState(mailboxes)
+    this.currentState = new MailboxState(mailboxes)
+    return this
   }
 
   public onChange(handler: () => void) {
