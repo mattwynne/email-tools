@@ -47,8 +47,8 @@ export class FastmailAccount {
     return this
   }
 
-  public onChange(handler: () => void) {
-    this.session.subscribe(handler)
+  public async onChange(handler: () => void) {
+    await this.session.subscribe(handler)
   }
 
   public close() {
