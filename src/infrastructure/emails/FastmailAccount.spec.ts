@@ -11,6 +11,7 @@ import {
   EmailSubject,
   MailboxName,
 } from "../../core"
+import Mail from "nodemailer/lib/mailer"
 
 describe(FastmailAccount.name, () => {
   describe.skip("null mode", () => {
@@ -86,6 +87,21 @@ describe(FastmailAccount.name, () => {
             MailboxName.of("Spam"),
             MailboxName.of("Trash"),
           ])
+        )
+      })
+    })
+
+    it("counts emails in a mailbox", async () => {
+      await sendTestEmail(
+        Email.from("someone@example.com").about(EmailSubject.of("a subject"))
+      )
+      await FastmailAccount.connect(config, async (account) => {
+        await eventually(async () =>
+          assertThat(
+            await account.state.of([MailboxName.of("Inbox")]).mailboxes[0]
+              .emails.length,
+            equalTo(1)
+          )
         )
       })
     })
