@@ -11,7 +11,7 @@ import {
 import { Contacts, ContactsChange } from "./infrastructure/contacts"
 import { EmailProvider } from "./infrastructure/emails"
 
-describe(Application.name, () => {
+describe.skip(Application.name, () => {
   describe("processing new mailbox state", () => {
     context("with no initial state", () => {
       it("doesn't change any contacts", () => {

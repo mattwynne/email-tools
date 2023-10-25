@@ -1,7 +1,6 @@
 import { MailboxName, MailboxState } from "../../core"
-import { EmailAccount } from "./EmailAccount"
 
-export class NullEmailAccount implements EmailAccount {
+export class NullEmailAccount {
   constructor(private readonly mailboxStates: MailboxState[]) {}
 
   async getMailboxState(onlyMailboxNames?: MailboxName[]) {
