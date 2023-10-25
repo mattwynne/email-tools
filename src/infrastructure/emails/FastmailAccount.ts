@@ -5,6 +5,7 @@ import {
   Mailbox,
   MailboxName,
   MailboxState,
+  UniqueIdentifier,
 } from "../../core"
 import { FastmailConfig, FastmailSession, Subscriber } from "./FastmailSession"
 
@@ -48,40 +49,32 @@ export class FastmailAccount {
     await this.subscriber.addEventListener(handler)
   }
 
-  private async getMailboxes(
-    onlyMailboxes?: MailboxName[]
-  ): Promise<Mailbox[]> {
-    const filter = onlyMailboxes
-      ? (mailbox: { name: string }) =>
-          onlyMailboxes.some((name) =>
-            name.equals(MailboxName.of(mailbox.name))
-          )
-      : () => true
+  public async emailsIn(mailboxName: MailboxName): Promise<Email[]> {
+    const mailbox = this.currentState.mailboxes.find((mailbox) =>
+      mailbox.name.equals(mailboxName)
+    )
+    if (!mailbox) throw new Error(`No mailbox named '${mailboxName}'`)
+    return await this.getEmailsIn(mailbox.id)
+  }
 
-    return Promise.all(
-      (
-        await this.session.call("Mailbox/get", {
-          accountId: this.session.accountId,
-          ids: null,
-        })
-      ).list
-        .filter(filter)
-        .map(async (mailbox: { id: string; name: string }) =>
-          Mailbox.named(mailbox.name).withEmails(
-            await this.getEmailsIn(mailbox.id)
-          )
-        )
+  private async getMailboxes(): Promise<Mailbox[]> {
+    const result = await this.session.call("Mailbox/get", {
+      accountId: this.session.accountId,
+      ids: null,
+    })
+    return result.list.map((mailbox: { id: string; name: string }) =>
+      Mailbox.named(mailbox.name).withId(UniqueIdentifier.of(mailbox.id))
     )
   }
 
-  private async getEmailsIn(mailboxId: string): Promise<Email[]> {
+  private async getEmailsIn(mailboxId: UniqueIdentifier): Promise<Email[]> {
     const result = await this.session.calls([
       [
         "Email/query",
         {
           accountId: this.session.accountId,
           filter: {
-            inMailbox: mailboxId,
+            inMailbox: mailboxId.value,
           },
         },
         "0",
@@ -113,7 +106,6 @@ export class FastmailAccount {
             EmailSubject.of(email.subject || "")
           )
         } catch (error) {
-          console.error(error)
           return Email.from(EmailAddress.of("unknown"))
         }
       }

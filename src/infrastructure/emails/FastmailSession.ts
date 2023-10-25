@@ -105,13 +105,13 @@ export class FastmailSession {
   }
 
   public async calls(methodCalls: MethodCall[]) {
-    console.log(
-      util.inspect(methodCalls, {
-        showHidden: false,
-        depth: null,
-        colors: true,
-      })
-    )
+    // console.log(
+    //   util.inspect(methodCalls, {
+    //     showHidden: false,
+    //     depth: null,
+    //     colors: true,
+    //   })
+    // )
     const response = await fetch(this.apiUrl, {
       method: "POST",
       headers: this.headers,

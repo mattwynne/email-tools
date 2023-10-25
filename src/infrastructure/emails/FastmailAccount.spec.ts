@@ -77,54 +77,32 @@ describe(FastmailAccount.name, () => {
     it("connects to a real, empty fastmail inbox", async function () {
       await FastmailAccount.connect(config, async (account) => {
         assertThat(
-          account.state,
-          equalTo(
-            new MailboxState([
-              Mailbox.named("Inbox"),
-              Mailbox.named("Archive"),
-              Mailbox.named("Drafts"),
-              Mailbox.named("Sent"),
-              Mailbox.named("Spam"),
-              Mailbox.named("Trash"),
-            ])
-          )
+          account.state.mailboxes.map((mailbox) => mailbox.name),
+          equalTo([
+            MailboxName.of("Inbox"),
+            MailboxName.of("Archive"),
+            MailboxName.of("Drafts"),
+            MailboxName.of("Sent"),
+            MailboxName.of("Spam"),
+            MailboxName.of("Trash"),
+          ])
         )
       })
     })
 
-    it("reads an email that's in the Inbox", async () => {
+    it("reads emails in a mailbox", async () => {
       await sendTestEmail(
-        Email.from(EmailAddress.of("someone@example.com")).about(
-          EmailSubject.of("a subject")
-        )
+        Email.from("someone@example.com").about(EmailSubject.of("a subject"))
       )
       await FastmailAccount.connect(config, async (account) => {
         await eventually(async () =>
           assertThat(
-            await account.state.of([MailboxName.of("Inbox")]),
-            equalTo(
-              new MailboxState([
-                Mailbox.named("Inbox").withEmails([
-                  Email.from(EmailAddress.of("someone@example.com")).about(
-                    EmailSubject.of("a subject")
-                  ),
-                ]),
-              ])
-            )
-          )
-        )
-      })
-    })
-
-    it("fetches only specific mailboxes", async () => {
-      await FastmailAccount.connect(config, async (account) => {
-        assertThat(
-          await account.state.of([
-            MailboxName.of("Inbox"),
-            MailboxName.of("Archive"),
-          ]),
-          equalTo(
-            new MailboxState([Mailbox.named("Inbox"), Mailbox.named("Archive")])
+            await account.emailsIn(MailboxName.of("Inbox")),
+            equalTo([
+              Email.from("someone@example.com").about(
+                EmailSubject.of("a subject")
+              ),
+            ])
           )
         )
       })
