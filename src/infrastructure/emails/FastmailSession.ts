@@ -21,7 +21,7 @@ export type Headers = {
 
 type Listener = (event: MessageEvent<any>) => void
 
-class Subscriber {
+export class Subscriber {
   private events: EventSource | undefined
   private readonly listeners: Listener[] = []
 
@@ -52,9 +52,7 @@ class Subscriber {
   }
 
   private async ensureEventSource() {
-    if (this.events) {
-      return
-    }
+    if (this.events) return
 
     this.events = await new Promise((opened) => {
       const events = new EventSource(this.url, { headers: this.headers })
@@ -78,25 +76,18 @@ export class FastmailSession {
     return new this(headers, (await response.json()) as FastmailSession)
   }
 
-  private readonly subscriber
-
   constructor(
     public readonly headers: Headers,
     private readonly data: FastmailSession
-  ) {
-    this.subscriber = new Subscriber(
+  ) {}
+
+  public async subscribe() {
+    const subscriber = new Subscriber(
       this.data.eventSourceUrl + "types=*",
-      headers
+      this.headers
     )
-  }
-
-  public close() {
-    this.subscriber.close()
-  }
-
-  async subscribe(handler: () => void) {
-    // TODO - expose the subscriber through this method, then only people who use it have to close it.
-    await this.subscriber.addEventListener(handler)
+    // TODO wait for open
+    return subscriber
   }
 
   get apiUrl(): string {
