@@ -6,7 +6,7 @@ import {
   MailboxName,
   MailboxState,
 } from "../../core"
-import { FastmailConfig, FastmailSession } from "./FastmailSession"
+import { FastmailConfig, FastmailSession, Subscriber } from "./FastmailSession"
 
 export class FastmailAccount {
   static createNull(arg?: any): FastmailAccount {
@@ -15,21 +15,25 @@ export class FastmailAccount {
 
   static async connect(
     config: FastmailConfig,
-    subscriber?: (account: FastmailAccount) => Promise<void>
+    onSubscribed?: (account: FastmailAccount) => Promise<void>
   ) {
     const session = await FastmailSession.create(config.token)
-    const result = new this(session)
+    const subscriber = await session.subscribe()
+    const result = new this(session, subscriber)
     await result.refresh()
-    if (subscriber) {
-      await subscriber(result)
-      result.close()
+    if (onSubscribed) {
+      await onSubscribed(result)
+      subscriber.close()
     }
     return result
   }
 
   private currentState: MailboxState = new MailboxState([])
 
-  constructor(private readonly session: FastmailSession) {}
+  constructor(
+    private readonly session: FastmailSession,
+    private readonly subscriber: Subscriber
+  ) {}
 
   public get state() {
     return this.currentState
@@ -48,11 +52,7 @@ export class FastmailAccount {
   }
 
   public async onChange(handler: () => void) {
-    await this.session.subscribe(handler)
-  }
-
-  public close() {
-    this.session.close()
+    await this.subscriber.addEventListener(handler)
   }
 
   private async getMailboxes(
