@@ -9,34 +9,35 @@ const run = async () => {
   if (!token) {
     throw new Error("Please set FASTMAIL_API_TOKEN")
   }
-  const account = await FastmailAccount.connect({ token })
-  const { mailboxes } = await account.state.of([
-    MailboxName.of("Inbox"),
-    MailboxName.of("Paperwork"),
-    MailboxName.of("Screener"),
-    MailboxName.of("Feed"),
-  ])
-  console.log(mailboxes)
-  const stats = mailboxes.map((mailbox) => ({
-    name: mailbox.name,
-    messages: mailbox.emails.length,
-  }))
+  await FastmailAccount.connect({ token }, async (account) => {
+    const { mailboxes } = await account.state.of([
+      MailboxName.of("Inbox"),
+      MailboxName.of("Paperwork"),
+      MailboxName.of("Screener"),
+      MailboxName.of("Feed"),
+    ])
+    console.log(mailboxes)
+    const stats = mailboxes.map((mailbox) => ({
+      name: mailbox.name,
+      messages: mailbox.emails.length,
+    }))
 
-  const totals = stats.reduce(
-    (totals, stat) => ({
-      messages: totals.messages + stat.messages,
-    }),
-    { messages: 0 }
-  )
+    const totals = stats.reduce(
+      (totals, stat) => ({
+        messages: totals.messages + stat.messages,
+      }),
+      { messages: 0 }
+    )
 
-  const data = {
-    date: new Date(),
-    totals,
-    mailboxes: stats,
-  }
-  console.log(data)
-  const path = __dirname + "/../data/"
-  await fs.appendFile(path + "stats.ndjson", JSON.stringify(data) + "\n")
+    const data = {
+      date: new Date(),
+      totals,
+      mailboxes: stats,
+    }
+    console.log(data)
+    const path = __dirname + "/../data/"
+    await fs.appendFile(path + "stats.ndjson", JSON.stringify(data) + "\n")
+  })
 }
 
 run().catch((error) => {

@@ -1,4 +1,5 @@
 import EventSource from "eventsource"
+import util from "util"
 
 type ApiMethod =
   | "Email/get"
@@ -22,17 +23,18 @@ export type Headers = {
 type Listener = (event: MessageEvent<any>) => void
 
 export class Subscriber {
-  private events: EventSource | undefined
-  private readonly listeners: Listener[] = []
+  public static async connect(url: string, headers: Headers) {
+    const events = await new Promise<EventSource>((opened) => {
+      const events = new EventSource(url, { headers })
+      events.onopen = () => opened(events)
+    })
+    return new Subscriber(events)
+  }
 
-  constructor(
-    private readonly url: string,
-    private readonly headers: Headers
-  ) {}
+  private readonly listeners: Listener[] = []
+  private constructor(private readonly events: EventSource) {}
 
   public async addEventListener(handler: () => void) {
-    // TODO: create the eventsource every time
-    await this.ensureEventSource()
     const listener = (e: MessageEvent<any>) => {
       console.log(e.data)
       handler()
@@ -43,21 +45,10 @@ export class Subscriber {
   }
 
   public close() {
-    if (this.events) {
-      for (const listener of this.listeners) {
-        this.events.removeEventListener("state", listener)
-      }
-      this.events.close()
+    for (const listener of this.listeners) {
+      this.events.removeEventListener("state", listener)
     }
-  }
-
-  private async ensureEventSource() {
-    if (this.events) return
-
-    this.events = await new Promise((opened) => {
-      const events = new EventSource(this.url, { headers: this.headers })
-      events.onopen = () => opened(events)
-    })
+    this.events.close()
   }
 }
 
@@ -82,12 +73,10 @@ export class FastmailSession {
   ) {}
 
   public async subscribe() {
-    const subscriber = new Subscriber(
+    return Subscriber.connect(
       this.data.eventSourceUrl + "types=*",
       this.headers
     )
-    // TODO wait for open
-    return subscriber
   }
 
   get apiUrl(): string {
@@ -116,6 +105,13 @@ export class FastmailSession {
   }
 
   public async calls(methodCalls: MethodCall[]) {
+    console.log(
+      util.inspect(methodCalls, {
+        showHidden: false,
+        depth: null,
+        colors: true,
+      })
+    )
     const response = await fetch(this.apiUrl, {
       method: "POST",
       headers: this.headers,
@@ -128,6 +124,9 @@ export class FastmailSession {
       throw new Error(await response.text())
     }
     const result = await response.json()
+    console.log(
+      util.inspect(result, { showHidden: false, depth: null, colors: true })
+    )
     return result["methodResponses"]
   }
 }

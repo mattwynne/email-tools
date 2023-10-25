@@ -75,20 +75,21 @@ describe(FastmailAccount.name, () => {
     this.beforeEach(() => reset(config))
 
     it("connects to a real, empty fastmail inbox", async function () {
-      const account = await FastmailAccount.connect(config)
-      assertThat(
-        account.state,
-        equalTo(
-          new MailboxState([
-            Mailbox.named("Inbox"),
-            Mailbox.named("Archive"),
-            Mailbox.named("Drafts"),
-            Mailbox.named("Sent"),
-            Mailbox.named("Spam"),
-            Mailbox.named("Trash"),
-          ])
+      await FastmailAccount.connect(config, async (account) => {
+        assertThat(
+          account.state,
+          equalTo(
+            new MailboxState([
+              Mailbox.named("Inbox"),
+              Mailbox.named("Archive"),
+              Mailbox.named("Drafts"),
+              Mailbox.named("Sent"),
+              Mailbox.named("Spam"),
+              Mailbox.named("Trash"),
+            ])
+          )
         )
-      )
+      })
     })
 
     it("reads an email that's in the Inbox", async () => {
@@ -97,39 +98,41 @@ describe(FastmailAccount.name, () => {
           EmailSubject.of("a subject")
         )
       )
-      const account = await FastmailAccount.connect(config)
-      await eventually(async () =>
-        assertThat(
-          await account.state.of([MailboxName.of("Inbox")]),
-          equalTo(
-            new MailboxState([
-              Mailbox.named("Inbox").withEmails([
-                Email.from(EmailAddress.of("someone@example.com")).about(
-                  EmailSubject.of("a subject")
-                ),
-              ]),
-            ])
+      await FastmailAccount.connect(config, async (account) => {
+        await eventually(async () =>
+          assertThat(
+            await account.state.of([MailboxName.of("Inbox")]),
+            equalTo(
+              new MailboxState([
+                Mailbox.named("Inbox").withEmails([
+                  Email.from(EmailAddress.of("someone@example.com")).about(
+                    EmailSubject.of("a subject")
+                  ),
+                ]),
+              ])
+            )
           )
         )
-      )
+      })
     })
 
     it("fetches only specific mailboxes", async () => {
-      const account = await FastmailAccount.connect(config)
-      assertThat(
-        await account.state.of([
-          MailboxName.of("Inbox"),
-          MailboxName.of("Archive"),
-        ]),
-        equalTo(
-          new MailboxState([Mailbox.named("Inbox"), Mailbox.named("Archive")])
+      await FastmailAccount.connect(config, async (account) => {
+        assertThat(
+          await account.state.of([
+            MailboxName.of("Inbox"),
+            MailboxName.of("Archive"),
+          ]),
+          equalTo(
+            new MailboxState([Mailbox.named("Inbox"), Mailbox.named("Archive")])
+          )
         )
-      )
+      })
     })
 
     it("emits events when a new mail arrives", async () => {
       let eventReceived = false
-      FastmailAccount.connect(config, async (account) => {
+      await FastmailAccount.connect(config, async (account) => {
         await account.onChange(() => {
           eventReceived = true
         })
