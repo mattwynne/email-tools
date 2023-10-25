@@ -31,16 +31,15 @@ class Subscriber {
   ) {}
 
   public async addEventListener(handler: () => void) {
-    if (!this.events) {
-      this.events = new EventSource(this.url, { headers: this.headers })
-    }
+    // TODO: create the eventsource every time
+    await this.ensureEventSource()
     const listener = (e: MessageEvent<any>) => {
       console.log(e.data)
       handler()
       // const changes: StateChange = JSON.parse(e.data).changed
     }
     this.listeners.push(listener)
-    this.events.addEventListener("state", listener)
+    this.events?.addEventListener("state", listener)
   }
 
   public close() {
@@ -50,6 +49,17 @@ class Subscriber {
       }
       this.events.close()
     }
+  }
+
+  private async ensureEventSource() {
+    if (this.events) {
+      return
+    }
+
+    this.events = await new Promise((opened) => {
+      const events = new EventSource(this.url, { headers: this.headers })
+      events.onopen = () => opened(events)
+    })
   }
 }
 
@@ -84,9 +94,9 @@ export class FastmailSession {
     this.subscriber.close()
   }
 
-  subscribe(handler: () => void) {
+  async subscribe(handler: () => void) {
     // TODO - expose the subscriber through this method, then only people who use it have to close it.
-    this.subscriber.addEventListener(handler)
+    await this.subscriber.addEventListener(handler)
   }
 
   get apiUrl(): string {

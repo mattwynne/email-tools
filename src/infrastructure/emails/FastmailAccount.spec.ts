@@ -130,7 +130,7 @@ describe(FastmailAccount.name, () => {
     it("emits events when a new mail arrives", async () => {
       let eventReceived = false
       FastmailAccount.connect(config, async (account) => {
-        account.onChange(() => {
+        await account.onChange(() => {
           eventReceived = true
         })
 
