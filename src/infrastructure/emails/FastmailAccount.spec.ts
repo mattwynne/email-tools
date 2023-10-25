@@ -68,13 +68,14 @@ describe(FastmailAccount.name, () => {
   describe("fastmail mode @online", function () {
     this.timeout(process.env.SLOW_TEST_TIMEOUT || 30000)
 
-    const fastmailConfig: FastmailConfig = {
+    const config: FastmailConfig = {
       token: process.env.FASTMAIL_API_TOKEN || "", // TODO: make env nullable infrastructure too
     }
 
+    this.beforeEach(() => reset(config))
+
     it("connects to a real, empty fastmail inbox", async function () {
-      await reset(fastmailConfig.token)
-      const account = await FastmailAccount.connect(fastmailConfig)
+      const account = await FastmailAccount.connect(config)
       assertThat(
         account.state,
         equalTo(
@@ -91,13 +92,12 @@ describe(FastmailAccount.name, () => {
     })
 
     it("reads an email that's in the Inbox", async () => {
-      await reset(fastmailConfig.token)
       await sendTestEmail(
         Email.from(EmailAddress.of("someone@example.com")).about(
           EmailSubject.of("a subject")
         )
       )
-      const account = await FastmailAccount.connect(fastmailConfig)
+      const account = await FastmailAccount.connect(config)
       await eventually(async () =>
         assertThat(
           await account.stateOf([MailboxName.of("Inbox")]),
@@ -115,8 +115,7 @@ describe(FastmailAccount.name, () => {
     })
 
     it("fetches only specific mailboxes", async () => {
-      await reset(fastmailConfig.token)
-      const provider = await FastmailAccount.connect(fastmailConfig)
+      const provider = await FastmailAccount.connect(config)
       assertThat(
         await provider.stateOf([
           MailboxName.of("Inbox"),
@@ -130,8 +129,7 @@ describe(FastmailAccount.name, () => {
 
     it("emits events when a new mail arrives", async () => {
       let eventReceived = false
-      await reset(fastmailConfig.token)
-      await FastmailAccount.connect(fastmailConfig, async (account) => {
+      FastmailAccount.connect(config, async (account) => {
         account.onChange(() => {
           eventReceived = true
         })
@@ -142,13 +140,12 @@ describe(FastmailAccount.name, () => {
           )
         )
       })
-
       await eventually(async () => assertThat(eventReceived, is(truthy())))
     })
   })
 })
 
-const reset = async (token: string) => {
+const reset = async ({ token }: FastmailConfig) => {
   const api = await FastmailSession.create(token)
   if (api.username !== "test@levain.codes") {
     throw new Error(
