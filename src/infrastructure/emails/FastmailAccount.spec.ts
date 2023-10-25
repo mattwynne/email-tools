@@ -1,7 +1,7 @@
 import { assertThat, equalTo, is, truthy } from "hamjest"
 import nodemailer from "nodemailer"
 import { eventually } from "ts-eventually"
-import { FastmailAccount } from "./EmailProvider"
+import { FastmailAccount } from "./FastmailAccount"
 import { FastmailConfig, FastmailSession } from "./FastmailSession"
 import {
   MailboxState,
