@@ -46,10 +46,10 @@ describe(FastmailAccount.name, () => {
         Mailbox.named("Inbox/Screener"),
         Mailbox.named("Sent"),
       ])
-      const provider = FastmailAccount.createNull({
+      const account = FastmailAccount.createNull({
         mailboxStates: [mailboxState],
       })
-      const actual = await provider.stateOf([
+      const actual = await account.state.of([
         MailboxName.of("Inbox/Paperwork"),
         MailboxName.of("Inbox/Screener"),
       ])
@@ -100,7 +100,7 @@ describe(FastmailAccount.name, () => {
       const account = await FastmailAccount.connect(config)
       await eventually(async () =>
         assertThat(
-          await account.stateOf([MailboxName.of("Inbox")]),
+          await account.state.of([MailboxName.of("Inbox")]),
           equalTo(
             new MailboxState([
               Mailbox.named("Inbox").withEmails([
@@ -115,9 +115,9 @@ describe(FastmailAccount.name, () => {
     })
 
     it("fetches only specific mailboxes", async () => {
-      const provider = await FastmailAccount.connect(config)
+      const account = await FastmailAccount.connect(config)
       assertThat(
-        await provider.stateOf([
+        await account.state.of([
           MailboxName.of("Inbox"),
           MailboxName.of("Archive"),
         ]),

@@ -30,7 +30,7 @@ class Subscriber {
     private readonly headers: Headers
   ) {}
 
-  public addEventListener(handler: () => void) {
+  public async addEventListener(handler: () => void) {
     if (!this.events) {
       this.events = new EventSource(this.url, { headers: this.headers })
     }
