@@ -35,16 +35,6 @@ export class FastmailAccount {
     return this.currentState
   }
 
-  public stateOf(onlyMailboxes: MailboxName[]) {
-    return new MailboxState(
-      this.currentState.mailboxes.filter((mailbox) =>
-        onlyMailboxes.some((onlyMailboxName) =>
-          onlyMailboxName.equals(mailbox.name)
-        )
-      )
-    )
-  }
-
   public async refresh() {
     const mailboxes = await this.getMailboxes()
     // const inbox = mailboxes.find(

@@ -10,7 +10,7 @@ const run = async () => {
     throw new Error("Please set FASTMAIL_API_TOKEN")
   }
   const account = await FastmailAccount.connect({ token })
-  const { mailboxes } = await account.stateOf([
+  const { mailboxes } = await account.state.of([
     MailboxName.of("Inbox"),
     MailboxName.of("Paperwork"),
     MailboxName.of("Screener"),
