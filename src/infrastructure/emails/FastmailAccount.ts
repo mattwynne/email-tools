@@ -1,3 +1,4 @@
+import Debug from "debug"
 import {
   Email,
   EmailAddress,
@@ -9,6 +10,8 @@ import {
 } from "../../core"
 import { FastmailConfig, FastmailSession } from "./FastmailSession"
 import { Subscriber } from "./Subscriber"
+
+const debug = Debug("FastmailAccount")
 
 export class FastmailAccount {
   static createNull(arg?: any): FastmailAccount {
@@ -22,6 +25,10 @@ export class FastmailAccount {
     const session = await FastmailSession.create(config.token)
     const subscriber = await session.subscribe()
     const account = new this(session, subscriber)
+    const changes = await new Promise((resolve) =>
+      subscriber.addEventListener((changes) => resolve(changes))
+    )
+    debug(changes)
     await account.refresh()
     await onReady(account)
     subscriber.close()

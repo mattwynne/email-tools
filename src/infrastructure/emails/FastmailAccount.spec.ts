@@ -1,3 +1,4 @@
+import Debug from "debug"
 import { assertThat, equalTo, is, truthy } from "hamjest"
 import nodemailer from "nodemailer"
 import { eventually } from "ts-eventually"
@@ -137,8 +138,8 @@ describe(FastmailAccount.name, () => {
             EmailSubject.of("a subject")
           )
         )
+        await eventually(async () => assertThat(eventReceived, is(truthy())))
       })
-      await eventually(async () => assertThat(eventReceived, is(truthy())))
     })
   })
 })
@@ -197,6 +198,8 @@ const reset = async ({ token }: FastmailConfig) => {
 }
 
 async function sendTestEmail(email: Email) {
+  const debug = Debug("sendTestEmail")
+  debug("sending email", email)
   const pass = process.env.FASTMAIL_SMTP_PASSWORD
   if (!pass) throw new Error("please set FASTMAIL_SMTP_PASSWORD")
   const smtp = nodemailer.createTransport({
