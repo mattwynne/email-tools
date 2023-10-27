@@ -7,7 +7,7 @@ const debug = Debug("Subscriber")
 
 type Listener = (event: MessageEvent<any>) => void
 
-type StateChange = {
+export type StateChange = {
   type: string
   changeed: {
     [accountId: string]: {
