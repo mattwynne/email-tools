@@ -7,7 +7,8 @@ import {
   MailboxState,
   UniqueIdentifier,
 } from "../../core"
-import { FastmailConfig, FastmailSession, Subscriber } from "./FastmailSession"
+import { FastmailConfig, FastmailSession } from "./FastmailSession"
+import { Subscriber } from "./Subscriber"
 
 export class FastmailAccount {
   static createNull(arg?: any): FastmailAccount {
