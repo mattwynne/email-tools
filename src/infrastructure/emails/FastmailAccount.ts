@@ -21,12 +21,10 @@ export class FastmailAccount {
   ) {
     const session = await FastmailSession.create(config.token)
     const subscriber = await session.subscribe()
-    const result = new this(session, subscriber)
-    await result.refresh()
-    if (onReady) {
-      await onReady(result)
-      subscriber.close()
-    }
+    const account = new this(session, subscriber)
+    await account.refresh()
+    await onReady(account)
+    subscriber.close()
   }
 
   private mailboxState: MailboxState = new MailboxState([])
