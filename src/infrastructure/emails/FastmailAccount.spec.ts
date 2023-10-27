@@ -96,13 +96,14 @@ describe(FastmailAccount.name, () => {
         Email.from("someone@example.com").about(EmailSubject.of("a subject"))
       )
       await FastmailAccount.connect(config, async (account) => {
-        await eventually(async () =>
+        await eventually(async () => {
           assertThat(
             await account.state.of([MailboxName.of("Inbox")]).mailboxes[0]
               .emails.length,
             equalTo(1)
           )
-        )
+          await account.refresh()
+        })
       })
     })
 
