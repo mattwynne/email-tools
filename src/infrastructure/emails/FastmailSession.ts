@@ -1,5 +1,8 @@
 import EventSource from "eventsource"
 import util from "util"
+import Debug from "debug"
+
+const debug = Debug("FastmailSession")
 
 type ApiMethod =
   | "Email/get"
@@ -124,7 +127,7 @@ export class FastmailSession {
       throw new Error(await response.text())
     }
     const result = await response.json()
-    console.log(
+    debug(
       util.inspect(result, { showHidden: false, depth: null, colors: true })
     )
     return result["methodResponses"]
