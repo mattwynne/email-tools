@@ -9,7 +9,7 @@ import {
   UniqueIdentifier,
 } from "../../core"
 import { FastmailConfig, FastmailSession } from "./FastmailSession"
-import { Subscriber } from "./Subscriber"
+import { StateChange, Subscriber } from "./Subscriber"
 
 const debug = Debug("FastmailAccount")
 
@@ -51,7 +51,7 @@ export class FastmailAccount {
     return this
   }
 
-  public async onChange(handler: () => void) {
+  public async onChange(handler: (changes: StateChange) => void) {
     await this.subscriber.addEventListener(handler)
   }
 
