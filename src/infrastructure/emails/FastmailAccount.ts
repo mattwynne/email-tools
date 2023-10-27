@@ -28,7 +28,7 @@ export class FastmailAccount {
     }
   }
 
-  private currentState: MailboxState = new MailboxState([])
+  private mailboxState: MailboxState = new MailboxState([])
 
   constructor(
     private readonly session: FastmailSession,
@@ -36,12 +36,12 @@ export class FastmailAccount {
   ) {}
 
   public get state() {
-    return this.currentState
+    return this.mailboxState
   }
 
   public async refresh() {
     const mailboxes = await this.getMailboxes()
-    this.currentState = new MailboxState(mailboxes)
+    this.mailboxState = new MailboxState(mailboxes)
     return this
   }
 
@@ -50,7 +50,7 @@ export class FastmailAccount {
   }
 
   public async emailsIn(mailboxName: MailboxName): Promise<Email[]> {
-    const mailbox = this.currentState.mailboxes.find((mailbox) =>
+    const mailbox = this.mailboxState.mailboxes.find((mailbox) =>
       mailbox.name.equals(mailboxName)
     )
     if (!mailbox) throw new Error(`No mailbox named '${mailboxName}'`)
