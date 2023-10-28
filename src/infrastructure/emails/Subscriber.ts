@@ -3,7 +3,7 @@ import util from "util"
 import Debug from "debug"
 import { Headers } from "./FastmailSession"
 
-const debug = Debug("Subscriber")
+const debug = Debug("email-tools:Subscriber")
 
 type Listener = (event: MessageEvent<any>) => void
 

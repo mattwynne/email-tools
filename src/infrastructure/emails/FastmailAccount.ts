@@ -11,7 +11,7 @@ import {
 import { FastmailConfig, FastmailSession } from "./FastmailSession"
 import { StateChange, Subscriber } from "./Subscriber"
 
-const debug = Debug("FastmailAccount")
+const debug = Debug("email-tools:FastmailAccount")
 
 export class FastmailAccount {
   static createNull(arg?: any): FastmailAccount {

@@ -2,7 +2,7 @@ import util from "util"
 import Debug from "debug"
 import { Subscriber } from "./Subscriber"
 
-const debug = Debug("FastmailSession")
+const debug = Debug("email-tools:FastmailSession")
 
 type ApiMethod =
   | "Email/get"
