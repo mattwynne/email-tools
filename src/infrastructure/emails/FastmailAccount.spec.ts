@@ -198,8 +198,8 @@ const reset = async ({ token }: FastmailConfig) => {
 }
 
 async function sendTestEmail(email: Email) {
-  const debug = Debug("sendTestEmail")
-  debug("sending email", email)
+  const debug = Debug("email-tools:sendTestEmail")
+  debug(email)
   const pass = process.env.FASTMAIL_SMTP_PASSWORD
   if (!pass) throw new Error("please set FASTMAIL_SMTP_PASSWORD")
   const smtp = nodemailer.createTransport({
