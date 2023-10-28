@@ -80,7 +80,7 @@ export class FastmailAccount {
             inMailbox: id,
           },
         },
-        `emails-in-mailbox-${id}`,
+        id,
       ])
     )
     return mailboxes.list.map((mailbox: { id: string; name: string }) =>
@@ -89,8 +89,9 @@ export class FastmailAccount {
         .withEmails(
           emails
             .find(
-              (response: [unknown, unknown, string]) =>
-                response[2] === `emails-in-mailbox-${mailbox.id}`
+              (
+                response: [unknown, { filter: { inMailbox: string } }, unknown]
+              ) => response[1].filter.inMailbox === mailbox.id
             )[1]
             .ids.map((id: string) => Email.withId(UniqueIdentifier.of(id)))
         )
