@@ -12,8 +12,8 @@ export class Mailbox {
     public readonly emails: Email[]
   ) {}
 
-  public withId(id: UniqueIdentifier) {
-    return new Mailbox(id, this.name, this.emails)
+  public withId(id: UniqueIdentifier | string) {
+    return new Mailbox(UniqueIdentifier.of(id), this.name, this.emails)
   }
 
   public withEmails(emails: Email[]) {

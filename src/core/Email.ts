@@ -2,8 +2,12 @@ import { TinyType } from "tiny-types"
 import { EmailAddress, EmailSubject, UniqueIdentifier } from "."
 
 export class Email extends TinyType {
-  static withId(id: UniqueIdentifier) {
-    return new Email(id, EmailAddress.unknown(), EmailSubject.unknown())
+  static withId(id: UniqueIdentifier | string) {
+    return new Email(
+      UniqueIdentifier.of(id),
+      EmailAddress.unknown(),
+      EmailSubject.unknown()
+    )
   }
 
   static from(sender: string | EmailAddress) {
