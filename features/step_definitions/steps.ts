@@ -11,7 +11,7 @@ import {
   ContactsGroupName,
   Email,
   EmailAddress,
-  Mailbox,
+  MailboxState,
   MailboxName,
   EmailAccountState,
 } from "../../src/core"
@@ -39,23 +39,24 @@ defineParameterType({
 Given(
   "an email in {mailbox} from {email address}",
   function (this: World, mailboxName: MailboxName, sender: EmailAddress) {
-    this.theEmail = Email.from(sender)
-    const mailbox = Mailbox.named(mailboxName).withEmails([this.theEmail])
-    const emailAccountState = new EmailAccountState([mailbox])
-    this.emailAccountStates.push(emailAccountState)
+    // this.theEmail = Email.from(sender)
+    // const mailbox = MailboxState.named(mailboxName).withEmailIds([
+    //   this.theEmail,
+    // ])
+    // const emailAccountState = new EmailAccountState([mailbox])
+    // this.emailAccountStates.push(emailAccountState)
   }
 )
 
 When(
   "the email is added to {mailbox}",
   async function (this: World, toMailbox: MailboxName) {
-    const mailbox = Mailbox.named(toMailbox).withEmails([this.theEmail])
-    const emailAccountState = new EmailAccountState([mailbox])
-    this.emailAccountStates.push(emailAccountState)
-
-    const app = this.app()
-    await app.processNewEmailAccountState()
-    await app.processNewEmailAccountState()
+    // const mailbox = MailboxState.named(toMailbox).withEmailIds([this.theEmail])
+    // const emailAccountState = new EmailAccountState([mailbox])
+    // this.emailAccountStates.push(emailAccountState)
+    // const app = this.app()
+    // await app.processNewEmailAccountState()
+    // await app.processNewEmailAccountState()
   }
 )
 

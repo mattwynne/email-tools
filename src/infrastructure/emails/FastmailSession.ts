@@ -45,7 +45,7 @@ export class FastmailSession {
     private readonly data: FastmailSession
   ) {}
 
-  public async subscribe() {
+  public async connectSubscriber() {
     return Subscriber.connect(
       this.data.eventSourceUrl + "types=*",
       this.headers

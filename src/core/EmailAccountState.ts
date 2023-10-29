@@ -1,4 +1,4 @@
-import { Mailbox, MailboxName } from "."
+import { MailboxState, MailboxName } from "."
 
 export class EmailAccountState {
   ofMailboxes(onlyMailboxesNamed: MailboxName[]) {
@@ -11,5 +11,5 @@ export class EmailAccountState {
     )
   }
 
-  constructor(public readonly mailboxes: Mailbox[]) {}
+  constructor(public readonly mailboxes: MailboxState[]) {}
 }
