@@ -13,10 +13,10 @@ export class Application {
   async processNewEmailAccountState() {
     const state = await this.emailAccount.state
     if (this.currentState) {
-      await this.contactsProvider.addToGroup(
-        state.mailboxes[0].emails[0].from,
-        state.mailboxes[0].name.contactsGroup
-      )
+      // await this.contactsProvider.addToGroup(
+      //   state.mailboxes[0].emailIds[0].from,
+      //   state.mailboxes[0].name.contactsGroup
+      // )
     }
     this.currentState = state
     return this

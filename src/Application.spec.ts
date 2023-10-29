@@ -4,7 +4,7 @@ import {
   ContactsGroup,
   ContactsGroupName,
   Email,
-  Mailbox,
+  MailboxState,
   EmailAccountState,
   UniqueIdentifier,
 } from "./core"
@@ -28,38 +28,38 @@ describe.skip(Application.name, () => {
 
     context("with an email in Inbox/Screener", () => {
       it("@wip adds the contact to an existing Paperwork group when the email is moved to the Inbox/Paperwork mailbox", async () => {
-        const contactsProvider = Contacts.createNull({
-          groups: [
-            ContactsGroup.named("Paperwork").withId(UniqueIdentifier.create()),
-          ],
-          contacts: [],
-        })
-        const changes = contactsProvider.trackChanges()
-        const theEmail: Email = Email.from("sender@example.com")
-        const inScreener = new EmailAccountState([
-          Mailbox.named("Inbox/Screener").withEmails([theEmail]),
-        ])
-        const movedToPaperwork = new EmailAccountState([
-          Mailbox.named("Inbox/Paperwork").withEmails([theEmail]),
-        ])
-        const app = new Application(
-          FastmailAccount.createNull({
-            EmailAccountStates: [inScreener, movedToPaperwork],
-          }),
-          contactsProvider
-        )
-        await app.processNewEmailAccountState()
-        await app.processNewEmailAccountState()
-        assertThat(
-          changes.data,
-          equalTo([
-            ContactsChange.of({
-              action: "add-to-group",
-              emailAddress: theEmail.from,
-              group: ContactsGroupName.of("Paperwork"),
-            }),
-          ])
-        )
+        // const contactsProvider = Contacts.createNull({
+        //   groups: [
+        //     ContactsGroup.named("Paperwork").withId(UniqueIdentifier.create()),
+        //   ],
+        //   contacts: [],
+        // })
+        // const changes = contactsProvider.trackChanges()
+        // const theEmail: Email = Email.from("sender@example.com")
+        // const inScreener = new EmailAccountState([
+        //   MailboxState.named("Inbox/Screener").withEmailIds([theEmail]),
+        // ])
+        // const movedToPaperwork = new EmailAccountState([
+        //   MailboxState.named("Inbox/Paperwork").withEmailIds([theEmail]),
+        // ])
+        // const app = new Application(
+        //   FastmailAccount.createNull({
+        //     EmailAccountStates: [inScreener, movedToPaperwork],
+        //   }),
+        //   contactsProvider
+        // )
+        // await app.processNewEmailAccountState()
+        // await app.processNewEmailAccountState()
+        // assertThat(
+        //   changes.data,
+        //   equalTo([
+        //     ContactsChange.of({
+        //       action: "add-to-group",
+        //       emailAddress: theEmail.from,
+        //       group: ContactsGroupName.of("Paperwork"),
+        //     }),
+        //   ])
+        // )
       })
     })
   })

@@ -3,13 +3,14 @@ import {
   Email,
   EmailAddress,
   EmailSubject,
-  Mailbox,
+  MailboxState,
   MailboxName,
   EmailAccountState,
   UniqueIdentifier,
 } from "../../core"
 import { FastmailConfig, FastmailSession } from "./FastmailSession"
 import { StateChange, Subscriber } from "./Subscriber"
+import { EventEmitter } from "stream"
 
 const debug = Debug("email-tools:FastmailAccount")
 
@@ -23,13 +24,9 @@ export class FastmailAccount {
     onReady: (account: FastmailAccount) => Promise<void>
   ) {
     const session = await FastmailSession.create(config.token)
-    const subscriber = await session.subscribe()
-    const account = new this(session, subscriber)
-    const changes = await new Promise((resolve) =>
-      subscriber.addEventListener((changes) => resolve(changes))
-    )
-    debug(changes)
-    await account.refresh()
+    const subscriber = await session.connectSubscriber()
+    const account = new FastmailAccount(session, subscriber)
+    await account.refreshed()
     try {
       await onReady(account)
     } finally {
@@ -39,22 +36,29 @@ export class FastmailAccount {
 
   private accountState: EmailAccountState = new EmailAccountState([])
   private changes: StateChange[] = []
+  private events = new EventEmitter()
 
-  constructor(
+  private constructor(
     private readonly session: FastmailSession,
     private readonly subscriber: Subscriber
   ) {
     this.subscriber.addEventListener((changes) => {
       this.changes.push(changes)
-      this.refresh()
+      this.refresh().then(() => {
+        this.events.emit("refreshed")
+      })
     })
+  }
+
+  public async refreshed() {
+    return new Promise((resolve) => this.events.on("refreshed", resolve))
   }
 
   public get state() {
     return this.accountState
   }
 
-  public async refresh() {
+  private async refresh() {
     const mailboxes = await this.getMailboxes()
     this.accountState = new EmailAccountState(mailboxes)
     return this
@@ -72,64 +76,37 @@ export class FastmailAccount {
     return await this.getEmailsIn(mailbox.id)
   }
 
-  private async getMailboxes(): Promise<Mailbox[]> {
-    if (this.changes.length > 1) {
-      const previousChange = this.changes[this.changes.length - 2]
-      const result = await this.session.calls(
-        this.accountState.mailboxes.map((mailbox) => [
-          "Email/queryChanges",
-          {
-            accountId: this.session.accountId,
-            filter: {
-              inMailbox: mailbox.id.value,
-            },
-            sinceQueryState: `${
-              previousChange.changed[this.session.accountId].Email
-            }:0`,
-          },
-          mailbox.id.value,
-        ])
-      )
-      debug(result)
-      for (const queryChanges of result) {
-        if (queryChanges.added.length > 0) {
-          debug("added: ", queryChanges.added)
-        }
-        if (queryChanges.removed.length > 0) {
-          debug("removed: ", queryChanges.removed)
-        }
-      }
-    }
+  private async getMailboxes(): Promise<MailboxState[]> {
     const mailboxes = await this.session.call("Mailbox/get", {
       accountId: this.session.accountId,
       ids: null,
     })
 
-    const ids = mailboxes.list.map(({ id }: { id: string }) => id)
+    const mailboxIds = mailboxes.list.map(({ id }: { id: string }) => id)
 
     const emails = await this.session.calls(
-      ids.map((id: string) => [
+      mailboxIds.map((inMailbox: string) => [
         "Email/query",
         {
           accountId: this.session.accountId,
           filter: {
-            inMailbox: id,
+            inMailbox,
           },
         },
-        id,
+        inMailbox,
       ])
     )
     return mailboxes.list.map((mailbox: { id: string; name: string }) =>
-      Mailbox.named(mailbox.name)
+      MailboxState.named(mailbox.name)
         .withId(UniqueIdentifier.of(mailbox.id))
-        .withEmails(
+        .withEmailIds(
           emails
             .find(
               (
                 response: [unknown, { filter: { inMailbox: string } }, unknown]
               ) => response[1].filter.inMailbox === mailbox.id
             )[1]
-            .ids.map((id: string) => Email.withId(UniqueIdentifier.of(id)))
+            .ids.map((id: string) => UniqueIdentifier.of(id))
         )
     )
   }

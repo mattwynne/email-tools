@@ -19,7 +19,7 @@ const run = async () => {
     console.log(mailboxes)
     const stats = mailboxes.map((mailbox) => ({
       name: mailbox.name,
-      messages: mailbox.emails.length,
+      messages: mailbox.emailIds.length,
     }))
 
     const totals = stats.reduce(

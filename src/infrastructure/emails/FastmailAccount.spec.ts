@@ -6,7 +6,7 @@ import { FastmailAccount } from "./FastmailAccount"
 import { FastmailConfig, FastmailSession } from "./FastmailSession"
 import {
   EmailAccountState,
-  Mailbox,
+  MailboxState,
   Email,
   EmailAddress,
   EmailSubject,
@@ -46,12 +46,11 @@ describe(FastmailAccount.name, () => {
           Email.from("someone@example.com").about(EmailSubject.of("a subject"))
         )
         await eventually(async () => {
-          await account.refresh()
           const mailboxState = account.state.ofMailboxes([
             MailboxName.of("Inbox"),
           ])
           assertThat(mailboxState.mailboxes.length, equalTo(1))
-          assertThat(mailboxState.mailboxes[0].emails.length, equalTo(1))
+          assertThat(mailboxState.mailboxes[0].emailIds.length, equalTo(1))
         })
       })
     })
