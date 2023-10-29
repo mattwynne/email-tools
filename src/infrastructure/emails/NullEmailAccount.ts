@@ -1,15 +1,15 @@
-import { MailboxName, MailboxState } from "../../core"
+import { MailboxName, EmailAccountState } from "../../core"
 
 export class NullEmailAccount {
-  constructor(private readonly mailboxStates: MailboxState[]) {}
+  constructor(private readonly EmailAccountStates: EmailAccountState[]) {}
 
-  async getMailboxState(onlyMailboxNames?: MailboxName[]) {
-    const nextMailboxState = this.mailboxStates.shift()
-    if (!nextMailboxState)
-      throw new Error("You don't have any more configured MailboxStates")
-    if (!onlyMailboxNames) return nextMailboxState
-    return new MailboxState(
-      nextMailboxState.mailboxes.filter((mailbox) =>
+  async getEmailAccountState(onlyMailboxNames?: MailboxName[]) {
+    const nextEmailAccountState = this.EmailAccountStates.shift()
+    if (!nextEmailAccountState)
+      throw new Error("You don't have any more configured EmailAccountStates")
+    if (!onlyMailboxNames) return nextEmailAccountState
+    return new EmailAccountState(
+      nextEmailAccountState.mailboxes.filter((mailbox) =>
         onlyMailboxNames.some((name) => name.equals(mailbox.name))
       )
     )

@@ -1,16 +1,16 @@
 import { Contacts } from "./infrastructure/contacts"
-import { MailboxState } from "./core/MailboxState"
+import { EmailAccountState } from "./core/EmailAccountState"
 import { FastmailAccount } from "./infrastructure/emails"
 
 export class Application {
-  private currentState?: MailboxState
+  private currentState?: EmailAccountState
 
   constructor(
     private readonly emailAccount: FastmailAccount,
     private readonly contactsProvider: Contacts
   ) {}
 
-  async processNewMailboxState() {
+  async processNewEmailAccountState() {
     const state = await this.emailAccount.state
     if (this.currentState) {
       await this.contactsProvider.addToGroup(

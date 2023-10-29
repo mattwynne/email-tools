@@ -1,8 +1,8 @@
 import { Mailbox, MailboxName } from "."
 
-export class MailboxState {
-  of(onlyMailboxesNamed: MailboxName[]) {
-    return new MailboxState(
+export class EmailAccountState {
+  ofMailboxes(onlyMailboxesNamed: MailboxName[]) {
+    return new EmailAccountState(
       this.mailboxes.filter((mailbox) =>
         onlyMailboxesNamed.some((onlyMailboxName) =>
           onlyMailboxName.equals(mailbox.name)
