@@ -9,7 +9,7 @@ type Listener = (event: MessageEvent<any>) => void
 
 export type StateChange = {
   type: string
-  changeed: {
+  changed: {
     [accountId: string]: {
       Email: string
       EmailDelivery: string

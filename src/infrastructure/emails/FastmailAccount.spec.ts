@@ -5,7 +5,7 @@ import { eventually } from "ts-eventually"
 import { FastmailAccount } from "./FastmailAccount"
 import { FastmailConfig, FastmailSession } from "./FastmailSession"
 import {
-  MailboxState,
+  EmailAccountState,
   Mailbox,
   Email,
   EmailAddress,
@@ -15,58 +15,6 @@ import {
 import Mail from "nodemailer/lib/mailer"
 
 describe(FastmailAccount.name, () => {
-  describe.skip("null mode", () => {
-    it("can be created with stubbed MailboxStates", async () => {
-      const mailboxStates = [
-        new MailboxState([
-          Mailbox.named("Inbox/Screener").withEmails([
-            Email.from(EmailAddress.of("someone@example.com")).about(
-              EmailSubject.of("a subject")
-            ),
-          ]),
-        ]),
-        new MailboxState([
-          Mailbox.named("Inbox/Paperwork").withEmails([
-            Email.from(EmailAddress.of("someone@example.com")).about(
-              EmailSubject.of("a subject")
-            ),
-          ]),
-        ]),
-      ]
-      const provider = FastmailAccount.createNull({
-        mailboxStates,
-      })
-      assertThat(
-        [await provider.refresh(), await provider.refresh()],
-        equalTo(mailboxStates)
-      )
-    })
-
-    it("can return only mailboxes matching the given names", async () => {
-      const mailboxState = new MailboxState([
-        Mailbox.named("Inbox/Paperwork"),
-        Mailbox.named("Inbox/Screener"),
-        Mailbox.named("Sent"),
-      ])
-      const account = FastmailAccount.createNull({
-        mailboxStates: [mailboxState],
-      })
-      const actual = await account.state.of([
-        MailboxName.of("Inbox/Paperwork"),
-        MailboxName.of("Inbox/Screener"),
-      ])
-      assertThat(
-        actual,
-        equalTo(
-          new MailboxState([
-            Mailbox.named("Inbox/Paperwork"),
-            Mailbox.named("Inbox/Screener"),
-          ])
-        )
-      )
-    })
-  })
-
   describe("fastmail mode @online", function () {
     this.timeout(process.env.SLOW_TEST_TIMEOUT || 30000)
 
@@ -93,17 +41,17 @@ describe(FastmailAccount.name, () => {
     })
 
     it("counts emails in a mailbox", async () => {
-      await sendTestEmail(
-        Email.from("someone@example.com").about(EmailSubject.of("a subject"))
-      )
       await FastmailAccount.connect(config, async (account) => {
+        await sendTestEmail(
+          Email.from("someone@example.com").about(EmailSubject.of("a subject"))
+        )
         await eventually(async () => {
-          assertThat(
-            await account.state.of([MailboxName.of("Inbox")]).mailboxes[0]
-              .emails.length,
-            equalTo(1)
-          )
           await account.refresh()
+          const mailboxState = account.state.ofMailboxes([
+            MailboxName.of("Inbox"),
+          ])
+          assertThat(mailboxState.mailboxes.length, equalTo(1))
+          assertThat(mailboxState.mailboxes[0].emails.length, equalTo(1))
         })
       })
     })

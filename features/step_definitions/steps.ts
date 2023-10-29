@@ -13,7 +13,7 @@ import {
   EmailAddress,
   Mailbox,
   MailboxName,
-  MailboxState,
+  EmailAccountState,
 } from "../../src/core"
 import { Contacts, ContactsChange } from "../../src/infrastructure/contacts"
 import { FastmailAccount } from "../../src/infrastructure/emails"
@@ -41,8 +41,8 @@ Given(
   function (this: World, mailboxName: MailboxName, sender: EmailAddress) {
     this.theEmail = Email.from(sender)
     const mailbox = Mailbox.named(mailboxName).withEmails([this.theEmail])
-    const mailboxState: MailboxState = new MailboxState([mailbox])
-    this.mailboxStates.push(mailboxState)
+    const emailAccountState = new EmailAccountState([mailbox])
+    this.emailAccountStates.push(emailAccountState)
   }
 )
 
@@ -50,12 +50,12 @@ When(
   "the email is added to {mailbox}",
   async function (this: World, toMailbox: MailboxName) {
     const mailbox = Mailbox.named(toMailbox).withEmails([this.theEmail])
-    const mailboxState: MailboxState = new MailboxState([mailbox])
-    this.mailboxStates.push(mailboxState)
+    const emailAccountState = new EmailAccountState([mailbox])
+    this.emailAccountStates.push(emailAccountState)
 
     const app = this.app()
-    await app.processNewMailboxState()
-    await app.processNewMailboxState()
+    await app.processNewEmailAccountState()
+    await app.processNewEmailAccountState()
   }
 )
 
@@ -64,7 +64,7 @@ type World = {
   contactsChanges: ContactsChange[]
   app: () => Application
   theEmail: Email
-  mailboxStates: MailboxState[]
+  emailAccountStates: EmailAccountState[]
 }
 
 Before(function (this: World) {
@@ -74,7 +74,7 @@ Before(function (this: World) {
   this.app = () => {
     return new Application(fastmailAccount(), this.contactsProvider)
   }
-  this.mailboxStates = []
+  this.emailAccountStates = []
 })
 
 Then(

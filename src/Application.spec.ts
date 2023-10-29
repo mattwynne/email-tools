@@ -5,7 +5,7 @@ import {
   ContactsGroupName,
   Email,
   Mailbox,
-  MailboxState,
+  EmailAccountState,
   UniqueIdentifier,
 } from "./core"
 import { Contacts, ContactsChange } from "./infrastructure/contacts"
@@ -21,7 +21,7 @@ describe.skip(Application.name, () => {
           FastmailAccount.createNull(),
           contactsProvider
         )
-        app.processNewMailboxState()
+        app.processNewEmailAccountState()
         assertThat(changes.data, isEmpty())
       })
     })
@@ -36,20 +36,20 @@ describe.skip(Application.name, () => {
         })
         const changes = contactsProvider.trackChanges()
         const theEmail: Email = Email.from("sender@example.com")
-        const inScreener = new MailboxState([
+        const inScreener = new EmailAccountState([
           Mailbox.named("Inbox/Screener").withEmails([theEmail]),
         ])
-        const movedToPaperwork = new MailboxState([
+        const movedToPaperwork = new EmailAccountState([
           Mailbox.named("Inbox/Paperwork").withEmails([theEmail]),
         ])
         const app = new Application(
           FastmailAccount.createNull({
-            mailboxStates: [inScreener, movedToPaperwork],
+            EmailAccountStates: [inScreener, movedToPaperwork],
           }),
           contactsProvider
         )
-        await app.processNewMailboxState()
-        await app.processNewMailboxState()
+        await app.processNewEmailAccountState()
+        await app.processNewEmailAccountState()
         assertThat(
           changes.data,
           equalTo([

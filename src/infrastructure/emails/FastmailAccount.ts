@@ -5,7 +5,7 @@ import {
   EmailSubject,
   Mailbox,
   MailboxName,
-  MailboxState,
+  EmailAccountState,
   UniqueIdentifier,
 } from "../../core"
 import { FastmailConfig, FastmailSession } from "./FastmailSession"
@@ -30,24 +30,33 @@ export class FastmailAccount {
     )
     debug(changes)
     await account.refresh()
-    await onReady(account)
-    subscriber.close()
+    try {
+      await onReady(account)
+    } finally {
+      subscriber.close()
+    }
   }
 
-  private mailboxState: MailboxState = new MailboxState([])
+  private accountState: EmailAccountState = new EmailAccountState([])
+  private changes: StateChange[] = []
 
   constructor(
     private readonly session: FastmailSession,
     private readonly subscriber: Subscriber
-  ) {}
+  ) {
+    this.subscriber.addEventListener((changes) => {
+      this.changes.push(changes)
+      this.refresh()
+    })
+  }
 
   public get state() {
-    return this.mailboxState
+    return this.accountState
   }
 
   public async refresh() {
     const mailboxes = await this.getMailboxes()
-    this.mailboxState = new MailboxState(mailboxes)
+    this.accountState = new EmailAccountState(mailboxes)
     return this
   }
 
@@ -56,7 +65,7 @@ export class FastmailAccount {
   }
 
   public async emailsIn(mailboxName: MailboxName): Promise<Email[]> {
-    const mailbox = this.mailboxState.mailboxes.find((mailbox) =>
+    const mailbox = this.accountState.mailboxes.find((mailbox) =>
       mailbox.name.equals(mailboxName)
     )
     if (!mailbox) throw new Error(`No mailbox named '${mailboxName}'`)
@@ -64,6 +73,33 @@ export class FastmailAccount {
   }
 
   private async getMailboxes(): Promise<Mailbox[]> {
+    if (this.changes.length > 1) {
+      const previousChange = this.changes[this.changes.length - 2]
+      const result = await this.session.calls(
+        this.accountState.mailboxes.map((mailbox) => [
+          "Email/queryChanges",
+          {
+            accountId: this.session.accountId,
+            filter: {
+              inMailbox: mailbox.id.value,
+            },
+            sinceQueryState: `${
+              previousChange.changed[this.session.accountId].Email
+            }:0`,
+          },
+          mailbox.id.value,
+        ])
+      )
+      debug(result)
+      for (const queryChanges of result) {
+        if (queryChanges.added.length > 0) {
+          debug("added: ", queryChanges.added)
+        }
+        if (queryChanges.removed.length > 0) {
+          debug("removed: ", queryChanges.removed)
+        }
+      }
+    }
     const mailboxes = await this.session.call("Mailbox/get", {
       accountId: this.session.accountId,
       ids: null,

@@ -8,9 +8,11 @@ type ApiMethod =
   | "Email/get"
   | "Email/set"
   | "Email/query"
+  | "Email/queryChanges"
   | "Mailbox/get"
   | "Mailbox/set"
   | "Mailbox/query"
+  | "Mailbox/queryChanges"
 
 type MethodCall = [method: ApiMethod, params: any, index: string]
 
