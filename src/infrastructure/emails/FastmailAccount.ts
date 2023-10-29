@@ -73,7 +73,7 @@ export class FastmailAccount {
       mailbox.name.equals(mailboxName)
     )
     if (!mailbox) throw new Error(`No mailbox named '${mailboxName}'`)
-    return await this.getEmailsIn(mailbox.id)
+    return await this.getEmailsIn(mailbox)
   }
 
   private async getMailboxes(): Promise<MailboxState[]> {
@@ -85,15 +85,15 @@ export class FastmailAccount {
     const mailboxIds = mailboxes.list.map(({ id }: { id: string }) => id)
 
     const emails = await this.session.calls(
-      mailboxIds.map((inMailbox: string) => [
+      mailboxIds.map((mailboxId: string) => [
         "Email/query",
         {
           accountId: this.session.accountId,
           filter: {
-            inMailbox,
+            inMailbox: mailboxId,
           },
         },
-        inMailbox,
+        mailboxId,
       ])
     )
     return mailboxes.list.map((mailbox: { id: string; name: string }) =>
@@ -111,34 +111,14 @@ export class FastmailAccount {
     )
   }
 
-  private async getEmailsIn(mailboxId: UniqueIdentifier): Promise<Email[]> {
-    const result = await this.session.calls([
-      [
-        "Email/query",
-        {
-          accountId: this.session.accountId,
-          filter: {
-            inMailbox: mailboxId.value,
-          },
-        },
-        "0",
-      ],
-      [
-        "Email/get",
-        {
-          accountId: this.session.accountId,
-          "#ids": {
-            resultOf: "0",
-            name: "Email/query",
-            path: "/ids",
-          },
-        },
-        "1",
-      ],
-    ])
-    const emails = result[1][1].list
+  private async getEmailsIn(mailbox: MailboxState): Promise<Email[]> {
+    const result = await this.session.call("Email/get", {
+      accountId: this.session.accountId,
+      ids: mailbox.emailIds.map((id) => id.value),
+    })
+    const emails = result.list
     if (!emails) {
-      throw new Error("No emails found for mailbox " + mailboxId)
+      throw new Error("No emails found for mailbox " + mailbox.name)
     }
     return emails.map(
       (email: { subject: string; from: { email: string }[] }) => {
