@@ -23,20 +23,26 @@ describe(PushNotification.name, function () {
   this.afterEach(() => push.close())
 
   it("connects", async () => {
-    const stateChange = await new Promise<StateChange>((resolve) =>
-      push.addEventListener(resolve)
-    )
-    assertThat(stateChange.type, equalTo("connect"))
+    const changes = await listeningForChanges(1)
+    assertThat(changes[0].type, equalTo("connect"))
   })
 
   it("emits when an email is received", async () => {
-    await new Promise<StateChange>((resolve) => push.addEventListener(resolve))
     await sendTestEmail(
       Email.from("someone@example.com").about(EmailSubject.of("A subject"))
     )
-    const stateChange = await new Promise<StateChange>((resolve) =>
-      push.addEventListener(resolve)
-    )
-    assertThat(stateChange.type, equalTo("delivery"))
+    const changes = await listeningForChanges(2)
+    assertThat(changes[0].type, equalTo("connect"))
+    assertThat(changes[1].type, equalTo("delivery"))
   })
+
+  const listeningForChanges = (expectedNumberOfChanges: number) => {
+    const changes: StateChange[] = []
+    return new Promise<StateChange[]>((resolve) =>
+      push.addEventListener((stateChange) => {
+        changes.push(stateChange)
+        if (changes.length == expectedNumberOfChanges) resolve(changes)
+      })
+    )
+  }
 })
