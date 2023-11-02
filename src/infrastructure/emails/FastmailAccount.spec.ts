@@ -1,18 +1,10 @@
-import Debug from "debug"
 import { assertThat, equalTo, is, truthy } from "hamjest"
-import nodemailer from "nodemailer"
 import { eventually } from "ts-eventually"
+import { Email, EmailAddress, EmailSubject, MailboxName } from "../../core"
 import { FastmailAccount } from "./FastmailAccount"
-import { FastmailConfig, FastmailSession } from "./FastmailSession"
-import {
-  EmailAccountState,
-  MailboxState,
-  Email,
-  EmailAddress,
-  EmailSubject,
-  MailboxName,
-} from "../../core"
-import Mail from "nodemailer/lib/mailer"
+import { FastmailConfig } from "./FastmailSession"
+import { reset } from "./reset"
+import { sendTestEmail } from "./sendTestEmail"
 
 describe(FastmailAccount.name, () => {
   describe("fastmail mode @online", function () {
@@ -90,77 +82,3 @@ describe(FastmailAccount.name, () => {
     })
   })
 })
-
-const reset = async ({ token }: FastmailConfig) => {
-  const api = await FastmailSession.create(token)
-  if (api.username !== "test@levain.codes") {
-    throw new Error(
-      `Only run the tests with the test account! Attempted to run with ${api.username}`
-    )
-  }
-  await api.calls([
-    [
-      "Email/query",
-      {
-        accountId: api.accountId,
-        filter: null,
-      },
-      "0",
-    ],
-    [
-      "Email/set",
-      {
-        accountId: api.accountId,
-        "#destroy": {
-          resultOf: "0",
-          name: "Email/query",
-          path: "/ids",
-        },
-      },
-      "1",
-    ],
-    [
-      "Mailbox/query",
-      {
-        accountId: api.accountId,
-        filter: {
-          hasAnyRole: false,
-        },
-      },
-      "2",
-    ],
-    [
-      "Mailbox/set",
-      {
-        accountId: api.accountId,
-        "#destroy": {
-          resultOf: "2",
-          name: "Mailbox/query",
-          path: "/ids",
-        },
-      },
-      "3",
-    ],
-  ])
-}
-
-async function sendTestEmail(email: Email) {
-  const debug = Debug("email-tools:sendTestEmail")
-  debug(email)
-  const pass = process.env.FASTMAIL_SMTP_PASSWORD
-  if (!pass) throw new Error("please set FASTMAIL_SMTP_PASSWORD")
-  const smtp = nodemailer.createTransport({
-    host: "smtp.fastmail.com",
-    port: 465,
-    secure: true,
-    auth: {
-      user: "test@levain.codes",
-      pass,
-    },
-  })
-  await smtp.sendMail({
-    to: "test@levain.codes",
-    from: email.from.value,
-    subject: email.subject.value,
-  })
-}

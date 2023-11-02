@@ -19,17 +19,17 @@ export type StateChange = {
   }
 }
 
-export class Subscriber {
+export class PushNotification {
   public static async connect(url: string, headers: Headers) {
-    const events = await new Promise<EventSource>((opened) => {
+    const eventSource = await new Promise<EventSource>((opened) => {
       const events = new EventSource(url, { headers })
       events.onopen = () => opened(events)
     })
-    return new Subscriber(events)
+    return new PushNotification(eventSource)
   }
 
   private readonly listeners: Listener[] = []
-  private constructor(private readonly events: EventSource) {}
+  private constructor(private readonly eventSource: EventSource) {}
 
   public async addEventListener(handler: (changes: StateChange) => void) {
     const listener = (e: MessageEvent<any>) => {
@@ -44,13 +44,13 @@ export class Subscriber {
       handler(changes)
     }
     this.listeners.push(listener)
-    this.events?.addEventListener("state", listener)
+    this.eventSource?.addEventListener("state", listener)
   }
 
   public close() {
     for (const listener of this.listeners) {
-      this.events.removeEventListener("state", listener)
+      this.eventSource.removeEventListener("state", listener)
     }
-    this.events.close()
+    this.eventSource.close()
   }
 }

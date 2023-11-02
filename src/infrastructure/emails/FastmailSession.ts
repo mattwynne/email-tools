@@ -1,6 +1,6 @@
 import util from "util"
 import Debug from "debug"
-import { Subscriber } from "./Subscriber"
+import { PushNotification } from "./PushNotification"
 
 const debug = Debug("email-tools:FastmailSession")
 
@@ -46,7 +46,7 @@ export class FastmailSession {
   ) {}
 
   public async connectSubscriber() {
-    return Subscriber.connect(
+    return PushNotification.connect(
       this.data.eventSourceUrl + "types=*",
       this.headers
     )
