@@ -9,7 +9,7 @@ import {
   UniqueIdentifier,
 } from "../../core"
 import { FastmailConfig, FastmailSession } from "./FastmailSession"
-import { StateChange, Subscriber } from "./Subscriber"
+import { StateChange, PushNotification } from "./PushNotification"
 import { EventEmitter } from "stream"
 
 const debug = Debug("email-tools:FastmailAccount")
@@ -40,7 +40,7 @@ export class FastmailAccount {
 
   private constructor(
     private readonly session: FastmailSession,
-    private readonly subscriber: Subscriber
+    private readonly subscriber: PushNotification
   ) {
     this.subscriber.addEventListener((changes) => {
       this.changes.push(changes)
