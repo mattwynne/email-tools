@@ -46,10 +46,7 @@ export class FastmailSession {
   ) {}
 
   public async connectSubscriber() {
-    return PushNotification.connect(
-      this.data.eventSourceUrl + "types=*",
-      this.headers
-    )
+    return PushNotification.connect(this)
   }
 
   get apiUrl(): string {
