@@ -19,51 +19,31 @@ export type StateChange = {
   }
 }
 
-export class PushNotification {
-  public static async connect({
+class JmapEventSource {
+  static async connect({
     eventSourceUrl,
     headers,
   }: {
     eventSourceUrl: string
     headers: Headers
   }) {
-    const eventSource = await new Promise<EventSource>((opened) => {
+    return new Promise<JmapEventSource>((resolved) => {
       const eventSource = new EventSource(eventSourceUrl, { headers })
-      eventSource.onerror = (e: MessageEvent<any>) => {
-        throw new Error("Could not connect EventSource: " + JSON.stringify(e))
+      eventSource.onerror = ({ data }: MessageEvent<string>) => {
+        throw new Error(
+          "Could not connect EventSource: " + JSON.stringify(data)
+        )
       }
-      eventSource.onopen = () => opened(eventSource)
-    })
-    return await new Promise<PushNotification>((connected) => {
-      eventSource.addEventListener("state", ({ data }: MessageEvent<any>) => {
-        const initialState: StateChange = JSON.parse(data)
-        connected(new PushNotification(eventSource, initialState))
-      })
+      eventSource.onopen = () => resolved(new JmapEventSource(eventSource))
     })
   }
-
   private readonly listeners: Listener[] = []
-  private constructor(
-    private readonly eventSource: EventSource,
-    private currentState: StateChange
-  ) {
-    this.addEventListener((newState) => (this.currentState = newState))
-  }
+  public constructor(private readonly eventSource: EventSource) {}
 
-  public get state() {
-    return this.currentState
-  }
-
-  public async addEventListener(handler: (changes: StateChange) => void) {
-    const listener = (e: MessageEvent<any>) => {
-      const changes: StateChange = JSON.parse(e.data)
-      debug(
-        util.inspect(changes, {
-          showHidden: false,
-          depth: null,
-          colors: true,
-        })
-      )
+  public async onStateChange(handler: (changes: StateChange) => void) {
+    const listener = ({ data }: MessageEvent<string>) => {
+      const changes: StateChange = JSON.parse(data)
+      debug(changes)
       handler(changes)
     }
     this.listeners.push(listener)
@@ -75,5 +55,44 @@ export class PushNotification {
       this.eventSource.removeEventListener("state", listener)
     }
     this.eventSource.close()
+  }
+}
+
+export class PushNotification {
+  public static async connect({
+    eventSourceUrl,
+    headers,
+  }: {
+    eventSourceUrl: string
+    headers: Headers
+  }) {
+    const jmapEventSource = await JmapEventSource.connect({
+      eventSourceUrl,
+      headers,
+    })
+    return await new Promise<PushNotification>((connected) => {
+      jmapEventSource.onStateChange((initialState) =>
+        connected(new PushNotification(jmapEventSource, initialState))
+      )
+    })
+  }
+
+  private constructor(
+    private readonly events: JmapEventSource,
+    private currentState: StateChange
+  ) {
+    events.onStateChange((newState) => (this.currentState = newState))
+  }
+
+  public get state() {
+    return this.currentState
+  }
+
+  public async addEventListener(handler: (changes: StateChange) => void) {
+    this.events.onStateChange(handler)
+  }
+
+  public close() {
+    this.events.close()
   }
 }

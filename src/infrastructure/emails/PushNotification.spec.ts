@@ -1,9 +1,9 @@
 import { assertThat, equalTo } from "hamjest"
+import { Email, EmailSubject } from "../../core"
 import { FastmailSession } from "./FastmailSession"
 import { PushNotification, StateChange } from "./PushNotification"
-import { Email, EmailSubject } from "../../core"
-import { sendTestEmail } from "./sendTestEmail"
 import { reset } from "./reset"
+import { sendTestEmail } from "./sendTestEmail"
 
 describe(PushNotification.name, function () {
   this.timeout(process.env.SLOW_TEST_TIMEOUT || 30000)
@@ -23,7 +23,7 @@ describe(PushNotification.name, function () {
     assertThat(push.state.type, equalTo("connect"))
   })
 
-  it("emits when an email is received", async () => {
+  it("emits and sets state when an email is received", async () => {
     const session = await FastmailSession.create(token)
     push = await PushNotification.connect(session)
     await sendTestEmail(
