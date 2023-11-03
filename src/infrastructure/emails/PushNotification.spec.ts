@@ -13,33 +13,32 @@ describe(PushNotification.name, function () {
 
   this.beforeEach(async () => {
     await reset({ token })
-    const session = await FastmailSession.create(token)
-    push = await PushNotification.connect(
-      session.eventSourceUrl,
-      session.headers
-    )
   })
 
   this.afterEach(() => push.close())
 
-  it("connects", async () => {
-    const changes = await listeningForChanges(1)
-    assertThat(changes[0].type, equalTo("connect"))
+  it("connects with an initial state", async () => {
+    const session = await FastmailSession.create(token)
+    push = await PushNotification.connect(session)
+    assertThat(push.state.type, equalTo("connect"))
   })
 
   it("emits when an email is received", async () => {
+    const session = await FastmailSession.create(token)
+    push = await PushNotification.connect(session)
     await sendTestEmail(
       Email.from("someone@example.com").about(EmailSubject.of("A subject"))
     )
-    const changes = await listeningForChanges(2)
-    assertThat(changes[0].type, equalTo("connect"))
-    assertThat(changes[1].type, equalTo("delivery"))
+    const changes = await listeningForChanges(1)
+    assertThat(changes[0].type, equalTo("delivery"))
+    assertThat(push.state.type, equalTo("delivery"))
   })
 
   const listeningForChanges = (expectedNumberOfChanges: number) => {
     const changes: StateChange[] = []
     return new Promise<StateChange[]>((resolve) =>
       push.addEventListener((stateChange) => {
+        console.log("got a message in the tests")
         changes.push(stateChange)
         if (changes.length == expectedNumberOfChanges) resolve(changes)
       })
