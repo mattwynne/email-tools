@@ -5,7 +5,7 @@ import { Headers } from "./FastmailSession"
 
 const debug = Debug("email-tools:PushNotification")
 
-type Listener = (event: MessageEvent<any>) => void
+type Listener = (event: MessageEvent<string>) => void
 
 export type StateChange = {
   type: string
@@ -27,11 +27,12 @@ class JmapEventSource {
     eventSourceUrl: string
     headers: Headers
   }) {
-    return new Promise<JmapEventSource>((resolved) => {
+    return new Promise<JmapEventSource>((resolved, rejected) => {
       const eventSource = new EventSource(eventSourceUrl, { headers })
-      eventSource.onerror = ({ data }: MessageEvent<string>) => {
-        throw new Error(
-          "Could not connect EventSource: " + JSON.stringify(data)
+      eventSource.onerror = (event) => {
+        eventSource.close()
+        rejected(
+          new Error("Could not connect EventSource: " + JSON.stringify(event))
         )
       }
       eventSource.onopen = () => resolved(new JmapEventSource(eventSource))
@@ -41,7 +42,7 @@ class JmapEventSource {
   public constructor(private readonly eventSource: EventSource) {}
 
   public async onStateChange(handler: (changes: StateChange) => void) {
-    const listener = ({ data }: MessageEvent<string>) => {
+    const listener: Listener = ({ data }) => {
       const changes: StateChange = JSON.parse(data)
       debug(changes)
       handler(changes)
