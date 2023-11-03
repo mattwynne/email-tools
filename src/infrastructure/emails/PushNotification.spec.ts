@@ -1,4 +1,4 @@
-import { assertThat, equalTo } from "hamjest"
+import { assertThat, equalTo, is, promiseThat, rejected, throws } from "hamjest"
 import { Email, EmailSubject } from "../../core"
 import { FastmailSession } from "./FastmailSession"
 import { PushNotification, StateChange } from "./PushNotification"
@@ -15,7 +15,15 @@ describe(PushNotification.name, function () {
     await reset({ token })
   })
 
-  this.afterEach(() => push.close())
+  this.afterEach(() => push && push.close())
+
+  it("fails to connect with bad details", async () => {
+    const attemptingConnection = PushNotification.connect({
+      eventSourceUrl: "a-bad-url",
+      headers: { Authorization: "a-bad-token", "Content-Type": "whatever" },
+    })
+    return promiseThat(attemptingConnection, is(rejected()))
+  })
 
   it("connects with an initial state", async () => {
     const session = await FastmailSession.create(token)
