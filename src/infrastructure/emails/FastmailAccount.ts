@@ -1,18 +1,16 @@
 import Debug from "debug"
+import { EventEmitter } from "stream"
 import {
   Email,
+  EmailAccountState,
   EmailAddress,
   EmailSubject,
-  MailboxState,
   MailboxName,
-  EmailAccountState,
+  MailboxState,
   UniqueIdentifier,
-  UnknownValue,
 } from "../../core"
 import { FastmailConfig, FastmailSession } from "./FastmailSession"
-import { StateChange, PushNotification } from "./PushNotification"
-import { EventEmitter } from "stream"
-import { channel } from "diagnostics_channel"
+import { PushNotification, StateChange } from "./PushNotification"
 
 const debug = Debug("email-tools:FastmailAccount")
 
