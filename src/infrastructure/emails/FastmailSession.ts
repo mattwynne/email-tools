@@ -45,10 +45,6 @@ export class FastmailSession {
     private readonly data: FastmailSession
   ) {}
 
-  public async connectSubscriber() {
-    return PushNotification.connect(this)
-  }
-
   get apiUrl(): string {
     return this.data.apiUrl
   }

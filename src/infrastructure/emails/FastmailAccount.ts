@@ -7,10 +7,12 @@ import {
   MailboxName,
   EmailAccountState,
   UniqueIdentifier,
+  UnknownValue,
 } from "../../core"
 import { FastmailConfig, FastmailSession } from "./FastmailSession"
 import { StateChange, PushNotification } from "./PushNotification"
 import { EventEmitter } from "stream"
+import { channel } from "diagnostics_channel"
 
 const debug = Debug("email-tools:FastmailAccount")
 
@@ -24,13 +26,14 @@ export class FastmailAccount {
     onReady: (account: FastmailAccount) => Promise<void>
   ) {
     const session = await FastmailSession.create(config.token)
-    const subscriber = await session.connectSubscriber()
-    const account = new FastmailAccount(session, subscriber)
-    await account.refreshed()
+    const pushNotifications = await PushNotification.connect(session)
+    const account = new FastmailAccount(session)
+    await account.refresh(pushNotifications.state)
+    pushNotifications.addEventListener((changes) => account.refresh(changes))
     try {
       await onReady(account)
     } finally {
-      subscriber.close()
+      pushNotifications.close()
     }
   }
 
@@ -38,34 +41,21 @@ export class FastmailAccount {
   private changes: StateChange[] = []
   private events = new EventEmitter()
 
-  private constructor(
-    private readonly session: FastmailSession,
-    private readonly subscriber: PushNotification
-  ) {
-    this.subscriber.addEventListener((changes) => {
-      this.changes.push(changes)
-      this.refresh().then(() => {
-        this.events.emit("refreshed")
-      })
-    })
-  }
-
-  public async refreshed() {
-    return new Promise((resolve) => this.events.on("refreshed", resolve))
-  }
+  private constructor(private readonly session: FastmailSession) {}
 
   public get state() {
     return this.accountState
   }
 
-  private async refresh() {
+  private async refresh(newState: StateChange) {
     const mailboxes = await this.getMailboxes()
     this.accountState = new EmailAccountState(mailboxes)
+    this.events.emit("refreshed")
     return this
   }
 
-  public async onChange(handler: (changes: StateChange) => void) {
-    await this.subscriber.addEventListener(handler)
+  public async onChange(handler: () => void) {
+    this.events.on("refreshed", () => handler())
   }
 
   public async emailsIn(mailboxName: MailboxName): Promise<Email[]> {
