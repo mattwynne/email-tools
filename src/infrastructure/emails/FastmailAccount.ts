@@ -65,26 +65,21 @@ export class FastmailAccount {
   }
 
   private async getMailboxes(): Promise<MailboxState[]> {
-    const mailboxes = await this.session.call("Mailbox/get", {
-      accountId: this.session.accountId,
-      ids: null,
-    })
-
-    const mailboxIds = mailboxes.list.map(({ id }: { id: string }) => id)
+    const mailboxes = await getAllMailboxes(this.session)
 
     const emails = await this.session.calls(
-      mailboxIds.map((mailboxId: string) => [
+      mailboxes.map(({ id }) => [
         "Email/query",
         {
           accountId: this.session.accountId,
           filter: {
-            inMailbox: mailboxId,
+            inMailbox: id,
           },
         },
-        mailboxId,
+        id,
       ])
     )
-    return mailboxes.list.map((mailbox: { id: string; name: string }) =>
+    return mailboxes.map((mailbox) =>
       MailboxState.named(mailbox.name)
         .withId(UniqueIdentifier.of(mailbox.id))
         .withEmailIds(
@@ -123,4 +118,20 @@ export class FastmailAccount {
       }
     )
   }
+}
+const getAllMailboxes = async (session: FastmailSession) => {
+  const mailboxes = await session.call("Mailbox/get", {
+    accountId: session.accountId,
+    ids: null,
+  })
+  debug(mailboxes)
+  return mailboxes.list as JmapMailbox[]
+}
+
+type JmapMailbox = {
+  id: string
+  name: string
+  totalEmails: number
+  unreadEmails: number
+  parentId: string | null
 }
