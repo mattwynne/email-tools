@@ -66,30 +66,14 @@ export class FastmailAccount {
 
   private async getMailboxes(): Promise<MailboxState[]> {
     const mailboxes = await getAllMailboxes(this.session)
-
-    const emails = await this.session.calls(
-      mailboxes.map(({ id }) => [
-        "Email/query",
-        {
-          accountId: this.session.accountId,
-          filter: {
-            inMailbox: id,
-          },
-        },
-        id,
-      ])
-    )
-    return mailboxes.map((mailbox) =>
+    const emails = await getEmailsInMailboxes(this.session, mailboxes.list)
+    return mailboxes.list.map((mailbox) =>
       MailboxState.named(mailbox.name)
         .withId(UniqueIdentifier.of(mailbox.id))
         .withEmailIds(
           emails
-            .find(
-              (
-                response: [unknown, { filter: { inMailbox: string } }, unknown]
-              ) => response[1].filter.inMailbox === mailbox.id
-            )[1]
-            .ids.map((id: string) => UniqueIdentifier.of(id))
+            .find((queryResult) => queryResult.filter.inMailbox === mailbox.id)
+            ?.ids.map((id) => UniqueIdentifier.of(id)) || []
         )
     )
   }
@@ -125,7 +109,12 @@ const getAllMailboxes = async (session: FastmailSession) => {
     ids: null,
   })
   debug(mailboxes)
-  return mailboxes.list as JmapMailbox[]
+  return mailboxes as JmapMailboxes
+}
+
+type JmapMailboxes = {
+  list: JmapMailbox[]
+  state: string
 }
 
 type JmapMailbox = {
@@ -134,4 +123,34 @@ type JmapMailbox = {
   totalEmails: number
   unreadEmails: number
   parentId: string | null
+}
+
+const getEmailsInMailboxes = async (
+  session: FastmailSession,
+  mailboxes: JmapMailbox[]
+): Promise<JmapEmailQuery[]> => {
+  const emails = await session.calls(
+    mailboxes.map(({ id }) => [
+      "Email/query",
+      {
+        accountId: session.accountId,
+        filter: {
+          inMailbox: id,
+        },
+      },
+      id,
+    ])
+  )
+  debug(emails)
+  return emails.map(
+    (response: [string, JmapEmailQuery]) => response[1] as JmapEmailQuery
+  )
+}
+
+type JmapEmailQuery = {
+  ids: string[]
+  queryState: string
+  filter: {
+    inMailbox: string
+  }
 }
