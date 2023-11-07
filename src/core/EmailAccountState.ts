@@ -7,9 +7,15 @@ export class EmailAccountState {
         onlyMailboxesNamed.some((onlyMailboxName) =>
           onlyMailboxName.equals(mailbox.name)
         )
-      )
+      ),
+      this.mailboxState,
+      this.emailState
     )
   }
 
-  constructor(public readonly mailboxes: MailboxState[]) {}
+  constructor(
+    public readonly mailboxes: MailboxState[],
+    public readonly mailboxState: string,
+    public readonly emailState: string
+  ) {}
 }
