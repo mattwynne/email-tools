@@ -109,10 +109,10 @@ const getAllMailboxes = async (session: FastmailSession) => {
     ids: null,
   })
   debug(mailboxes)
-  return mailboxes as JmapMailboxes
+  return mailboxes as JmapMailboxGetResult
 }
 
-type JmapMailboxes = {
+type JmapMailboxGetResult = {
   list: JmapMailbox[]
   state: string
 }
@@ -128,7 +128,7 @@ type JmapMailbox = {
 const getEmailsInMailboxes = async (
   session: FastmailSession,
   mailboxes: JmapMailbox[]
-): Promise<JmapEmailQuery[]> => {
+): Promise<JmapEmailQueryResult[]> => {
   const emails = await session.calls(
     mailboxes.map(({ id }) => [
       "Email/query",
@@ -143,11 +143,12 @@ const getEmailsInMailboxes = async (
   )
   debug(emails)
   return emails.map(
-    (response: [string, JmapEmailQuery]) => response[1] as JmapEmailQuery
+    (response: [string, JmapEmailQueryResult]) =>
+      response[1] as JmapEmailQueryResult
   )
 }
 
-type JmapEmailQuery = {
+type JmapEmailQueryResult = {
   ids: string[]
   queryState: string
   filter: {
