@@ -11,7 +11,9 @@ export class NullEmailAccount {
     return new EmailAccountState(
       nextEmailAccountState.mailboxes.filter((mailbox) =>
         onlyMailboxNames.some((name) => name.equals(mailbox.name))
-      )
+      ),
+      "1",
+      "1"
     )
   }
 

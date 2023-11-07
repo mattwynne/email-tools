@@ -36,7 +36,7 @@ export class FastmailAccount {
     }
   }
 
-  private accountState: EmailAccountState = new EmailAccountState([])
+  private accountState: EmailAccountState = new EmailAccountState([], "", "")
   private changes: StateChange[] = []
   private events = new EventEmitter()
 
@@ -47,8 +47,13 @@ export class FastmailAccount {
   }
 
   private async refresh(newState: StateChange) {
+    debug("Refreshing with state", newState)
     const mailboxes = await this.getMailboxes()
-    this.accountState = new EmailAccountState(mailboxes)
+    this.accountState = new EmailAccountState(
+      mailboxes,
+      newState.changed[this.session.accountId].Mailbox,
+      newState.changed[this.session.accountId].Email
+    )
     this.events.emit("refreshed")
     return this
   }
