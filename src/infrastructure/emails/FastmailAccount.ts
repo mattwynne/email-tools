@@ -21,6 +21,27 @@ import {
 
 const debug = Debug("email-tools:FastmailAccount")
 
+type EventMap = Record<string, any>
+type EventKey<Map extends EventMap> = string & keyof Map
+type EventReceiver<T> = (params: T) => void
+interface Emitter<T extends EventMap> {
+  on<Key extends EventKey<T>>(eventName: Key, fn: EventReceiver<T[Key]>): void
+  off<Key extends EventKey<T>>(eventName: Key, fn: EventReceiver<T[Key]>): void
+  emit<Key extends EventKey<T>>(eventName: Key, params: T[Key]): void
+}
+
+function createEmitter<T extends EventMap>(): Emitter<T> {
+  return new EventEmitter()
+}
+
+type Events = {
+  "email-created": EmailCreatedEvent
+}
+
+export type EmailCreatedEvent = {
+  email: Email
+}
+
 export class FastmailAccount {
   static createNull(arg?: any): FastmailAccount {
     throw new Error("Method not implemented.")
@@ -44,13 +65,9 @@ export class FastmailAccount {
 
   private accountState: EmailAccountState = new EmailAccountState([], "", "")
   private changes: StateChange[] = []
-  private events = new EventEmitter()
+  public events: Emitter<Events> = new EventEmitter()
 
   private constructor(private readonly session: FastmailSession) {}
-
-  public on(event: "email-created", handler: (event: any) => void) {
-    this.events.on(event, handler)
-  }
 
   public get state() {
     return this.accountState
@@ -90,12 +107,7 @@ export class FastmailAccount {
         this.events.emit("email-created", { email })
       }
     }
-    this.events.emit("refreshed")
     return this
-  }
-
-  public async onChange(handler: () => void) {
-    this.events.on("refreshed", () => handler())
   }
 
   public async emailsIn(mailboxName: MailboxName): Promise<Email[]> {

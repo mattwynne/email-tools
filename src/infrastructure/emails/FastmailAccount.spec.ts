@@ -1,7 +1,10 @@
 import { assertThat, equalTo, is, truthy } from "hamjest"
 import { eventually } from "ts-eventually"
 import { Email, EmailAddress, EmailSubject, MailboxName } from "../../core"
-import { FastmailAccount } from "./FastmailAccount"
+import {
+  EmailCreatedEvent as EmailCreated,
+  FastmailAccount,
+} from "./FastmailAccount"
 import { FastmailConfig } from "./FastmailSession"
 import { reset } from "./reset"
 import { sendTestEmail } from "./sendTestEmail"
@@ -67,8 +70,8 @@ describe(FastmailAccount.name, () => {
 
     it("emits an event when a new mail arrives", async () => {
       await FastmailAccount.connect(config, async (account) => {
-        const waitingForEvent = new Promise<any>((received) =>
-          account.on("email-created", received)
+        const waitingForEvent = new Promise<EmailCreated>((received) =>
+          account.events.on("email-created", received)
         )
 
         await sendTestEmail(
