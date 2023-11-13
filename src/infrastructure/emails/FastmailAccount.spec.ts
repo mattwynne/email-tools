@@ -66,18 +66,19 @@ describe(FastmailAccount.name, () => {
     })
 
     it("emits an event when a new mail arrives", async () => {
-      let eventReceived = false
       await FastmailAccount.connect(config, async (account) => {
-        await account.onChange(() => {
-          eventReceived = true
-        })
+        const waitingForEvent = new Promise<any>((received) =>
+          account.on("email-created", received)
+        )
 
         await sendTestEmail(
           Email.from(EmailAddress.of("someone@example.com")).about(
             EmailSubject.of("a subject")
           )
         )
-        await eventually(async () => assertThat(eventReceived, is(truthy())))
+
+        const receivedEvent = await waitingForEvent
+        assertThat(receivedEvent.email.subject, equalTo("a subject"))
       })
     })
   })
