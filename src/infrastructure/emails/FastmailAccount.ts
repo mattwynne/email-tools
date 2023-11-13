@@ -40,6 +40,7 @@ type Events = {
 
 export type EmailCreatedEvent = {
   email: Email
+  mailboxName: MailboxName
 }
 
 export class FastmailAccount {
@@ -88,24 +89,23 @@ export class FastmailAccount {
         this.accountState.mailboxState
       )
       debug(mailboxChanges)
-      const updatedMailboxEmails = await emailQueryChanges(
-        this.session,
-        mailboxChanges[2][1].list,
-        this.accountState.emailState + ":0"
-      )
-      debug(updatedMailboxEmails)
       const changes = await emailChanges(
         this.session,
         this.accountState.emailState
       )
       debug(changes)
+      // TODO: combine with emailChanges query?
       const createdEmails = await this.session.call("Email/get", {
         accountId: this.session.accountId,
         ids: changes.created,
       })
       for (const email of createdEmails.list) {
-        this.events.emit("email-created", { email })
+        this.events.emit("email-created", {
+          email,
+          mailboxName: MailboxName.of("Inbox"), // TODO: work out which mailbox the email has arrived in - should be in th email/get result
+        })
       }
+      // TODO: update mailbox state so that counts are correct
     }
     return this
   }
