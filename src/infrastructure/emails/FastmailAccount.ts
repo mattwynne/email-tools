@@ -11,7 +11,13 @@ import {
 } from "../../core"
 import { FastmailConfig, FastmailSession } from "./FastmailSession"
 import { PushNotification, StateChange } from "./PushNotification"
-import { getAllMailboxes, getEmailsInMailboxes } from "./jmap/queries"
+import {
+  getAllMailboxes,
+  emailQueryChanges,
+  getEmailsInMailboxes,
+  getMailboxChangesSince,
+  emailChanges,
+} from "./jmap/queries"
 
 const debug = Debug("email-tools:FastmailAccount")
 
@@ -48,12 +54,31 @@ export class FastmailAccount {
 
   private async refresh(newState: StateChange) {
     debug("Refreshing with state", newState)
-    const mailboxes = await this.getMailboxes()
-    this.accountState = new EmailAccountState(
-      mailboxes,
-      newState.changed[this.session.accountId].Mailbox,
-      newState.changed[this.session.accountId].Email
-    )
+    const accountStateChanges = newState.changed[this.session.accountId]
+    if (this.accountState.mailboxState == "") {
+      this.accountState = new EmailAccountState(
+        await this.getMailboxes(),
+        accountStateChanges.Mailbox,
+        accountStateChanges.Email
+      )
+    } else {
+      const mailboxChanges = await getMailboxChangesSince(
+        this.session,
+        this.accountState.mailboxState
+      )
+      debug(mailboxChanges)
+      const updatedMailboxEmails = await emailQueryChanges(
+        this.session,
+        mailboxChanges[2][1].list,
+        this.accountState.emailState + ":0"
+      )
+      debug(updatedMailboxEmails)
+      const changes = await emailChanges(
+        this.session,
+        this.accountState.emailState
+      )
+      debug(changes)
+    }
     this.events.emit("refreshed")
     return this
   }
