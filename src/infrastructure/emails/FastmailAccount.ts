@@ -48,6 +48,10 @@ export class FastmailAccount {
 
   private constructor(private readonly session: FastmailSession) {}
 
+  public on(event: "email-created", handler: (event: any) => void) {
+    this.events.on(event, handler)
+  }
+
   public get state() {
     return this.accountState
   }
@@ -78,6 +82,13 @@ export class FastmailAccount {
         this.accountState.emailState
       )
       debug(changes)
+      const createdEmails = await this.session.call("Email/get", {
+        accountId: this.session.accountId,
+        ids: changes.created,
+      })
+      for (const email of createdEmails.list) {
+        this.events.emit("email-created", { email })
+      }
     }
     this.events.emit("refreshed")
     return this
