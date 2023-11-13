@@ -5,12 +5,14 @@ import { PushNotification } from "./PushNotification"
 const debug = Debug("email-tools:FastmailSession")
 
 type ApiMethod =
+  | "Email/changes"
   | "Email/get"
   | "Email/set"
   | "Email/query"
   | "Email/queryChanges"
   | "Mailbox/get"
   | "Mailbox/set"
+  | "Mailbox/changes"
   | "Mailbox/query"
   | "Mailbox/queryChanges"
 
