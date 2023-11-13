@@ -82,6 +82,7 @@ describe(FastmailAccount.name, () => {
 
         const receivedEvent = await waitingForEvent
         assertThat(receivedEvent.email.subject, equalTo("a subject"))
+        assertThat(receivedEvent.mailboxName, equalTo(MailboxName.of("Inbox")))
       })
     })
   })
