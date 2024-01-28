@@ -7,11 +7,15 @@
 </body>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.3.0/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 
 <script>
   const getStats = async () => {
-    const response = await fetch('./data/stats.ndjson')
-    const rows = (await response.text()).split("\n").filter(row => row.length > 0)
+    const response = await fetch("./data/stats.ndjson")
+    const rows = (await response.text())
+      .split("\n")
+      .filter((row) => row.length > 0)
     console.log(rows)
     const stats = rows.map(JSON.parse)
     console.log(stats)
@@ -21,29 +25,43 @@
   const run = async () => {
     const stats = await getStats()
 
-    const ctx = document.getElementById('myChart');
+    const ctx = document.getElementById("myChart")
 
-    const timestamps = stats.map(stat => stat.date)
+    const timestamps = stats.map((stat) => stat.date)
 
     new Chart(ctx, {
-      type: 'line',
+      type: "line",
       data: {
         labels: timestamps,
-        datasets: [{
-          label: 'total',
-          data: stats.map(stat => stat.totals.messages),
-          borderWidth: 1
-        }]
+        datasets: [
+          {
+            label: "total",
+            data: stats.map((stat) => stat.totals.messages),
+            borderWidth: 1,
+          },
+        ],
       },
       options: {
         scales: {
           y: {
-            beginAtZero: true
-          }
-        }
-      }
-    });
+            beginAtZero: true,
+          },
+        },
+        plugins: {
+          zoom: {
+            zoom: {
+              wheel: {
+                enabled: true,
+              },
+              pinch: {
+                enabled: true,
+              },
+              mode: "xy",
+            },
+          },
+        },
+      },
+    })
   }
   run().catch(console.error)
-
 </script>
