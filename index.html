@@ -16,18 +16,33 @@
     const rows = (await response.text())
       .split("\n")
       .filter((row) => row.length > 0)
-    console.log(rows)
-    const stats = rows.map(JSON.parse)
-    console.log(stats)
-    return stats
+    return rows
+      .map(JSON.parse)
+      .map((stat) => ({ ...stat, date: new Date(stat.date) }))
+  }
+
+  const filterStats = (stats, daysToShow) => {
+    const since = new Date(
+      new Date().setDate(new Date().getDate() - daysToShow)
+    )
+    return stats.filter((stat) => stat.date > since)
   }
 
   const run = async () => {
-    const stats = await getStats()
+    const daysToShow =
+      new URLSearchParams(window.location.search).get("days") || 90
+    const stats = filterStats(await getStats(), daysToShow)
 
     const ctx = document.getElementById("myChart")
 
-    const timestamps = stats.map((stat) => stat.date)
+    const timestamps = stats.map(({ date }) =>
+      date.toLocaleDateString("en-gb", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    )
 
     new Chart(ctx, {
       type: "line",
@@ -35,7 +50,7 @@
         labels: timestamps,
         datasets: [
           {
-            label: "total",
+            label: `total (over ${daysToShow} days)`,
             data: stats.map((stat) => stat.totals.messages),
             borderWidth: 1,
           },
