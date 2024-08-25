@@ -12,11 +12,13 @@ defmodule EmailToolsWeb.RootLive do
       |> assign(:last_response, "")
       |> assign(:connected?, false)
       |> assign(:state, State.new())
+      |> assign(:status, "...")
     }
   end
 
   def render(assigns) do
     ~H"""
+    <h2><%= @status %></h2>
     <h1>State:</h1>
     <pre>
     <code>
@@ -72,6 +74,7 @@ defmodule EmailToolsWeb.RootLive do
       socket
       |> assign(state: state)
       |> assign(connected?: State.connected?(state))
+      |> assign(status: state.status)
     }
   end
 end
