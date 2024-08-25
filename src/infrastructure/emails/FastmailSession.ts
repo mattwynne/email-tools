@@ -1,6 +1,7 @@
 import util from "util"
 import Debug from "debug"
 import { PushNotification } from "./PushNotification"
+import fs from "fs"
 
 const debug = Debug("email-tools:FastmailSession")
 
@@ -85,6 +86,7 @@ export class FastmailSession {
       throw new Error(await response.text())
     }
     const result = await response.json()
+    fs.appendFileSync("log", JSON.stringify(result))
     debug(
       util.inspect(result, { showHidden: false, depth: null, colors: true })
     )
