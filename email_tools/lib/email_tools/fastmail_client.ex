@@ -9,7 +9,13 @@ defmodule EmailTools.FastmailClient do
 
   def start_link(opts \\ []) do
     token = System.get_env("FASTMAIL_API_TOKEN")
-    state = %{token: token, ui: self()}
+
+    state = %{
+      token: token,
+      ui: self(),
+      status: "Connecting"
+    }
+
     {:ok, pid} = GenServer.start_link(__MODULE__, state, opts)
     pid
   end
@@ -40,6 +46,7 @@ defmodule EmailTools.FastmailClient do
 
           state
           |> Map.put(:session, session)
+          |> Map.put(:status, "Connecting to event stream")
           |> stream_events()
 
         _ ->
@@ -51,10 +58,59 @@ defmodule EmailTools.FastmailClient do
   end
 
   @impl true
-  def handle_cast({:event, event}, state) do
-    state = state |> Map.put(:latest, event["changed"])
+  def handle_cast({:event, %{"changed" => changes}}, state) do
+    account_id = State.account_id(state)
+    handle_changes(changes, account_id, state)
+
+    state =
+      state
+      |> Map.put(:latest, changes)
+      |> Map.put(:status, "Handling update event")
 
     send(state.ui, {:state, state})
+    {:noreply, state}
+  end
+
+  def handle_cast({:method_call, method, params}, state) do
+    {:ok, response} =
+      post(
+        State.api_url(state),
+        Jason.encode!(%{
+          using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+          methodCalls: [[method, params, "a"]]
+        }),
+        headers: headers(state)
+      )
+
+    result = Jason.decode!(response.body)
+    method_response = Enum.at(result["methodResponses"], 0)
+
+    GenServer.cast(
+      self(),
+      {:method_response, method_response}
+    )
+
+    {:noreply, state}
+  end
+
+  def handle_cast({:method_response, ["Thread/changes", result, _]}, state) do
+    GenServer.cast(
+      self(),
+      {:method_call, "Thread/get",
+       %{
+         accountId: State.account_id(state),
+         ids: result["updated"]
+       }}
+    )
+
+    {
+      :noreply,
+      state
+    }
+  end
+
+  def handle_cast({:method_response, [method, result, _]}, state) do
+    dbg([method, result])
     {:noreply, state}
   end
 
@@ -62,6 +118,35 @@ defmodule EmailTools.FastmailClient do
     FastmailEvents.new(state.token) |> FastmailEvents.stream(state.session)
 
     state
+  end
+
+  defp handle_changes(changes, account_id, %{latest: old_changes} = state) do
+    new = changes[account_id]
+    old = old_changes[account_id]
+    dbg(old)
+
+    ["Email", "Mailbox", "Thread"]
+    |> Enum.each(fn type ->
+      if old[type] != new[type] do
+        get_changes(type, old[type], state)
+      end
+    end)
+  end
+
+  defp handle_changes(_, _, _), do: nil
+
+  defp get_changes(type, since, state) do
+    GenServer.cast(
+      self(),
+      {
+        :method_call,
+        "#{type}/changes",
+        %{
+          accountId: State.account_id(state),
+          sinceState: since
+        }
+      }
+    )
   end
 
   @impl true
@@ -79,6 +164,12 @@ defmodule EmailTools.FastmailClient do
     {:noreply, state}
   end
 
+  def handle_info({_ref, {:error, %Mint.TransportError{reason: :timeout}}}, state) do
+    dbg("Attempting to reconnect")
+    stream_events(state)
+    {:noreply, state}
+  end
+
   def handle_info(msg, state) do
     dbg([:unhandled, msg])
     {:noreply, state}
@@ -87,6 +178,7 @@ defmodule EmailTools.FastmailClient do
   defp headers(%{token: token}) do
     [
       {"accept", "application/json"},
+      {"content-type", "application/json"},
       {"authorization", "Bearer #{token}"}
     ]
   end
