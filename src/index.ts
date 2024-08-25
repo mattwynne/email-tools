@@ -2,6 +2,7 @@
 
 import EventSource from "eventsource"
 import util from "util"
+import fs from "fs"
 
 // bail if we don't have our ENV set:
 if (!process.env.FASTMAIL_API_TOKEN) {
@@ -40,6 +41,7 @@ const subscribe = async (
   new Promise((resolve) => {
     const source = new EventSource(url + "types=*", { headers })
     source.addEventListener("state", (e) => {
+      fs.appendFileSync("log", JSON.stringify(e.data))
       const changes: StateChange = JSON.parse(e.data).changed
       for (const accountId in changes) {
         onChange(accountId, changes[accountId])
@@ -73,6 +75,7 @@ const methodCall = async (
   })
   const data = await response.json()
   const result = data["methodResponses"][0][1]
+  fs.appendFileSync("log", JSON.stringify(data))
   console.log(
     method,
     "params:",
