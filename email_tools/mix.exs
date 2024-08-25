@@ -32,18 +32,14 @@ defmodule EmailTools.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.7.14"},
-      {:phoenix_ecto, "~> 4.5"},
+      {:bandit, "~> 1.5"},
+      {:caldav_client, "~> 2.0"},
+      {:dns_cluster, "~> 0.1.1"},
       {:ecto_sql, "~> 3.10"},
-      {:postgrex, ">= 0.0.0"},
-      {:phoenix_html, "~> 4.1"},
-      {:phoenix_live_reload, "~> 1.2", only: :dev},
-      # TODO bump on release to {:phoenix_live_view, "~> 1.0.0"},
-      {:phoenix_live_view, "~> 1.0.0-rc.1", override: true},
-      {:floki, ">= 0.30.0", only: :test},
-      {:phoenix_live_dashboard, "~> 0.8.3"},
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
+      {:finch, "~> 0.14.0"},
+      {:floki, ">= 0.30.0", only: :test},
+      {:gettext, "~> 0.20"},
       {:heroicons,
        github: "tailwindlabs/heroicons",
        tag: "v2.1.1",
@@ -51,23 +47,21 @@ defmodule EmailTools.MixProject do
        app: false,
        compile: false,
        depth: 1},
+      {:jason, "~> 1.2"},
+      {:phoenix_ecto, "~> 4.5"},
+      {:phoenix_html, "~> 4.1"},
+      {:phoenix_live_dashboard, "~> 0.8.3"},
+      {:phoenix_live_reload, "~> 1.2", only: :dev},
+      {:phoenix_live_view, "~> 1.0.0-rc.1", override: true},
+      {:phoenix, "~> 1.7.14"},
+      {:postgrex, ">= 0.0.0"},
+      {:server_sent_event, "~> 1.0.0"},
       {:swoosh, "~> 1.5"},
+      {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
-      {:gettext, "~> 0.20"},
-      {:jason, "~> 1.2"},
-      {:dns_cluster, "~> 0.1.1"},
-      {:bandit, "~> 1.5"},
-      {:caldav_client, "~> 2.0"},
-
-      # time zone database
-      {:tzdata, "~> 1.1"},
-
-      # recommended Tesla adapter
-      # {:hackney, "~> 1.18"},
-      # {:eventsource_ex, "~> 2.0.0"},
       {:tesla, "~> 1.12.1"},
-      {:finch, "~> 0.14.0"}
+      {:tzdata, "~> 1.1"}
     ]
   end
 
