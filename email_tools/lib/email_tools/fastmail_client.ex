@@ -4,16 +4,13 @@ defmodule EmailTools.FastmailClient do
   use GenServer
   use Tesla
 
-  plug(Tesla.Middleware.SSE, only: :data)
-  adapter(Tesla.Adapter.Finch, name: EmailTools.Finch)
-
   def start_link(opts \\ []) do
     token = System.get_env("FASTMAIL_API_TOKEN")
 
     state = %{
       token: token,
       ui: self(),
-      status: "Connecting"
+      status: "Connecting to Fastmail servers"
     }
 
     {:ok, pid} = GenServer.start_link(__MODULE__, state, opts)
@@ -31,6 +28,8 @@ defmodule EmailTools.FastmailClient do
 
   @impl true
   def handle_cast(:connect, state) do
+    send(state.ui, {:state, state})
+
     response =
       get(
         "https://api.fastmail.com/jmap/session",
@@ -44,16 +43,20 @@ defmodule EmailTools.FastmailClient do
         {:ok, response} ->
           session = Jason.decode!(response.body)
 
+          state =
+            state
+            |> Map.put(:session, session)
+            |> Map.put(:status, "Connecting to event stream")
+
+          send(state.ui, {:state, state})
+
           state
-          |> Map.put(:session, session)
-          |> Map.put(:status, "Connecting to event stream")
           |> stream_events()
 
         _ ->
           state
       end
 
-    send(state.ui, {:state, state})
     {:noreply, state}
   end
 
@@ -115,9 +118,10 @@ defmodule EmailTools.FastmailClient do
   end
 
   defp stream_events(state) do
-    FastmailEvents.new(state.token) |> FastmailEvents.stream(state.session)
+    url = state.session["eventSourceUrl"]
+    {:ok, events} = FastmailEvents.start_link(%{url: url, token: state.token, last_event_id: nil})
 
-    state
+    state |> Map.put(:events, events)
   end
 
   defp handle_changes(changes, account_id, %{latest: old_changes} = state) do
@@ -166,8 +170,8 @@ defmodule EmailTools.FastmailClient do
 
   def handle_info({_ref, {:error, %Mint.TransportError{reason: :timeout}}}, state) do
     dbg("Attempting to reconnect")
-    stream_events(state)
-    {:noreply, state}
+
+    {:noreply, stream_events(state)}
   end
 
   def handle_info(msg, state) do
