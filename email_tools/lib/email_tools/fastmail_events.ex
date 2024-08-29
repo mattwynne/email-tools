@@ -29,7 +29,8 @@ defmodule EmailTools.FastmailEvents do
   end
 
   # Immediatly try to reconnect when the connection is lost.
-  def handle_disconnect(_, state) do
+  def handle_disconnect(reason, state) do
+    dbg([:disconnect, reason])
     {:connect, request(state), state}
   end
 
