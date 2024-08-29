@@ -40,7 +40,6 @@ defmodule EmailToolsWeb.RootLive do
     }
     </code></pre>
 
-
     <pre><code class="json">
     {
     "name": "Phoenix",
@@ -50,17 +49,15 @@ defmodule EmailToolsWeb.RootLive do
     """
   end
 
-  def handle_info({:response, {:ok, response}}, socket) do
-    body = Jason.decode!(response.body)
-
+  def handle_info({:response, %{status: 200} = response}, socket) do
     {
       :noreply,
       socket
-      |> assign(last_response: inspect(body, pretty: true))
+      |> assign(last_response: inspect(response.body, pretty: true))
     }
   end
 
-  def handle_info({:response, {:error, response}}, socket) do
+  def handle_info({:response, response}, socket) do
     {
       :noreply,
       socket

@@ -2,7 +2,6 @@ defmodule EmailTools.FastmailClient do
   alias EmailTools.FastmailEvents
   alias EmailTools.ServerSentEvent
   use GenServer
-  use Tesla
 
   def start_link(opts \\ []) do
     token = System.get_env("FASTMAIL_API_TOKEN")
@@ -31,7 +30,7 @@ defmodule EmailTools.FastmailClient do
     send(state.ui, {:state, state})
 
     response =
-      get(
+      Req.get!(
         "https://api.fastmail.com/jmap/session",
         headers: headers(state)
       )
@@ -40,8 +39,8 @@ defmodule EmailTools.FastmailClient do
 
     state =
       case response do
-        {:ok, response} ->
-          session = Jason.decode!(response.body)
+        %{status: 200} ->
+          session = response.body
 
           state =
             state
@@ -77,13 +76,14 @@ defmodule EmailTools.FastmailClient do
   end
 
   def handle_cast({:method_call, method, params}, state) do
-    {:ok, response} =
-      post(
+    response =
+      Req.post!(
         State.api_url(state),
-        Jason.encode!(%{
-          using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-          methodCalls: [[method, params, "a"]]
-        }),
+        body:
+          Jason.encode!(%{
+            using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+            methodCalls: [[method, params, "a"]]
+          }),
         headers: headers(state)
       )
 
@@ -121,8 +121,7 @@ defmodule EmailTools.FastmailClient do
 
   defp stream_events(state) do
     url = state.session["eventSourceUrl"]
-    dbg(:starting_events_genserver)
-    {:ok, events} = FastmailEvents.start_link(%{url: url, token: state.token, last_event_id: nil})
+    {:ok, events} = FastmailEvents.start_link(%{url: url, token: state.token, last_event_id: "0"})
 
     state |> Map.put(:events, events)
   end
