@@ -1,6 +1,5 @@
 defmodule EmailTools.FastmailClient do
   alias EmailTools.FastmailEvents
-  alias EmailTools.ServerSentEvent
   use GenServer
 
   def start_link(opts \\ []) do
@@ -9,7 +8,9 @@ defmodule EmailTools.FastmailClient do
     state = %{
       token: token,
       ui: self(),
-      status: "Connecting to Fastmail servers"
+      status: "Connecting to Fastmail servers",
+      mailboxes: [],
+      emails_by_mailbox: %{}
     }
 
     {:ok, pid} = GenServer.start_link(__MODULE__, state, opts)
@@ -35,8 +36,6 @@ defmodule EmailTools.FastmailClient do
         headers: headers(state)
       )
 
-    send(state.ui, {:response, response})
-
     state =
       case response do
         %{status: 200} ->
@@ -51,6 +50,7 @@ defmodule EmailTools.FastmailClient do
 
           state
           |> stream_events()
+          |> fetch_initial_state()
 
         _ ->
           state
@@ -87,18 +87,18 @@ defmodule EmailTools.FastmailClient do
         headers: headers(state)
       )
 
-    result = Jason.decode!(response.body)
-    method_response = Enum.at(result["methodResponses"], 0)
+    method_response = Enum.at(response.body["methodResponses"], 0)
 
-    GenServer.cast(
+    send(
       self(),
-      {:method_response, method_response}
+      method_response
     )
 
     {:noreply, state}
   end
 
-  def handle_cast({:method_response, ["Thread/changes", result, _]}, state) do
+  @impl true
+  def handle_info(["Thread/changes", result, _], state) do
     GenServer.cast(
       self(),
       {:method_call, "Thread/get",
@@ -108,14 +108,47 @@ defmodule EmailTools.FastmailClient do
        }}
     )
 
-    {
-      :noreply,
-      state
-    }
+    {:noreply, state}
   end
 
-  def handle_cast({:method_response, [method, result, _]}, state) do
-    dbg([method, result])
+  def handle_info(["Mailbox/get", %{"list" => mailboxes}, _], state) do
+    Enum.each(mailboxes, fn mailbox ->
+      GenServer.cast(
+        self(),
+        {:method_call, "Email/query",
+         %{
+           accountId: State.account_id(state),
+           filter: %{
+             inMailbox: mailbox["id"]
+           }
+         }}
+      )
+    end)
+
+    state = state |> Map.put(:mailboxes, mailboxes)
+
+    send(state.ui, {:state, state})
+    {:noreply, state}
+  end
+
+  def handle_info(["Email/query", result, _], state) do
+    state =
+      state
+      |> Map.put(
+        :emails_by_mailbox,
+        Map.put(
+          state.emails_by_mailbox,
+          result["filter"]["inMailbox"],
+          result["ids"]
+        )
+      )
+
+    send(state.ui, {:state, state})
+    {:noreply, state}
+  end
+
+  def handle_info(msg, state) do
+    dbg([:unhandled, msg])
     {:noreply, state}
   end
 
@@ -155,24 +188,17 @@ defmodule EmailTools.FastmailClient do
     )
   end
 
-  @impl true
-  # TODO: wrap all this in a FastmailEvents Genserver
-  def handle_info({_ref, {:data, payload}}, state) do
-    case ServerSentEvent.parse(payload) do
-      %{event: "state", data: data} ->
-        event = Jason.decode!(data)
-        GenServer.cast(self(), {:event, event})
+  defp fetch_initial_state(state) do
+    GenServer.cast(
+      self(),
+      {:method_call, "Mailbox/get",
+       %{
+         accountId: State.account_id(state),
+         ids: nil
+       }}
+    )
 
-      _ ->
-        nil
-    end
-
-    {:noreply, state}
-  end
-
-  def handle_info(msg, state) do
-    dbg([:unhandled, msg])
-    {:noreply, state}
+    state
   end
 
   defp headers(%{token: token}) do
