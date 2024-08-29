@@ -25,4 +25,9 @@ defmodule EmailTools.FastmailEventTest do
 
     assert event.data == expected_data
   end
+
+  test "parsing a non-message" do
+    event = FastmailEvent.new(": new event source connection\r\n\r\n")
+    assert FastmailEvent.empty?(event)
+  end
 end
