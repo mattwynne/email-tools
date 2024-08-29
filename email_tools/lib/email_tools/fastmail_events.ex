@@ -1,8 +1,8 @@
 defmodule EmailTools.FastmailEvents do
-  @behaviour ServerSentEvent.Client
+  alias EmailTools.FastmailEvent
 
   def start_link(state) do
-    ServerSentEvent.Client.start_link(
+    GenServer.start_link(
       __MODULE__,
       state
       |> Map.put(:client, self())
@@ -12,57 +12,40 @@ defmodule EmailTools.FastmailEvents do
   # Start connecting to the endpoint as soon as client is started.
   def init(state) do
     dbg("init!")
-    {:connect, request(state), state}
+    GenServer.cast(self(), :connect)
+    {:ok, state}
   end
 
-  # The client has successfully connected, or reconnected, to the event stream.
-  def handle_connect(_response, state) do
-    dbg("connected!")
+  def handle_cast(:connect, state) do
+    headers = %{
+      "accept" => "text/event-stream",
+      "authorization" => "Bearer #{state.token}"
+    }
+
+    headers =
+      if state.last_event_id do
+        Map.put(headers, "last-event-id", state.last_event_id)
+      else
+        headers
+      end
+
+    response = Req.get!(state.url, headers: headers, into: :self, receive_timeout: :infinity)
+
+    state =
+      Enum.reduce(response.body, state, fn message, state ->
+        dbg(message)
+        event = FastmailEvent.new(message)
+
+        if !FastmailEvent.empty?(event) do
+          dbg(event)
+          GenServer.cast(state.client, {:event, event.data})
+          %{state | last_event_id: event.id}
+        else
+          state
+        end
+      end)
+
+    dbg(state)
     {:noreply, state}
-  end
-
-  # Retry connecting to endpoint 1 second after a failure to connect.
-  def handle_connect_failure(reason, state) do
-    dbg([:failed, reason])
-    Process.sleep(1_000)
-    {:connect, request(state), state}
-  end
-
-  # Immediatly try to reconnect when the connection is lost.
-  def handle_disconnect(reason, state) do
-    dbg([:disconnect, reason])
-    {:connect, request(state), state}
-  end
-
-  # Update the running state of the client with the id of each event as it arrives.
-  # This event id is used for reconnection.
-  def handle_event(%{type: "state"} = event, state) do
-    IO.puts("I just got a new event: #{inspect(event)}")
-    GenServer.cast(state.client, {:event, Jason.decode!(Enum.at(event.lines, 0))})
-    %{state | last_event_id: event.id}
-  end
-
-  def handle_event(event, state) do
-    dbg(["Unhandled event:", event])
-    state
-  end
-
-  # When stop message is received this process will exit with reason :normal.
-  def handle_info(:stop, state) do
-    {:stop, :normal, state}
-  end
-
-  # Not a callback but helpful pattern for creating requests in several callbacks
-  defp request(state) do
-    result =
-      Raxx.request(:GET, state.url)
-      |> Raxx.set_header("accept", "text/event-stream")
-      |> Raxx.set_header("authorization", "Bearer #{state.token}")
-
-    if state.last_event_id do
-      result |> Raxx.set_header("last-event-id", state.last_event_id)
-    else
-      result
-    end
   end
 end

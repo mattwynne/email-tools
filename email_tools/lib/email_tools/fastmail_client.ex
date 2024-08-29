@@ -61,7 +61,9 @@ defmodule EmailTools.FastmailClient do
   end
 
   @impl true
-  def handle_cast({:event, %{"changed" => changes}}, state) do
+  def handle_cast({:event, data}, state) do
+    dbg([:client, :event, data])
+    changes = data["changes"]
     account_id = State.account_id(state)
     handle_changes(changes, account_id, state)
 
@@ -119,6 +121,7 @@ defmodule EmailTools.FastmailClient do
 
   defp stream_events(state) do
     url = state.session["eventSourceUrl"]
+    dbg(:starting_events_genserver)
     {:ok, events} = FastmailEvents.start_link(%{url: url, token: state.token, last_event_id: nil})
 
     state |> Map.put(:events, events)
@@ -166,12 +169,6 @@ defmodule EmailTools.FastmailClient do
     end
 
     {:noreply, state}
-  end
-
-  def handle_info({_ref, {:error, %Mint.TransportError{reason: :timeout}}}, state) do
-    dbg("Attempting to reconnect")
-
-    {:noreply, stream_events(state)}
   end
 
   def handle_info(msg, state) do
