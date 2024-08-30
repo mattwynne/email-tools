@@ -11,16 +11,15 @@ defmodule EmailToolsWeb.RootLive do
       |> assign(:fastmail, fastmail)
       |> assign(:connected?, false)
       |> assign(:state, State.new())
-      |> assign(:status, "...")
-      |> assign(:mailboxes, [])
+      |> assign(:mailboxes, nil)
       |> assign(:emails_by_mailbox, %{})
     }
   end
 
   def render(assigns) do
     ~H"""
-    <ul>
-      <%= for mailbox <- @mailboxes do %>
+    <ul :if={@mailboxes}>
+      <%= for mailbox <- @mailboxes["list"] do %>
         <li>
           <%= mailbox["name"] %>
           <span :if={@emails_by_mailbox[mailbox["id"]]}>
@@ -29,8 +28,8 @@ defmodule EmailToolsWeb.RootLive do
         </li>
       <% end %>
     </ul>
-    <h2><%= @status %></h2>
-    <h1>State:</h1>
+    <hr />
+    <h1 class="text-2xl">State:</h1>
     <pre>
     <code>
     <%= inspect(@state, pretty: true) %>
@@ -45,7 +44,6 @@ defmodule EmailToolsWeb.RootLive do
       socket
       |> assign(state: state)
       |> assign(connected?: State.connected?(state))
-      |> assign(status: state.status)
       |> assign(mailboxes: state.mailboxes)
       |> assign(emails_by_mailbox: state.emails_by_mailbox)
     }
