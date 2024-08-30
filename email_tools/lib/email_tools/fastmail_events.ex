@@ -1,12 +1,16 @@
 defmodule EmailTools.FastmailEvents do
   alias EmailTools.FastmailEvent
 
-  def start_link(state) do
-    GenServer.start_link(
-      __MODULE__,
-      state
-      |> Map.put(:client, self())
-    )
+  def open_stream(url, token) do
+    state = %{
+      client: self(),
+      url: url,
+      token: token,
+      last_event_id: "0"
+    }
+
+    {:ok, pid} = GenServer.start_link(__MODULE__, state)
+    pid
   end
 
   def init(state) do
@@ -21,21 +25,28 @@ defmodule EmailTools.FastmailEvents do
       "last-event-id" => state.last_event_id
     }
 
-    %{body: stream} =
-      Req.get!(state.url,
+    result =
+      Req.get(state.url,
         headers: headers,
         auth: {:bearer, state.token},
         into: :self,
         receive_timeout: :infinity
       )
 
-    Enum.each(stream, fn message ->
-      event = FastmailEvent.new(message)
+    case result do
+      {:ok, response} ->
+        Enum.each(response.body, fn message ->
+          event = FastmailEvent.new(message)
 
-      if !FastmailEvent.empty?(event) do
-        GenServer.cast(state.client, {:event, event.data})
-      end
-    end)
+          if !FastmailEvent.empty?(event) do
+            GenServer.cast(state.client, {:event, event.data})
+          end
+        end)
+
+      {:error, error} ->
+        dbg(["EventSource connection failed: #{Exception.message(error)}, retrying"])
+        GenServer.cast(self(), :connect)
+    end
 
     {:noreply, state}
   end
