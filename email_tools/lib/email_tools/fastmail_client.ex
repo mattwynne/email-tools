@@ -1,4 +1,7 @@
 defmodule EmailTools.FastmailClient do
+  alias EmailTools.Mailbox
+  alias EmailTools.Email
+  alias EmailTools.State
   alias EmailTools.FastmailEvents
   use GenServer
 
@@ -146,13 +149,36 @@ defmodule EmailTools.FastmailClient do
   def handle_info(["Email/get", result, _], state) do
     emails = result["list"]
 
-    for email <- emails do
-      email_id = email["id"]
-      new_mailbox_ids = Map.keys(email["mailboxIds"])
-      dbg([:email_moved, email_id, new_mailbox_ids])
-      # TODO: build State.mailboxes_for_email that scans the emails_by_mailbox maps and compares
-      # or maybe something that updates the state and emits an event?
-    end
+    state =
+      Enum.reduce(emails, state, fn email, state ->
+        email_id = email |> Email.id()
+        {added, removed} = state |> State.changes(email)
+
+        Enum.each(added, fn mailbox_id ->
+          dbg([:email_added, email_id, Mailbox.name(State.mailbox(state, mailbox_id))])
+        end)
+
+        Enum.each(removed, fn mailbox_id ->
+          dbg([:email_removed, email_id, Mailbox.name(State.mailbox(state, mailbox_id))])
+        end)
+
+        state =
+          Enum.reduce(
+            removed,
+            state,
+            fn mailbox_id, state ->
+              state |> State.remove_from_mailbox(mailbox_id, email |> Email.id())
+            end
+          )
+
+        Enum.reduce(
+          added,
+          state,
+          fn mailbox_id, state ->
+            state |> State.add_to_mailbox(mailbox_id, email |> Email.id())
+          end
+        )
+      end)
 
     {:noreply, state}
   end
@@ -178,7 +204,7 @@ defmodule EmailTools.FastmailClient do
     old = old_changes[account_id]
     dbg(old)
 
-    ["Email", "Mailbox"]
+    ["Email"]
     |> Enum.each(fn type ->
       if old[type] != new[type] do
         get_changes(type, old[type], state)

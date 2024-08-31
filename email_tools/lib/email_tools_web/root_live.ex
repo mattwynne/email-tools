@@ -1,4 +1,5 @@
 defmodule EmailToolsWeb.RootLive do
+  alias EmailTools.State
   use EmailToolsWeb, :live_view
   alias EmailTools.FastmailClient
 
@@ -16,8 +17,10 @@ defmodule EmailToolsWeb.RootLive do
     }
   end
 
+  @spec render(any()) :: Phoenix.LiveView.Rendered.t()
   def render(assigns) do
     ~H"""
+    <h1>test</h1>
     <ul :if={@mailboxes}>
       <%= for mailbox <- @mailboxes["list"] do %>
         <li>
