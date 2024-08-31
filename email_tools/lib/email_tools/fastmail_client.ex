@@ -151,15 +151,18 @@ defmodule EmailTools.FastmailClient do
 
     state =
       Enum.reduce(emails, state, fn email, state ->
-        email_id = email |> Email.id()
         {added, removed} = state |> State.changes(email)
 
         Enum.each(added, fn mailbox_id ->
-          dbg([:email_added, email_id, Mailbox.name(State.mailbox(state, mailbox_id))])
+          dbg([:email_added, Email.subject(email), Mailbox.name(State.mailbox(state, mailbox_id))])
         end)
 
         Enum.each(removed, fn mailbox_id ->
-          dbg([:email_removed, email_id, Mailbox.name(State.mailbox(state, mailbox_id))])
+          dbg([
+            :email_removed,
+            Email.subject(email),
+            Mailbox.name(State.mailbox(state, mailbox_id))
+          ])
         end)
 
         state =
@@ -179,6 +182,8 @@ defmodule EmailTools.FastmailClient do
           end
         )
       end)
+
+    send(state.ui, {:state, state})
 
     {:noreply, state}
   end
