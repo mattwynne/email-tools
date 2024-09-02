@@ -32,20 +32,10 @@ defmodule EmailTools.FastmailClient do
   def handle_cast(:connect, state) do
     send(state.ui, {:state, state})
 
-    result =
-      Req.get(
-        "https://api.fastmail.com/jmap/session",
-        headers: headers(state)
-      )
-
     state =
-      case result do
-        {:ok, response} ->
-          session = response.body
-
-          state =
-            state
-            |> Map.put(:session, session)
+      case FastmailSession.fetch(token: state.token) do
+        {:ok, session} ->
+          state = state |> Map.put(:session, session)
 
           send(state.ui, {:state, state})
 
@@ -66,8 +56,7 @@ defmodule EmailTools.FastmailClient do
   def handle_cast({:event, data}, state) do
     dbg([:client, :event, data])
     changes = data["changed"]
-    account_id = State.account_id(state)
-    handle_changes(changes, account_id, state)
+    handle_changes(changes, state.session.account_id, state)
 
     state =
       state
@@ -80,7 +69,7 @@ defmodule EmailTools.FastmailClient do
   def handle_cast({:method_call, method, params}, state) do
     response =
       Req.post!(
-        State.api_url(state),
+        state.session.api_url,
         body:
           Jason.encode!(%{
             using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
@@ -105,7 +94,7 @@ defmodule EmailTools.FastmailClient do
       method_call(
         "Email/query",
         %{
-          accountId: State.account_id(state),
+          accountId: state.session.account_id,
           filter: %{
             inMailbox: mailbox["id"]
           }
@@ -139,7 +128,7 @@ defmodule EmailTools.FastmailClient do
     ids = result["updated"]
 
     method_call("Email/get", %{
-      accountId: State.account_id(state),
+      accountId: state.session.account_id,
       ids: ids
     })
 
@@ -183,7 +172,7 @@ defmodule EmailTools.FastmailClient do
         )
       end)
 
-    send(state.ui, {:state, state})
+    # send(state.ui, {:state, state})
 
     {:noreply, state}
   end
@@ -198,7 +187,7 @@ defmodule EmailTools.FastmailClient do
     |> Map.put(
       :events,
       FastmailEvents.open_stream(
-        state.session["eventSourceUrl"],
+        state.session.event_source_url,
         state.token
       )
     )
@@ -225,7 +214,7 @@ defmodule EmailTools.FastmailClient do
     method_call(
       "#{type}/changes",
       %{
-        accountId: State.account_id(state),
+        accountId: state.session.account_id,
         sinceState: since
       }
     )
@@ -235,7 +224,7 @@ defmodule EmailTools.FastmailClient do
     method_call(
       "Mailbox/get",
       %{
-        accountId: State.account_id(state),
+        accountId: state.session.account_id,
         ids: nil
       }
     )
