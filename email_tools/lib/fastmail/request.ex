@@ -1,4 +1,4 @@
-defmodule Emailtools.Requests do
+defmodule Fastmail.Request do
   def session(token) do
     Req.new(
       method: :get,

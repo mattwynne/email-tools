@@ -1,11 +1,11 @@
-defmodule FastmailSessionTest do
+defmodule Fastmail.SessionTest do
   use ExUnit.Case, async: true
 
   describe "connecting to fastmail for real" do
     @tag :online
     test "it calls the fastmail servers to connect" do
       token = System.get_env("FASTMAIL_API_TOKEN")
-      {:ok, session} = FastmailSession.fetch(token: token)
+      {:ok, session} = Fastmail.Session.fetch(token: token)
       assert session.account_id == "u360641ae"
     end
   end
@@ -16,7 +16,7 @@ defmodule FastmailSessionTest do
         {request, Req.Response.new(status: 301, body: "Authorization header not a valid format")}
       end
 
-      {:error, error} = FastmailSession.fetch(req: Req.new(adapter: fake))
+      {:error, error} = Fastmail.Session.fetch(req: Req.new(adapter: fake))
 
       assert Exception.message(error) |> String.trim() ==
                "Authorization header not a valid format"
@@ -27,7 +27,7 @@ defmodule FastmailSessionTest do
         {request, RuntimeError.exception("non-existing domain")}
       end
 
-      {:error, error} = FastmailSession.fetch(req: Req.new(adapter: fake))
+      {:error, error} = Fastmail.Session.fetch(req: Req.new(adapter: fake))
 
       assert Exception.message(error) |> String.trim() ==
                "non-existing domain"
@@ -44,7 +44,7 @@ defmodule FastmailSessionTest do
         "apiUrl" => "https://myserver.com/api"
       }
 
-      session = FastmailSession.new(data)
+      session = Fastmail.Session.parse(data)
       assert session.account_id == "an-account-id"
       assert session.event_source_url == "https://myserver.com/events"
       assert session.api_url == "https://myserver.com/api"
