@@ -1,5 +1,5 @@
 defmodule Fastmail.Request do
-  def session(token) do
+  def get_session(token) do
     Req.new(
       method: :get,
       url: "https://api.fastmail.com/jmap/session",

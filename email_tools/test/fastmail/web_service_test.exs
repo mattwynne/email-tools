@@ -5,7 +5,8 @@ defmodule Fastmail.WebServiceTest do
     @tag :online
     test "it calls the fastmail servers to connect" do
       token = System.get_env("FASTMAIL_API_TOKEN")
-      {:ok, session} = Fastmail.WebService.get_session(token: token)
+      web_service = Fastmail.WebService.create(token: token)
+      {:ok, session} = web_service |> Fastmail.WebService.get_session()
       assert session.account_id == "u360641ae"
     end
 
@@ -14,7 +15,9 @@ defmodule Fastmail.WebServiceTest do
         {request, Req.Response.new(status: 301, body: "Authorization header not a valid format")}
       end
 
-      {:error, error} = Fastmail.WebService.get_session(req: Req.new(adapter: fake))
+      web_service = Fastmail.WebService.create_null(get_session: fake)
+
+      {:error, error} = web_service |> Fastmail.WebService.get_session()
 
       assert Exception.message(error) |> String.trim() ==
                "Authorization header not a valid format"
@@ -25,7 +28,8 @@ defmodule Fastmail.WebServiceTest do
         {request, RuntimeError.exception("non-existing domain")}
       end
 
-      {:error, error} = Fastmail.WebService.get_session(req: Req.new(adapter: fake))
+      web_service = Fastmail.WebService.create_null(get_session: fake)
+      {:error, error} = web_service |> Fastmail.WebService.get_session()
 
       assert Exception.message(error) |> String.trim() ==
                "non-existing domain"

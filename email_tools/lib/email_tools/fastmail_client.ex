@@ -32,8 +32,10 @@ defmodule EmailTools.FastmailClient do
   def handle_cast(:connect, state) do
     send(state.ui, {:state, state})
 
+    web_service = Fastmail.WebService.create(token: state.token)
+
     state =
-      case Fastmail.WebService.get_session(token: state.token) do
+      case web_service |> Fastmail.WebService.get_session() do
         {:ok, session} ->
           state = state |> Map.put(:session, session)
 
