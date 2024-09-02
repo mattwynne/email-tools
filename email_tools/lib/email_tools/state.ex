@@ -10,14 +10,6 @@ defmodule EmailTools.State do
     Map.has_key?(state, :session)
   end
 
-  def account_id(state) do
-    Map.keys(state.session["accounts"]) |> Enum.at(0)
-  end
-
-  def api_url(state) do
-    state.session["apiUrl"]
-  end
-
   def changes(state, email) do
     email_id = email |> Email.id()
     old_mailbox_ids = state |> mailbox_ids_for(email_id) |> MapSet.new()
