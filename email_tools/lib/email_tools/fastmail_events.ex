@@ -25,6 +25,7 @@ defmodule EmailTools.FastmailEvents do
       "last-event-id" => state.last_event_id
     }
 
+    # TODO: factor out onto WebService
     result =
       Req.get(state.url,
         headers: headers,

@@ -8,6 +8,8 @@ defmodule EmailTools.FastmailClient do
   def start_link(opts \\ []) do
     token = System.get_env("FASTMAIL_API_TOKEN")
 
+    # TODO: should we do this here or in init?
+    # TODO: add the web_service here
     state = %{
       token: token,
       ui: self(),
@@ -69,6 +71,8 @@ defmodule EmailTools.FastmailClient do
   end
 
   def handle_cast({:method_call, method, params}, state) do
+    # TODO: move this request onto Fastmail.Request.method_call(s)
+    # TODO: move this HTTP call onto Fastmail.WebService.method_calls
     response =
       Req.post!(
         state.session.api_url,
@@ -93,6 +97,7 @@ defmodule EmailTools.FastmailClient do
   @impl true
   def handle_info(["Mailbox/get", payload, _], state) do
     Enum.each(payload["list"], fn mailbox ->
+      # TODO: factor out some kind of request builder
       method_call(
         "Email/query",
         %{
