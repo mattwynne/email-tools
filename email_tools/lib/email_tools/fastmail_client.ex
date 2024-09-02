@@ -71,17 +71,14 @@ defmodule EmailTools.FastmailClient do
   end
 
   def handle_cast({:method_call, method, params}, state) do
-    # TODO: move this request onto Fastmail.Request.method_call(s)
     # TODO: move this HTTP call onto Fastmail.WebService.method_calls
     response =
-      Req.post!(
-        state.session.api_url,
-        body:
-          Jason.encode!(%{
-            using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-            methodCalls: [[method, params, "a"]]
-          }),
-        headers: headers(state)
+      Req.request!(
+        Fastmail.Request.method_calls(
+          state.session.api_url,
+          state.token,
+          [[method, params, "0"]]
+        )
       )
 
     method_response = Enum.at(response.body["methodResponses"], 0)
@@ -250,13 +247,5 @@ defmodule EmailTools.FastmailClient do
         payload
       }
     )
-  end
-
-  defp headers(%{token: token}) do
-    [
-      {"accept", "application/json"},
-      {"content-type", "application/json"},
-      {"authorization", "Bearer #{token}"}
-    ]
   end
 end
