@@ -1,8 +1,9 @@
-defmodule FastmailSession do
-  alias Emailtools.Requests
+defmodule Fastmail.Session do
+  alias Fastmail.Request
+
   defstruct [:account_id, :event_source_url, :api_url]
 
-  def new(data) do
+  def parse(data) do
     %__MODULE__{
       account_id: account_id(data),
       event_source_url: event_source_url(data),
@@ -12,12 +13,11 @@ defmodule FastmailSession do
 
   def fetch(ops \\ []) do
     token = ops[:token]
-
-    req = ops[:req] || Requests.session(token)
+    req = ops[:req] || Request.session(token)
 
     case Req.request(req) do
       {:ok, %{status: 200, body: body}} ->
-        {:ok, body |> FastmailSession.new()}
+        {:ok, body |> Fastmail.Session.parse()}
 
       {:ok, %{body: message}} ->
         {:error, RuntimeError.exception(message)}

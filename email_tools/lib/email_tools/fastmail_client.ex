@@ -33,7 +33,7 @@ defmodule EmailTools.FastmailClient do
     send(state.ui, {:state, state})
 
     state =
-      case FastmailSession.fetch(token: state.token) do
+      case Fastmail.Session.fetch(token: state.token) do
         {:ok, session} ->
           state = state |> Map.put(:session, session)
 
