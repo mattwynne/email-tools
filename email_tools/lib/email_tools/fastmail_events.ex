@@ -1,11 +1,10 @@
 defmodule EmailTools.FastmailEvents do
   alias EmailTools.FastmailEvent
 
-  def open_stream(url, token) do
+  def open_stream(session) do
     state = %{
       client: self(),
-      url: url,
-      token: token,
+      session: session,
       last_event_id: "0"
     }
 
@@ -20,19 +19,19 @@ defmodule EmailTools.FastmailEvents do
 
   def handle_cast(:connect, state) do
     # TODO: last_event_id is irrelevant until we get some kind of persistence.
-    headers = %{
-      "accept" => "text/event-stream",
-      "last-event-id" => state.last_event_id
-    }
 
     # TODO: factor out onto WebService
-    result =
-      Req.get(state.url,
-        headers: headers,
-        auth: {:bearer, state.token},
-        into: :self,
-        receive_timeout: :infinity
-      )
+    result = state.session |> Fastmail.Session.event_stream()
+    # headers = %{
+    #   "accept" => "text/event-stream",
+    #   "last-event-id" => state.last_event_id
+    # }
+    # Req.get(state.url,
+    #   headers: headers,
+    #   auth: {:bearer, state.token},
+    #   into: :self,
+    #   receive_timeout: :infinity
+    # )
 
     case result do
       {:ok, response} ->

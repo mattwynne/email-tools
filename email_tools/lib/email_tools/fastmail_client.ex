@@ -196,10 +196,7 @@ defmodule EmailTools.FastmailClient do
     state
     |> Map.put(
       :events,
-      FastmailEvents.open_stream(
-        state.session.event_source_url,
-        state.token
-      )
+      FastmailEvents.open_stream(state.session)
     )
   end
 
