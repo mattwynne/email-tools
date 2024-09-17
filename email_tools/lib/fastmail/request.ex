@@ -11,6 +11,20 @@ defmodule Fastmail.Request do
     )
   end
 
+  def get_event_source(token, url) do
+    Req.new(
+      method: :get,
+      url: url,
+      headers: [
+        {"accept", "text/event-stream"}
+        # "last-event-id" => state.last_event_id
+      ],
+      auth: {:bearer, token},
+      into: :self,
+      receive_timeout: :infinity
+    )
+  end
+
   def method_calls(url, token, method_calls) do
     Req.new(
       method: :post,
