@@ -1,24 +1,24 @@
 defmodule Fastmail.WebService do
-  defstruct [:get_session]
+  defstruct [:get_session, :token]
 
   def create_null(opts \\ []) do
     noop = fn request -> {request, Req.Response.new()} end
 
-    %__MODULE__{
-      get_session: Req.new(adapter: opts[:get_session] || noop)
-    }
+    new(fn _token -> Req.new(adapter: opts[:get_session] || noop) end, :a_token)
   end
 
   def create(opts) do
     token = Keyword.fetch!(opts, :token)
 
-    %__MODULE__{
-      get_session: Fastmail.Request.get_session(token)
-    }
+    new(&Fastmail.Request.get_session/1, token)
+  end
+
+  defp new(get_session, token) do
+    %__MODULE__{get_session: get_session, token: token}
   end
 
   def get_session(web_service) do
-    case Req.request(web_service.get_session) do
+    case Req.request(web_service.get_session.(web_service.token)) do
       {:ok, %{status: 200, body: body}} ->
         {:ok, body |> Fastmail.Session.parse()}
 
