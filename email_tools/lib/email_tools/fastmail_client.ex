@@ -147,12 +147,18 @@ defmodule EmailTools.FastmailClient do
         {added, removed} = state |> State.changes(email)
 
         Enum.each(added, fn mailbox_id ->
-          dbg([:email_added, Email.subject(email), Mailbox.name(State.mailbox(state, mailbox_id))])
+          dbg([
+            :email_added,
+            System.os_time(:millisecond),
+            Email.subject(email),
+            Mailbox.name(State.mailbox(state, mailbox_id))
+          ])
         end)
 
         Enum.each(removed, fn mailbox_id ->
           dbg([
             :email_removed,
+            System.os_time(:millisecond),
             Email.subject(email),
             Mailbox.name(State.mailbox(state, mailbox_id))
           ])
