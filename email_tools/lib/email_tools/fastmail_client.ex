@@ -71,7 +71,7 @@ defmodule EmailTools.FastmailClient do
   end
 
   def handle_cast({:method_call, method, params}, state) do
-    # TODO: move this HTTP call onto Fastmail.WebService.method_calls
+    # TODO: move this HTTP call onto Fastmail.Session.method_calls
     response =
       Req.request!(
         Fastmail.Request.method_calls(
