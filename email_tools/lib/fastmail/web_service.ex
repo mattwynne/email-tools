@@ -1,6 +1,33 @@
 defmodule Fastmail.WebService do
   defstruct [:get_session, :get_event_source, :token]
 
+  defmodule Get do
+    def session(token) do
+      Req.new(
+        method: :get,
+        url: "https://api.fastmail.com/jmap/session",
+        headers: [
+          {"accept", "application/json"}
+        ],
+        auth: {:bearer, token}
+      )
+    end
+
+    def event_source(token, url) do
+      Req.new(
+        method: :get,
+        url: url,
+        headers: [
+          {"accept", "text/event-stream"}
+          # "last-event-id" => state.last_event_id
+        ],
+        auth: {:bearer, token},
+        into: :self,
+        receive_timeout: :infinity
+      )
+    end
+  end
+
   def create_null(opts \\ []) do
     noop = fn request -> {request, Req.Response.new()} end
 
@@ -15,8 +42,8 @@ defmodule Fastmail.WebService do
     token = Keyword.fetch!(opts, :token)
 
     new(%__MODULE__{
-      get_session: &Fastmail.Request.get_session/1,
-      get_event_source: &Fastmail.Request.get_event_source/2,
+      get_session: &Get.session/1,
+      get_event_source: &Get.event_source/2,
       token: token
     })
   end
@@ -40,7 +67,7 @@ defmodule Fastmail.WebService do
 
   def get_event_source(web_service, url) do
     # TODO: handle errors
-    dbg(url)
+    # TODO: test me
     Req.request(web_service.get_event_source.(web_service.token, url))
   end
 end
