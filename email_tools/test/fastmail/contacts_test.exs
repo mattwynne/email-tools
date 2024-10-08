@@ -5,7 +5,8 @@ defmodule Fastmail.ContactsTest do
     defstruct [:action, :group, :email_address]
   end
 
-  alias Fastmail.Contacts.{ContactsGroup, Contact}
+  alias Fastmail.AddressBook
+  alias Fastmail.AddressBook.{ContactsGroup, Contact}
 
   describe "creating groups in null mode" do
     setup do
@@ -99,10 +100,10 @@ defmodule Fastmail.ContactsTest do
 
   test "returns stubbed contacts", %{contacts: contacts} do
     contacts =
-      Contacts.create_null(%{
+      Contacts.create_null(
         groups: [],
         contacts: [%Contact{email: "test@test.com", id: "1"}]
-      })
+      )
 
     assert contacts_list = Contacts.contacts(contacts)
     assert Enum.map(contacts_list, & &1.email) == ["test@test.com"]

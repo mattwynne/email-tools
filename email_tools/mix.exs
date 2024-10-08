@@ -61,7 +61,10 @@ defmodule EmailTools.MixProject do
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
       {:tesla, "~> 1.12.1"},
-      {:tzdata, "~> 1.1"}
+      {:tzdata, "~> 1.1"},
+      {:uniq, "~> 0.1"},
+      {:vobject, "~> 0.5.0"},
+      {:webdavex, "~> 0.3.3"}
     ]
   end
 
