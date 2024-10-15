@@ -1,36 +1,3 @@
-// Import Prism.js core
-import Prism from "prismjs"
-
-// Optionally import Prism themes and plugins if you need them
-import "prismjs/themes/prism.css" // Basic theme
-// import 'prismjs/themes/prism-tomorrow.css'; // Dark theme
-
-// Load languages you need, for example:
-import "prismjs/components/prism-json" // For JSON syntax highlighting
-
-// If you want to use any plugins
-// import 'prismjs/plugins/line-numbers/prism-line-numbers.css';
-// import 'prismjs/plugins/line-numbers/prism-line-numbers.js';
-
-// Initialize Prism (if needed, Prism auto-initializes by default)
-Prism.highlightAll()
-
-
-// Import Highlight.js core
-import hljs from 'highlight.js';
-
-// Optionally import the style you want to use
-import 'highlight.js/styles/default.css'; // Default theme
-// import 'highlight.js/styles/github.css'; // GitHub theme
-
-// Optionally load languages if you only want to include specific ones
-// import json from 'highlight.js/lib/languages/json';
-// hljs.registerLanguage('json', json);
-
-// Initialize Highlight.js (automatically highlights all <pre><code> blocks)
-document.addEventListener('DOMContentLoaded', (event) => {
-  hljs.highlightAll();
-});
 
 // If you want to use Phoenix channels, run `mix help phx.gen.channel`
 // to get started and then uncomment the line below.
