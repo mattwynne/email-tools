@@ -8,7 +8,7 @@ defmodule Fastmail.AddressBookTest do
   end
 
   describe "creating groups" do
-    :ok =
+    {:ok, :created} =
       AddressBook.connect() |> AddressBook.create_group_named(AddressBook.GroupName.of("Feed"))
 
     # assert {:ok, books} = DAVClient.fetch_address_books()
