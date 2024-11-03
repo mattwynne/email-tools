@@ -56,6 +56,7 @@ defmodule EmailTools.MixProject do
       {:phoenix, "~> 1.7.14"},
       {:postgrex, ">= 0.0.0"},
       {:req, "~> 0.5.5"},
+      {:sweet_xml, "~> 0.7.1"},
       {:swoosh, "~> 1.5"},
       {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
       {:telemetry_metrics, "~> 1.0"},
