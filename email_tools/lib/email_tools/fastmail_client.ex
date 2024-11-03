@@ -40,6 +40,7 @@ defmodule EmailTools.FastmailClient do
       case web_service |> Fastmail.WebService.get_session() do
         {:ok, session} ->
           state = state |> Map.put(:session, session)
+          dbg(session)
 
           send(state.ui, {:state, state})
 
@@ -81,6 +82,7 @@ defmodule EmailTools.FastmailClient do
         )
       )
 
+    dbg(response)
     method_response = Enum.at(response.body["methodResponses"], 0)
 
     send(
@@ -147,12 +149,12 @@ defmodule EmailTools.FastmailClient do
         {added, removed} = state |> State.changes(email)
 
         Enum.each(added, fn mailbox_id ->
-          dbg([
+          [
             :email_added,
             System.os_time(:millisecond),
             Email.subject(email),
             Mailbox.name(State.mailbox(state, mailbox_id))
-          ])
+          ]
         end)
 
         Enum.each(removed, fn mailbox_id ->
@@ -228,6 +230,11 @@ defmodule EmailTools.FastmailClient do
   end
 
   defp fetch_initial_state(state) do
+    method_call("AddressBook/get", %{
+      accountId: state.session.account_id,
+      ids: nil
+    })
+
     method_call(
       "Mailbox/get",
       %{

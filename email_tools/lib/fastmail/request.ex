@@ -12,7 +12,11 @@ defmodule Fastmail.Request do
       auth: {:bearer, token},
       body:
         Jason.encode!(%{
-          using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+          using: [
+            "urn:ietf:params:jmap:core",
+            "urn:ietf:params:jmap:mail",
+            "urn:ietf:params:jmap:contacts"
+          ],
           methodCalls: method_calls
         })
     )

@@ -43,11 +43,5 @@ defmodule Fastmail.AddressBook do
     {:ok, :created} =
       address_book.config
       |> Webdavex.Client.put("#{uuid}.vcf", {:binary, vcard_string})
-
-    # case @dav.create_vcard(%{
-    #        address_book: @address_book,
-    #        vCardString: vcard_string,
-    #        filename: "#{uuid}.vcf"
-    #      }) do
   end
 end
