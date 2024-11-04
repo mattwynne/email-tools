@@ -1,4 +1,4 @@
-defmodule Fastmail.AddressBook.Credentials do
+defmodule Fastmail.Contacts.Credentials do
   defstruct [:username, :password]
 
   def from_environment() do

@@ -1,4 +1,4 @@
-defmodule Fastmail.AddressBook.GroupName do
+defmodule Fastmail.Contacts.GroupName do
   defstruct [:value]
 
   def of(name) do

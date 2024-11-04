@@ -1,14 +1,14 @@
-defmodule Fastmail.AddressBook do
+defmodule Fastmail.Contacts do
   alias Uniq.UUID
-  alias Fastmail.AddressBook
+  alias Fastmail.Contacts
 
   defstruct [:config]
 
   def connect() do
-    connect(AddressBook.Credentials.from_environment())
+    connect(Contacts.Credentials.from_environment())
   end
 
-  def connect(%AddressBook.Credentials{} = credentials) do
+  def connect(%Contacts.Credentials{} = credentials) do
     username = credentials.username
     password = credentials.password
     digest = :base64.encode(String.replace(username, "@", "+Default@") <> ":" <> password)
@@ -25,7 +25,7 @@ defmodule Fastmail.AddressBook do
     %__MODULE__{config: config}
   end
 
-  def create_group_named(address_book, %AddressBook.GroupName{value: name}) do
+  def create_group_named(address_book, %Contacts.GroupName{value: name}) do
     uuid = UUID.uuid4()
     rev = DateTime.utc_now() |> DateTime.to_iso8601()
 
