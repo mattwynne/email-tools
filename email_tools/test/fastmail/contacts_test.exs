@@ -2,6 +2,7 @@ defmodule Fastmail.ContactsTest do
   alias Fastmail.Contacts
   use ExUnit.Case, async: true
   import SweetXml
+  require Logger
 
   describe "conecting" do
     test "connects using credentials from the environment" do
@@ -11,12 +12,13 @@ defmodule Fastmail.ContactsTest do
   end
 
   describe "creating groups" do
+    # @tag skip: "TODO"
     test "creates a group" do
       contacts = Contacts.connect()
 
       {:ok, :created} =
         contacts
-        |> Contacts.create_group_named(Contacts.GroupName.of("Feed"))
+        |> Contacts.create_group(Contacts.GroupName.of("Feed"))
 
       actual_groups = get_contact_groups()
       assert Enum.count(actual_groups) == 1
@@ -46,7 +48,7 @@ defmodule Fastmail.ContactsTest do
       {"Content-Type", "text/xml"}
     ]
 
-    # TODO: resolve duplication with Contacts
+    # TODO: resolve duplication of this URL with Contacts
     url = "https://carddav.fastmail.com/dav/addressbooks/user/#{username}/Default"
 
     body = "<propfind xmlns='DAV:'><allprop/></propfind>"
@@ -54,7 +56,7 @@ defmodule Fastmail.ContactsTest do
     case :hackney.request(:propfind, url, headers, body, []) do
       {:ok, 207, _response_headers, client_ref} ->
         {:ok, body} = :hackney.body(client_ref)
-        Contacts.Groups.from_xml(body) |> dbg()
+        Contacts.Groups.from_xml(body |> xpath(~x"/")) |> dbg()
 
         headers = [{"Authorization", authorization}]
 

@@ -34,6 +34,7 @@ defmodule FastmailClientTest do
              }
     end
 
+    @tag skip: "TODO"
     test("emits a message that the email has moved")
   end
 end
