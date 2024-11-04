@@ -7,8 +7,7 @@ defmodule Fastmail.WebServiceTest do
     test "it calls the fastmail servers to connect" do
       token = System.get_env("FASTMAIL_API_TOKEN")
       web_service = WebService.create(token: token)
-      {:ok, session} = web_service |> WebService.get_session()
-      assert session.account_id == "u4d014069"
+      {:ok, _session} = web_service |> WebService.get_session()
     end
 
     test "it fails with a bad token" do

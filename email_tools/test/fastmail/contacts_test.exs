@@ -1,3 +1,88 @@
+defmodule Fastmail.ContactsTest do
+  alias Fastmail.Contacts
+  use ExUnit.Case, async: true
+  import SweetXml
+
+  describe "conecting" do
+    test "connects using credentials from the environment" do
+      credentials = Contacts.Credentials.from_environment()
+      _service = Contacts.connect(credentials)
+    end
+  end
+
+  describe "creating groups" do
+    test "creates a group" do
+      contacts = Contacts.connect()
+
+      {:ok, :created} =
+        contacts
+        |> Contacts.create_group_named(Contacts.GroupName.of("Feed"))
+
+      actual_groups = get_contact_groups()
+      assert Enum.count(actual_groups) == 1
+
+      # assert {:ok, books} = DAVClient.fetch_address_books()
+      # assert {:ok, cards} = DAVClient.fetch_vcards(books[0])
+
+      # assert length(cards) == 1
+      # assert String.contains?(cards[0].data, "N:Feed")
+      # assert String.contains?(cards[0].data, "FN:Feed")
+      # assert String.contains?(cards[0].data, "X-ADDRESSBOOKSERVER-KIND:group")
+    end
+  end
+
+  def get_contact_groups do
+    credentials = Contacts.Credentials.from_environment()
+    username = credentials.username
+    password = credentials.password
+
+    # TODO: resolve duplication with Contacts
+    digest = :base64.encode(String.replace(username, "@", "+Default@") <> ":" <> password)
+    authorization = "Basic " <> digest
+
+    headers = [
+      {"Authorization", authorization},
+      {"Depth", "1"},
+      {"Content-Type", "text/xml"}
+    ]
+
+    # TODO: resolve duplication with Contacts
+    url = "https://carddav.fastmail.com/dav/addressbooks/user/#{username}/Default"
+
+    body = "<propfind xmlns='DAV:'><allprop/></propfind>"
+
+    case :hackney.request(:propfind, url, headers, body, []) do
+      {:ok, 207, _response_headers, client_ref} ->
+        {:ok, body} = :hackney.body(client_ref)
+        Contacts.Groups.from_xml(body) |> dbg()
+
+        headers = [{"Authorization", authorization}]
+
+        config =
+          Webdavex.Config.new(
+            base_url: "https://carddav.fastmail.com/",
+            headers: headers
+          )
+
+        body
+        |> xpath(~x"//href/text()"l)
+        |> tl()
+        |> Enum.each(fn path ->
+          dbg([:deleting, path])
+          Webdavex.Client.delete(config, to_string(path)) |> dbg()
+        end)
+
+      {:ok, status, _headers, _client_ref} ->
+        Logger.error("Failed with status: #{status}")
+        {:error, :unexpected_status}
+
+      {:error, reason} ->
+        Logger.error("Request failed: #{inspect(reason)}")
+        {:error, reason}
+    end
+  end
+end
+
 # defmodule Fastmail.ContactsTest do
 #   use ExUnit.Case, async: true
 
@@ -5,8 +90,8 @@
 #     defstruct [:action, :group, :email_address]
 #   end
 
-#   alias Fastmail.AddressBook
-#   alias Fastmail.AddressBook.{ContactsGroup, Contact}
+#   alias Fastmail.Contacts
+#   alias Fastmail.Contacts.{ContactsGroup, Contact}
 
 #   describe "creating groups in null mode" do
 #     setup do
