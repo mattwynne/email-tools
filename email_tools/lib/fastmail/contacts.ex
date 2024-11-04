@@ -25,7 +25,8 @@ defmodule Fastmail.Contacts do
     %__MODULE__{config: config}
   end
 
-  def create_group_named(address_book, %Contacts.GroupName{value: name}) do
+  def create_group(contacts, %Contacts.GroupName{value: name}) do
+    # TODO: delegate to Contacts.Group
     uuid = UUID.uuid4()
     rev = DateTime.utc_now() |> DateTime.to_iso8601()
 
@@ -40,8 +41,10 @@ defmodule Fastmail.Contacts do
     END:VCARD
     """
 
+    dbg(uuid)
+
     {:ok, :created} =
-      address_book.config
+      contacts.config
       |> Webdavex.Client.put("#{uuid}.vcf", {:binary, vcard_string})
   end
 end
