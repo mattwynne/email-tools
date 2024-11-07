@@ -41,8 +41,6 @@ defmodule Fastmail.Contacts do
     END:VCARD
     """
 
-    dbg(uuid)
-
     {:ok, :created} =
       contacts.config
       |> Webdavex.Client.put("#{uuid}.vcf", {:binary, vcard_string})

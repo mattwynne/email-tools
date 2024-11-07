@@ -20,8 +20,12 @@ defmodule Fastmail.ContactsTest do
         contacts
         |> Contacts.create_group(Contacts.GroupName.of("Feed"))
 
-      actual_groups = get_contact_groups()
-      assert Enum.count(actual_groups) == 1
+      groups = get_contact_groups()
+      on_exit(fn -> delete_groups(groups) end)
+      assert Enum.count(groups) == 1
+      # cards = get_cards(Enum.at(groups, 0))
+      # assert Enum.count(cards) == 1
+      # dbg(cards)
 
       # assert {:ok, books} = DAVClient.fetch_address_books()
       # assert {:ok, cards} = DAVClient.fetch_vcards(books[0])
@@ -31,24 +35,108 @@ defmodule Fastmail.ContactsTest do
       # assert String.contains?(cards[0].data, "FN:Feed")
       # assert String.contains?(cards[0].data, "X-ADDRESSBOOKSERVER-KIND:group")
     end
+
+    #     test "creates a group in connected mode", %{config: config} do
+    #       {:ok, contacts} = Contacts.create(config)
+    #       :ok = Contacts.create_group_named(contacts, ContactsGroupName.of("Feed"))
+    #       assert {:ok, books} = DAVClient.fetch_address_books()
+    #       assert {:ok, cards} = DAVClient.fetch_vcards(books[0])
+
+    #       assert length(cards) == 1
+    #       assert String.contains?(cards[0].data, "N:Feed")
+    #       assert String.contains?(cards[0].data, "FN:Feed")
+    #       assert String.contains?(cards[0].data, "X-ADDRESSBOOKSERVER-KIND:group")
+    #     end
+
+    #     test "creates a contact", %{config: config} do
+    #       {:ok, contacts} = Contacts.create(config)
+    #       :ok = Contacts.create_contact(contacts, EmailAddress.of("test@example.com"))
+    #       assert {:ok, books} = DAVClient.fetch_address_books()
+    #       assert {:ok, cards} = DAVClient.fetch_vcards(books[0])
+
+    #       assert length(cards) == 1
+    #       assert Regex.match?(~r/EMAIL.*:test@example.com/, cards[0].data)
+    #     end
+
+    #     test "lists groups", %{config: config} do
+    #       {:ok, contacts} = Contacts.create(config)
+    #       :ok = Contacts.create_group_named(contacts, ContactsGroupName.of("Friends"))
+    #       :ok = Contacts.create_group_named(contacts, ContactsGroupName.of("Family"))
+    #       :ok = Contacts.create_contact(contacts, EmailAddress.of("test@test.com"))
+
+    #       groups = Contacts.groups(contacts)
+    #       assert length(groups) == 2
+    #       assert Enum.map(groups, & &1.name) == ["Friends", "Family"]
+    #     end
+
+    #     test "lists contacts", %{config: config} do
+    #       {:ok, contacts} = Contacts.create(config)
+    #       :ok = Contacts.create_group_named(contacts, ContactsGroupName.of("Friends"))
+    #       :ok = Contacts.create_contact(contacts, EmailAddress.of("test@test.com"))
+    #       :ok = Contacts.create_contact(contacts, EmailAddress.of("someone@test.com"))
+
+    #       contacts_list = Contacts.contacts(contacts)
+    #       assert length(contacts_list) == 2
+    #       assert Enum.map(contacts_list, & &1.email) == ["test@test.com", "someone@test.com"]
+    #     end
+
+    #     test "adds a contact to an existing group", %{config: config} do
+    #       {:ok, contacts} = Contacts.create(config)
+    #       group = ContactsGroupName.of("Friends")
+    #       email = EmailAddress.of("test@test.com")
+    #       :ok = Contacts.create_group_named(contacts, group)
+    #       :ok = Contacts.create_contact(contacts, email)
+    #       :ok = Contacts.add_to_group(contacts, email, group)
+
+    #       assert {:ok, books} = DAVClient.fetch_address_books()
+    #       assert {:ok, cards} = DAVClient.fetch_vcards(books[0])
+
+    #       assert length(cards) == 2
+
+    #       groups =
+    #         Enum.filter(cards, fn card ->
+    #           Regex.match?(~r/X-ADDRESSBOOKSERVER-KIND:group/, card.data)
+    #         end)
+
+    #       assert length(groups) == 1
+    #       assert Regex.match?(~r/X-ADDRESSBOOKSERVER-MEMBER:urn:uuid:/, groups[0].data)
+    #     end
   end
 
-  def get_contact_groups do
+  def delete_groups(groups) do
+    headers = [{"Authorization", authorization()}]
+
+    config =
+      Webdavex.Config.new(
+        base_url: "https://carddav.fastmail.com/",
+        headers: headers
+      )
+
+    groups
+    |> Enum.each(fn group ->
+      Webdavex.Client.delete(config, group.href)
+    end)
+  end
+
+  def authorization do
     credentials = Contacts.Credentials.from_environment()
     username = credentials.username
     password = credentials.password
 
     # TODO: resolve duplication with Contacts
     digest = :base64.encode(String.replace(username, "@", "+Default@") <> ":" <> password)
-    authorization = "Basic " <> digest
+    "Basic " <> digest
+  end
 
+  def get_contact_groups do
     headers = [
-      {"Authorization", authorization},
+      {"Authorization", authorization()},
       {"Depth", "1"},
       {"Content-Type", "text/xml"}
     ]
 
     # TODO: resolve duplication of this URL with Contacts
+    %{username: username} = Contacts.Credentials.from_environment()
     url = "https://carddav.fastmail.com/dav/addressbooks/user/#{username}/Default"
 
     body = "<propfind xmlns='DAV:'><allprop/></propfind>"
@@ -56,23 +144,7 @@ defmodule Fastmail.ContactsTest do
     case :hackney.request(:propfind, url, headers, body, []) do
       {:ok, 207, _response_headers, client_ref} ->
         {:ok, body} = :hackney.body(client_ref)
-        Contacts.Groups.from_xml(body |> xpath(~x"/")) |> dbg()
-
-        headers = [{"Authorization", authorization}]
-
-        config =
-          Webdavex.Config.new(
-            base_url: "https://carddav.fastmail.com/",
-            headers: headers
-          )
-
-        body
-        |> xpath(~x"//href/text()"l)
-        |> tl()
-        |> Enum.each(fn path ->
-          dbg([:deleting, path])
-          Webdavex.Client.delete(config, to_string(path)) |> dbg()
-        end)
+        Contacts.Groups.from_xml(body |> xpath(~x"/"))
 
       {:ok, status, _headers, _client_ref} ->
         Logger.error("Failed with status: #{status}")

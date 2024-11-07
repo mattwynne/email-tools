@@ -1,10 +1,10 @@
 defmodule Fastmail.Contacts.Group do
   import SweetXml
-  defstruct [:name, :id]
+  defstruct [:href]
 
   def from_xml(xml) do
-    dbg(xml)
+    href = xml |> xpath(~x"/response/href/text()") |> to_string()
 
-    %__MODULE__{name: "Yo", id: ~c"yo-id"}
+    %__MODULE__{href: href}
   end
 end
