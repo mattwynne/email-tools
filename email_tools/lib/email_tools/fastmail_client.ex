@@ -157,13 +157,15 @@ defmodule EmailTools.FastmailClient do
           ]
         end)
 
-        Enum.each(removed, fn mailbox_id ->
-          dbg([
-            :email_removed,
-            System.os_time(:millisecond),
-            Email.subject(email),
-            Mailbox.name(State.mailbox(state, mailbox_id))
-          ])
+        Enum.each(removed, fn _mailbox_id ->
+          # TODO: how do we broadcast this?
+          nil
+          # dbg([
+          #   :email_removed,
+          #   System.os_time(:millisecond),
+          #   Email.subject(email),
+          #   Mailbox.name(State.mailbox(state, mailbox_id))
+          # ])
         end)
 
         state =
