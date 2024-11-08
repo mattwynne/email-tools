@@ -1,4 +1,5 @@
 defmodule Fastmail.ContactsTest do
+  alias Fastmail.Contacts.Card
   alias Fastmail.Contacts
   use ExUnit.Case, async: true
   import SweetXml
@@ -23,30 +24,10 @@ defmodule Fastmail.ContactsTest do
       groups = get_contact_groups()
       on_exit(fn -> delete_groups(groups) end)
       assert Enum.count(groups) == 1
-      # cards = get_cards(Enum.at(groups, 0))
-      # assert Enum.count(cards) == 1
-      # dbg(cards)
-
-      # assert {:ok, books} = DAVClient.fetch_address_books()
-      # assert {:ok, cards} = DAVClient.fetch_vcards(books[0])
-
-      # assert length(cards) == 1
-      # assert String.contains?(cards[0].data, "N:Feed")
-      # assert String.contains?(cards[0].data, "FN:Feed")
-      # assert String.contains?(cards[0].data, "X-ADDRESSBOOKSERVER-KIND:group")
+      [card] = get_cards(contacts, groups)
+      assert card.name == "Feed"
+      assert card.kind == :group
     end
-
-    #     test "creates a group in connected mode", %{config: config} do
-    #       {:ok, contacts} = Contacts.create(config)
-    #       :ok = Contacts.create_group_named(contacts, ContactsGroupName.of("Feed"))
-    #       assert {:ok, books} = DAVClient.fetch_address_books()
-    #       assert {:ok, cards} = DAVClient.fetch_vcards(books[0])
-
-    #       assert length(cards) == 1
-    #       assert String.contains?(cards[0].data, "N:Feed")
-    #       assert String.contains?(cards[0].data, "FN:Feed")
-    #       assert String.contains?(cards[0].data, "X-ADDRESSBOOKSERVER-KIND:group")
-    #     end
 
     #     test "creates a contact", %{config: config} do
     #       {:ok, contacts} = Contacts.create(config)
@@ -116,6 +97,17 @@ defmodule Fastmail.ContactsTest do
     |> Enum.each(fn group ->
       Webdavex.Client.delete(config, group.href)
     end)
+  end
+
+  def get_cards(contacts, groups) do
+    Enum.map(groups, fn group ->
+      {:ok, body} =
+        contacts.config
+        |> Webdavex.Client.get(group.href)
+
+      body
+    end)
+    |> Enum.map(&Card.parse/1)
   end
 
   def authorization do
