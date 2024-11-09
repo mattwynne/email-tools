@@ -2,10 +2,13 @@ defmodule Fastmail.Contacts.Card do
   defstruct([:name, :uid, :rev, :kind])
 
   def parse(body) do
+    dbg(body)
+
     fields =
       String.split(body, "\r\n")
       |> Enum.reject(fn line -> String.trim(line) == "" end)
       |> Enum.map(fn line -> String.split(line, ":") end)
+      |> dbg()
       |> Enum.map(fn [key, value] -> {key, value} end)
       |> Map.new()
 

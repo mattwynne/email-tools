@@ -13,7 +13,6 @@ defmodule Fastmail.ContactsTest do
   end
 
   describe "creating groups" do
-    # @tag skip: "TODO"
     test "creates a group" do
       contacts = Contacts.connect()
 
@@ -29,15 +28,22 @@ defmodule Fastmail.ContactsTest do
       assert card.kind == :group
     end
 
-    #     test "creates a contact", %{config: config} do
-    #       {:ok, contacts} = Contacts.create(config)
-    #       :ok = Contacts.create_contact(contacts, EmailAddress.of("test@example.com"))
-    #       assert {:ok, books} = DAVClient.fetch_address_books()
-    #       assert {:ok, cards} = DAVClient.fetch_vcards(books[0])
+    @tag :wip
+    test "creates a contact" do
+      contacts = Contacts.connect()
+      # {:ok, :created} = Contacts.create_contact(contacts, "test@example.com")
 
-    #       assert length(cards) == 1
-    #       assert Regex.match?(~r/EMAIL.*:test@example.com/, cards[0].data)
-    #     end
+      %{username: username} = Contacts.Credentials.from_environment()
+      href = "https://carddav.fastmail.com/dav/addressbooks/user/#{username}/Default"
+      cards = get_cards(contacts, [%{href: href}])
+      dbg(cards)
+
+      # assert {:ok, books} = DAVClient.fetch_address_books()
+      # assert {:ok, cards} = DAVClient.fetch_vcards(books[0])
+
+      # assert length(cards) == 1
+      # assert Regex.match?(~r/EMAIL.*:test@example.com/, cards[0].data)
+    end
 
     #     test "lists groups", %{config: config} do
     #       {:ok, contacts} = Contacts.create(config)
