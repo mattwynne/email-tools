@@ -1,7 +1,14 @@
 defmodule Fastmail.Contacts.Card do
+  require Logger
+
   defstruct([:name, :uid, :rev, :kind, :formatted_name, :email])
 
+  # TODO: test this. It happens when we try to fetch the vcard for the Default group
+  def parse(""), do: :empty_card
+
   def parse(body) do
+    Logger.debug("Attempting to parse vCard: #{inspect(body)}")
+
     lines =
       String.split(body, "\r\n")
       |> Enum.reject(fn line -> String.trim(line) == "" end)
@@ -10,7 +17,6 @@ defmodule Fastmail.Contacts.Card do
     fields =
       lines
       |> Enum.map(fn line -> String.split(line, ":") end)
-      |> dbg()
       |> Enum.map(fn [key, value] -> {key, value} end)
       |> Map.new()
 
@@ -44,6 +50,8 @@ defmodule Fastmail.Contacts.Card do
     Map.get(fields, preferred_email_key)
   end
 
+  defp combine_folded_lines([]), do: []
+
   defp combine_folded_lines([last_line]), do: [last_line]
 
   defp combine_folded_lines([current_line | tail]) do
@@ -57,6 +65,7 @@ defmodule Fastmail.Contacts.Card do
     end
   end
 
+  # TODO: create a separate struct for group cards
   def for_group(opts \\ []) do
     name = Keyword.fetch!(opts, :name)
     uid = Keyword.get(opts, :uid, Uniq.UUID.uuid4())
