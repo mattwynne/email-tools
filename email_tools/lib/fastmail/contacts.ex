@@ -12,7 +12,7 @@ defmodule Fastmail.Contacts do
     config =
       Webdavex.Config.new(
         base_url: "https://carddav.fastmail.com/",
-        headers: [{"Authorization", auth(credentials)}]
+        headers: [{"Authorization", Contacts.Credentials.basic_auth(credentials)}]
       )
 
     path = "dav/addressbooks/user/#{credentials.username}/Default"
@@ -26,14 +26,6 @@ defmodule Fastmail.Contacts do
     {:ok, :created} =
       contacts.config
       |> Webdavex.Client.put(path(contacts, "#{card.uid}.vcf"), {:binary, to_string(card)})
-  end
-
-  defp auth(credentials) do
-    username = credentials.username
-    password = credentials.password
-    digest = :base64.encode(String.replace(username, "@", "+Default@") <> ":" <> password)
-
-    "Basic " <> digest
   end
 
   defp path(contacts, file) do
