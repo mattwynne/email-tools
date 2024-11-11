@@ -1,4 +1,5 @@
 defmodule Fastmail.ContactsTest do
+  alias Fastmail.Contacts.Credentials
   alias Fastmail.Contacts.Card
   alias Fastmail.Contacts
   use ExUnit.Case, async: true
@@ -14,14 +15,15 @@ defmodule Fastmail.ContactsTest do
 
   describe "creating groups" do
     test "creates a group" do
-      contacts = Contacts.connect()
+      credentials = Credentials.from_environment()
+      contacts = Contacts.connect(credentials)
 
       {:ok, :created} =
         contacts
         |> Contacts.create_group(Contacts.GroupName.of("Feed"))
 
-      groups = get_contact_groups()
-      on_exit(fn -> delete_groups(groups) end)
+      groups = get_contact_groups(credentials)
+      on_exit(fn -> delete_groups(credentials, groups) end)
       assert Enum.count(groups) == 1
       [card] = get_cards(contacts, groups)
 
@@ -91,8 +93,8 @@ defmodule Fastmail.ContactsTest do
     #     end
   end
 
-  def delete_groups(groups) do
-    headers = [{"Authorization", authorization()}]
+  def delete_groups(credentials, groups) do
+    headers = [{"Authorization", Contacts.Credentials.basic_auth(credentials)}]
 
     config =
       Webdavex.Config.new(
@@ -119,25 +121,16 @@ defmodule Fastmail.ContactsTest do
     |> Enum.map(&Card.parse/1)
   end
 
-  def authorization do
-    credentials = Contacts.Credentials.from_environment()
-    username = credentials.username
-    password = credentials.password
-
-    # TODO: resolve duplication with Contacts
-    digest = :base64.encode(String.replace(username, "@", "+Default@") <> ":" <> password)
-    "Basic " <> digest
-  end
-
-  def get_contact_groups do
+  # TODO: move this function onto Contacts?
+  def get_contact_groups(credentials) do
     headers = [
-      {"Authorization", authorization()},
+      {"Authorization", Contacts.Credentials.basic_auth(credentials)},
       {"Depth", "1"},
       {"Content-Type", "text/xml"}
     ]
 
     # TODO: resolve duplication of this URL with Contacts
-    %{username: username} = Contacts.Credentials.from_environment()
+    %{username: username} = credentials
     url = "https://carddav.fastmail.com/dav/addressbooks/user/#{username}/Default"
 
     body = "<propfind xmlns='DAV:'><allprop/></propfind>"
