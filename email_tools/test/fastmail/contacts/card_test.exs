@@ -8,7 +8,7 @@ defmodule Fastmail.Contacts.CardTest do
         "BEGIN:VCARD\r\nVERSION:3.0\r\nUID:f91bef7c-e405-48ac-9657-e763d5e6a279\r\nN:Feed\r\nFN:Feed\r\nX-ADDRESSBOOKSERVER-KIND:group\r\nREV:20241108T063625Z\r\nEND:VCARD\r\n"
 
       card = Card.parse(body)
-      assert card.name == "Feed"
+      assert card.name == ["Feed"]
       assert card.uid == "f91bef7c-e405-48ac-9657-e763d5e6a279"
       assert card.rev == "20241108T063625Z"
     end
@@ -21,7 +21,7 @@ defmodule Fastmail.Contacts.CardTest do
       card = Card.parse(body)
       assert card.uid == "cee595dd-1819-405a-926a-2ff68119333a"
       assert card.formatted_name == "Matt Wynne"
-      assert card.name == "Wynne;Matt"
+      assert card.name == ["Wynne", "Matt"]
       assert card.email == "test@test.com"
     end
   end

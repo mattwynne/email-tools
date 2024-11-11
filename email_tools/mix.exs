@@ -33,7 +33,6 @@ defmodule EmailTools.MixProject do
   defp deps do
     [
       {:bandit, "~> 1.5"},
-      {:caldav_client, "~> 2.0"},
       {:dns_cluster, "~> 0.1.1"},
       {:ecto_sql, "~> 3.10"},
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
@@ -48,6 +47,7 @@ defmodule EmailTools.MixProject do
        compile: false,
        depth: 1},
       {:jason, "~> 1.2"},
+      {:mix_test_interactive, "~> 3.2"},
       {:phoenix_ecto, "~> 4.5"},
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_dashboard, "~> 0.8.3"},
@@ -64,7 +64,6 @@ defmodule EmailTools.MixProject do
       {:tesla, "~> 1.12.1"},
       {:tzdata, "~> 1.1"},
       {:uniq, "~> 0.1"},
-      {:vobject, "~> 0.5.0"},
       {:webdavex, "~> 0.3.3"}
     ]
   end

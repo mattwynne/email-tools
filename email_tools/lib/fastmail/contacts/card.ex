@@ -1,23 +1,60 @@
 defmodule Fastmail.Contacts.Card do
-  defstruct([:name, :uid, :rev, :kind])
+  defstruct([:name, :uid, :rev, :kind, :formatted_name, :email])
 
   def parse(body) do
-    dbg(body)
-
-    fields =
+    lines =
       String.split(body, "\r\n")
       |> Enum.reject(fn line -> String.trim(line) == "" end)
+      |> combine_folded_lines()
+
+    fields =
+      lines
       |> Enum.map(fn line -> String.split(line, ":") end)
       |> dbg()
       |> Enum.map(fn [key, value] -> {key, value} end)
       |> Map.new()
 
-    name = Map.get(fields, "N")
+    name = Map.get(fields, "N") |> String.split(";") |> Enum.reject(&(&1 == ""))
+    formatted_name = Map.get(fields, "FN")
+    email = find_email(fields)
     uid = Map.get(fields, "UID")
     rev = Map.get(fields, "REV")
     kind = if Map.get(fields, "X-ADDRESSBOOKSERVER-KIND") == "group", do: :group
 
-    %__MODULE__{name: name, uid: uid, rev: rev, kind: kind}
+    %__MODULE__{
+      name: name,
+      uid: uid,
+      rev: rev,
+      kind: kind,
+      formatted_name: formatted_name,
+      email: email
+    }
+  end
+
+  defp find_email(fields) do
+    keys = Map.keys(fields)
+
+    preferred_email_key =
+      Enum.find(keys, fn key ->
+        key_parts = String.split(key, ";")
+        preferred? = Enum.any?(key_parts, &String.contains?(&1, "PREF"))
+        Enum.any?(key_parts, &(&1 == "EMAIL")) && preferred?
+      end)
+
+    Map.get(fields, preferred_email_key)
+  end
+
+  defp combine_folded_lines([last_line]), do: [last_line]
+
+  defp combine_folded_lines([current_line | tail]) do
+    case hd(tail) do
+      " " <> next_line ->
+        folded_line = current_line <> next_line
+        combine_folded_lines([folded_line | tl(tail)])
+
+      _ ->
+        [current_line | combine_folded_lines(tail)]
+    end
   end
 
   def for_group(opts \\ []) do
