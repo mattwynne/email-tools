@@ -24,7 +24,9 @@ defmodule Fastmail.ContactsTest do
       on_exit(fn -> delete_groups(groups) end)
       assert Enum.count(groups) == 1
       [card] = get_cards(contacts, groups)
-      assert card.name == "Feed"
+
+      # TODO: what happens if we use whitespace in a group name? Do we need to surface this array here? Would formatted_name be better?
+      assert card.name == ["Feed"]
       assert card.kind == :group
     end
 
@@ -35,8 +37,7 @@ defmodule Fastmail.ContactsTest do
 
       %{username: username} = Contacts.Credentials.from_environment()
       href = "https://carddav.fastmail.com/dav/addressbooks/user/#{username}/Default"
-      cards = get_cards(contacts, [%{href: href}])
-      dbg(cards)
+      _cards = get_cards(contacts, [%{href: href}])
 
       # assert {:ok, books} = DAVClient.fetch_address_books()
       # assert {:ok, cards} = DAVClient.fetch_vcards(books[0])
@@ -110,6 +111,8 @@ defmodule Fastmail.ContactsTest do
       {:ok, body} =
         contacts.config
         |> Webdavex.Client.get(group.href)
+
+      Logger.debug("Fetched card for group #{inspect(group)}: #{body}")
 
       body
     end)
