@@ -1,7 +1,7 @@
 defmodule Fastmail.Contacts.Card do
   require Logger
 
-  defstruct([:name, :uid, :rev, :kind, :formatted_name, :email])
+  defstruct([:fields, :name, :uid, :rev, :kind, :formatted_name, :email])
 
   # TODO: test this. It happens when we try to fetch the vcard for the Default group
   def parse(""), do: :empty_card
@@ -16,7 +16,7 @@ defmodule Fastmail.Contacts.Card do
 
     fields =
       lines
-      |> Enum.map(fn line -> String.split(line, ":") end)
+      |> Enum.map(fn line -> String.split(line, ":", parts: 2) end)
       |> Enum.map(fn [key, value] -> {key, value} end)
       |> Map.new()
 
@@ -28,6 +28,7 @@ defmodule Fastmail.Contacts.Card do
     kind = if Map.get(fields, "X-ADDRESSBOOKSERVER-KIND") == "group", do: :group
 
     %__MODULE__{
+      fields: fields,
       name: name,
       uid: uid,
       rev: rev,
