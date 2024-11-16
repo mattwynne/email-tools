@@ -21,6 +21,6 @@ defmodule Fastmail.Contacts.Credentials do
 
     digest = :base64.encode(username <> ":" <> password)
 
-    "Basic " <> digest
+    ("Basic " <> digest) |> dbg()
   end
 end
