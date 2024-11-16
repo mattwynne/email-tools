@@ -6,7 +6,8 @@ defmodule Fastmail.Contacts.Card do
   # TODO: test this. It happens when we try to fetch the vcard for the Default group
   def parse(""), do: :empty_card
 
-  def parse(body) do
+  # TODO: remove this and always use CardsResponse
+  def parse(body) when is_binary(body) do
     Logger.debug("Attempting to parse vCard: #{inspect(body)}")
 
     lines =
@@ -14,6 +15,12 @@ defmodule Fastmail.Contacts.Card do
       |> Enum.reject(fn line -> String.trim(line) == "" end)
       |> combine_folded_lines()
 
+    parse(lines)
+  end
+
+  # TODO: make this #new
+  # TODO: make two structs, one for Group and one for Contact and decide which one to create
+  def parse(lines) when is_list(lines) do
     fields =
       lines
       |> Enum.map(fn line -> String.split(line, ":", parts: 2) end)

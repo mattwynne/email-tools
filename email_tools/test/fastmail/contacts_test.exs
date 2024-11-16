@@ -24,6 +24,7 @@ defmodule Fastmail.ContactsTest do
 
       groups = get_contact_groups(credentials)
       on_exit(fn -> delete_groups(credentials, groups) end)
+      dbg(get_cards(contacts, groups))
       assert Enum.count(groups) == 1
       [card] = get_cards(contacts, groups)
 
@@ -39,7 +40,7 @@ defmodule Fastmail.ContactsTest do
 
       %{username: username} = Contacts.Credentials.from_environment()
       href = "https://carddav.fastmail.com/dav/addressbooks/user/#{username}/Default"
-      _cards = get_cards(contacts, [%{href: href}])
+      _cards = get_cards(contacts, [%{href: href}]) |> dbg()
 
       # assert {:ok, books} = DAVClient.fetch_address_books()
       # assert {:ok, cards} = DAVClient.fetch_vcards(books[0])
@@ -133,7 +134,11 @@ defmodule Fastmail.ContactsTest do
     %{username: username} = credentials
     url = "https://carddav.fastmail.com/dav/addressbooks/user/#{username}/Default"
 
-    body = "<propfind xmlns='DAV:'><allprop/></propfind>"
+    body = """
+    <propfind xmlns='DAV:'>
+    <allprop/>
+    </propfind>
+    """
 
     case :hackney.request(:propfind, url, headers, body, []) do
       {:ok, 207, _response_headers, client_ref} ->
