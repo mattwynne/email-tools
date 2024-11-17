@@ -3,29 +3,15 @@ defmodule Fastmail.Contacts.Card do
 
   defstruct([:fields, :name, :uid, :rev, :kind, :formatted_name, :email])
 
-  # TODO: test this. It happens when we try to fetch the vcard for the Default group
-  def parse(""), do: :empty_card
-
-  # TODO: remove this and always use CardsResponse
-  def parse(body) when is_binary(body) do
-    Logger.debug("Attempting to parse vCard: #{inspect(body)}")
-
-    lines =
-      String.split(body, "\r\n")
-      |> Enum.reject(fn line -> String.trim(line) == "" end)
-      |> combine_folded_lines()
-
-    parse(lines)
-  end
-
-  # TODO: make this #new
   # TODO: make two structs, one for Group and one for Contact and decide which one to create
-  def parse(lines) when is_list(lines) do
+  def new(lines) when is_list(lines) do
     fields =
       lines
       |> Enum.map(fn line -> String.split(line, ":", parts: 2) end)
       |> Enum.map(fn [key, value] -> {key, value} end)
       |> Map.new()
+
+    # TODO: Map won't work, at least for groups because for member_ids there are multiple values with the same key
 
     name = Map.get(fields, "N") |> String.split(";") |> Enum.reject(&(&1 == ""))
     formatted_name = Map.get(fields, "FN")
@@ -33,6 +19,7 @@ defmodule Fastmail.Contacts.Card do
     uid = Map.get(fields, "UID")
     rev = Map.get(fields, "REV")
     kind = if Map.get(fields, "X-ADDRESSBOOKSERVER-KIND") == "group", do: :group
+    # member_ids = Map.get(fields, "X-ADDRESSBOOKSERVER-MEMBER")
 
     %__MODULE__{
       fields: fields,
@@ -56,21 +43,6 @@ defmodule Fastmail.Contacts.Card do
       end)
 
     Map.get(fields, preferred_email_key)
-  end
-
-  defp combine_folded_lines([]), do: []
-
-  defp combine_folded_lines([last_line]), do: [last_line]
-
-  defp combine_folded_lines([current_line | tail]) do
-    case hd(tail) do
-      " " <> next_line ->
-        folded_line = current_line <> next_line
-        combine_folded_lines([folded_line | tl(tail)])
-
-      _ ->
-        [current_line | combine_folded_lines(tail)]
-    end
   end
 
   # TODO: create a separate struct for group cards
