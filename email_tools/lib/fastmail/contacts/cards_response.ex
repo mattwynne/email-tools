@@ -1,14 +1,20 @@
 defmodule Fastmail.Contacts.CardsResponse do
   alias Fastmail.Contacts.Card
 
-  def parse(body) do
-    lines(body)
-    |> Enum.reduce([], &group_lines_by_vcard/2)
-    |> Enum.map(&Card.parse/1)
-    |> Enum.reverse()
+  defstruct [:body]
+
+  def new(body) do
+    %__MODULE__{body: body}
   end
 
-  def group_lines_by_vcard(line, vcard_lines) do
+  def parse(%__MODULE__{body: body}) do
+    lines(body)
+    |> Enum.reduce([], &group_lines_by_vcard/2)
+    |> Enum.reverse()
+    |> Enum.map(&Card.new/1)
+  end
+
+  defp group_lines_by_vcard(line, vcard_lines) do
     case line do
       "BEGIN:VCARD" ->
         [[] | vcard_lines]
@@ -22,7 +28,7 @@ defmodule Fastmail.Contacts.CardsResponse do
     end
   end
 
-  def lines(body) do
+  defp lines(body) do
     String.split(body, "\r\n")
     |> Enum.reject(fn line -> String.trim(line) == "" end)
     |> combine_folded_lines()
