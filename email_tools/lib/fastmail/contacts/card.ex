@@ -1,71 +1,152 @@
 defmodule Fastmail.Contacts.Card do
   require Logger
 
-  defstruct([:fields, :name, :uid, :rev, :kind, :formatted_name, :email])
+  defmodule Property do
+    alias Fastmail.Contacts.Card.Property.StructuredName
+    alias Fastmail.Contacts.Card.Property.Value
 
-  # TODO: make two structs, one for Group and one for Contact and decide which one to create
+    def parse(line) do
+      [name, value] = String.split(line, ":", parts: 2)
+
+      value_type =
+        Enum.find(
+          [
+            StructuredName,
+            Value
+          ],
+          & &1.matches?(name, value)
+        )
+
+      {String.to_atom(name), value_type.new(value)}
+    end
+
+    defmodule Value do
+      def matches?(_, _) do
+        true
+      end
+
+      def new(value) do
+        value
+      end
+    end
+
+    defmodule StructuredName do
+      defstruct [
+        :family_name,
+        :given_name,
+        :additional_names,
+        :honorific_prefixes,
+        :honorific_suffixes
+      ]
+
+      def matches?("N", value) do
+        Regex.match?(~r/;/, value)
+      end
+
+      def matches?(_name, _) do
+        false
+      end
+
+      def new(value) do
+        [
+          family_name,
+          given_name,
+          additional_names,
+          honorific_prefixes,
+          honorific_suffixes
+        ] = String.split(value, ";")
+
+        %__MODULE__{
+          family_name: family_name,
+          given_name: given_name,
+          additional_names: additional_names,
+          honorific_prefixes: honorific_prefixes,
+          honorific_suffixes: honorific_suffixes
+        }
+      end
+    end
+  end
+
+  defmodule Individual do
+    defstruct [:uid, :name, :rev, :formatted_name, :email]
+
+    def new(properties) do
+      %Individual{
+        name: Keyword.get(properties, :N),
+        uid: Keyword.get(properties, :UID),
+        rev: Keyword.get(properties, :REV),
+        formatted_name: Keyword.get(properties, :FN),
+        email: find_email(properties)
+      }
+    end
+
+    defp find_email(properties) do
+      keys = Keyword.keys(properties) |> Enum.uniq()
+
+      preferred_email_key =
+        Enum.find(keys, fn key ->
+          key_parts = key |> to_string() |> String.split(";")
+          preferred? = Enum.any?(key_parts, &String.contains?(&1, "PREF"))
+          Enum.any?(key_parts, &(&1 == "EMAIL")) && preferred?
+        end)
+
+      Keyword.get(properties, preferred_email_key)
+    end
+  end
+
+  defmodule Group do
+    defstruct [:uid, :name, :rev, :member_uids]
+
+    def new(properties) do
+      member_uids =
+        Keyword.get_values(properties, :"X-ADDRESSBOOKSERVER-MEMBER")
+        |> Enum.map(&String.replace(&1, "urn:uuid:", ""))
+
+      %Group{
+        uid: Keyword.get(properties, :UID),
+        rev: Keyword.get(properties, :REV),
+        name: Keyword.get(properties, :N),
+        member_uids: member_uids
+      }
+    end
+
+    defimpl String.Chars do
+      def to_string(card) do
+        [
+          "BEGIN:VCARD",
+          "VERSION:3.0",
+          "UID:#{card.uid}",
+          "N:#{card.name}",
+          "FN:#{card.name}",
+          "X-ADDRESSBOOKSERVER-KIND:group",
+          Enum.map(card.member_uids, &"X-ADDRESSBOOKSERVER-MEMBER:urn:uuid:#{&1}"),
+          "REV:#{card.rev}",
+          "END:VCARD"
+        ]
+        |> List.flatten()
+        # |> Enum.filter(&is_nil(&1))
+        |> Enum.join("\r\n")
+      end
+    end
+  end
+
   def new(lines) when is_list(lines) do
-    fields =
+    properties =
       lines
-      |> Enum.map(fn line -> String.split(line, ":", parts: 2) end)
-      |> Enum.map(fn [key, value] -> {key, value} end)
-      |> Map.new()
+      |> Enum.map(&Property.parse/1)
 
-    # TODO: Map won't work, at least for groups because for member_ids there are multiple values with the same key
-
-    name = Map.get(fields, "N") |> String.split(";") |> Enum.reject(&(&1 == ""))
-    formatted_name = Map.get(fields, "FN")
-    email = find_email(fields)
-    uid = Map.get(fields, "UID")
-    rev = Map.get(fields, "REV")
-    kind = if Map.get(fields, "X-ADDRESSBOOKSERVER-KIND") == "group", do: :group
-    # member_ids = Map.get(fields, "X-ADDRESSBOOKSERVER-MEMBER")
-
-    %__MODULE__{
-      fields: fields,
-      name: name,
-      uid: uid,
-      rev: rev,
-      kind: kind,
-      formatted_name: formatted_name,
-      email: email
-    }
+    if Keyword.get(properties, :"X-ADDRESSBOOKSERVER-KIND") == "group" do
+      Group.new(properties)
+    else
+      Individual.new(properties)
+    end
   end
 
-  defp find_email(fields) do
-    keys = Map.keys(fields)
-
-    preferred_email_key =
-      Enum.find(keys, fn key ->
-        key_parts = String.split(key, ";")
-        preferred? = Enum.any?(key_parts, &String.contains?(&1, "PREF"))
-        Enum.any?(key_parts, &(&1 == "EMAIL")) && preferred?
-      end)
-
-    Map.get(fields, preferred_email_key)
-  end
-
-  # TODO: create a separate struct for group cards
   def for_group(opts \\ []) do
     name = Keyword.fetch!(opts, :name)
     uid = Keyword.get(opts, :uid, Uniq.UUID.uuid4())
     rev = Keyword.get(opts, :rev, DateTime.utc_now() |> DateTime.to_iso8601())
-    kind = :group
-    %__MODULE__{name: name, uid: uid, rev: rev, kind: kind}
-  end
-
-  defimpl String.Chars do
-    def to_string(card) do
-      """
-      BEGIN:VCARD\r
-      VERSION:3.0\r
-      UID:#{card.uid}\r
-      N:#{card.name}\r
-      FN:#{card.name}\r
-      X-ADDRESSBOOKSERVER-KIND:#{card.kind}\r
-      REV:#{card.rev}\r
-      END:VCARD
-      """
-    end
+    member_uids = Keyword.get(opts, :member_uids, [])
+    %Group{name: name, uid: uid, rev: rev, member_uids: member_uids}
   end
 end
