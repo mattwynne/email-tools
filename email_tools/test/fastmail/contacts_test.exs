@@ -1,4 +1,5 @@
 defmodule Fastmail.ContactsTest do
+  alias Fastmail.Contacts.CardsResponse
   alias Fastmail.Contacts.Credentials
   alias Fastmail.Contacts.Card
   alias Fastmail.Contacts
@@ -24,13 +25,12 @@ defmodule Fastmail.ContactsTest do
 
       groups = get_contact_groups(credentials)
       on_exit(fn -> delete_groups(credentials, groups) end)
-      dbg(get_cards(contacts, groups))
+      get_cards(contacts, groups)
       assert Enum.count(groups) == 1
       [card] = get_cards(contacts, groups)
 
-      # TODO: what happens if we use whitespace in a group name? Do we need to surface this array here? Would formatted_name be better?
-      assert card.name == ["Feed"]
-      assert card.kind == :group
+      assert card.name == "Feed"
+      assert %Card.Group{} = card
     end
 
     @tag :wip
@@ -40,7 +40,7 @@ defmodule Fastmail.ContactsTest do
 
       %{username: username} = Contacts.Credentials.from_environment()
       href = "https://carddav.fastmail.com/dav/addressbooks/user/#{username}/Default"
-      _cards = get_cards(contacts, [%{href: href}]) |> dbg()
+      _cards = get_cards(contacts, [%{href: href}])
 
       # assert {:ok, books} = DAVClient.fetch_address_books()
       # assert {:ok, cards} = DAVClient.fetch_vcards(books[0])
@@ -117,9 +117,10 @@ defmodule Fastmail.ContactsTest do
 
       Logger.debug("Fetched card for group #{inspect(group)}: #{body}")
 
-      body
+      CardsResponse.new(body)
     end)
-    |> Enum.map(&Card.parse/1)
+    |> Enum.map(&CardsResponse.parse/1)
+    |> List.flatten()
   end
 
   # TODO: move this function onto Contacts?
