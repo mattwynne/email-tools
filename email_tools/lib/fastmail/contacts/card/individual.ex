@@ -23,4 +23,21 @@ defmodule Fastmail.Contacts.Card.Individual do
 
     Keyword.get(properties, preferred_email_key)
   end
+
+  defimpl String.Chars do
+    def to_string(card) do
+      [
+        "BEGIN:VCARD",
+        "VERSION:3.0",
+        "UID:#{card.uid}",
+        "N:#{card.name}",
+        "FN:#{card.formatted_name}",
+        "REV:#{card.rev}",
+        "EMAIL:#{card.email}",
+        "END:VCARD"
+      ]
+      |> List.flatten()
+      |> Enum.join("\r\n")
+    end
+  end
 end
