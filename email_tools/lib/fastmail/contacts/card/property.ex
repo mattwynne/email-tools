@@ -61,5 +61,20 @@ defmodule Fastmail.Contacts.Card.Property do
         honorific_suffixes: honorific_suffixes
       }
     end
+
+    defimpl String.Chars do
+      def to_string(%{
+            family_name: family_name,
+            given_name: given_name,
+            additional_names: additional_names,
+            honorific_prefixes: honorific_prefixes,
+            honorific_suffixes: honorific_suffixes
+          }) do
+        Enum.join(
+          [family_name, given_name, additional_names, honorific_prefixes, honorific_suffixes],
+          ";"
+        )
+      end
+    end
   end
 end
