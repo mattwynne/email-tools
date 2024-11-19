@@ -23,7 +23,7 @@ defmodule Fastmail.Contacts.CardTest do
       assert %Group{} = card
     end
 
-    test "parses a fastmail contact" do
+    test "parses a fastmail individual" do
       lines = [
         "PRODID:-//CyrusIMAP.org//Cyrus 3.11.0-alpha0-1110-gdd2947cf5-fm-20241..//EN",
         "VERSION:3.0",
@@ -121,6 +121,40 @@ defmodule Fastmail.Contacts.CardTest do
         |> to_string()
 
       assert card == String.trim(expected)
+    end
+  end
+
+  describe "creating a new card for an individual" do
+    test "renders a vCard string for an individual" do
+      uid = Uniq.UUID.uuid4()
+      rev = DateTime.utc_now() |> DateTime.to_iso8601()
+      name = "Dr. Test Me Data Phd"
+      formatted_name = StructuredName.new("Data;Test;Me;Dr.;Phd")
+      # TODO: create a property to model emails
+      email = "test@test.com"
+
+      card =
+        Card.for_individual(
+          uid: uid,
+          rev: rev,
+          name: name,
+          formatted_name: formatted_name,
+          email: email
+        )
+        |> to_string()
+
+      expected = """
+      BEGIN:VCARD\r
+      VERSION:3.0\r
+      UID:#{uid}\r
+      N:#{name}\r
+      FN:#{formatted_name}\r
+      REV:#{rev}\r
+      EMAIL:#{email}\r
+      END:VCARD
+      """
+
+      assert card === String.trim(expected)
     end
   end
 end

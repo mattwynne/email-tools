@@ -5,14 +5,11 @@ defmodule Fastmail.Contacts.Card do
   require Logger
 
   def new(lines) when is_list(lines) do
-    properties =
-      lines
-      |> Enum.map(&Property.parse/1)
+    properties = lines |> Enum.map(&Property.parse/1)
 
-    if Keyword.get(properties, :"X-ADDRESSBOOKSERVER-KIND") == "group" do
-      Group.new(properties)
-    else
-      Individual.new(properties)
+    case Keyword.get(properties, :"X-ADDRESSBOOKSERVER-KIND") do
+      "group" -> Group.new(properties)
+      _ -> Individual.new(properties)
     end
   end
 
@@ -22,5 +19,10 @@ defmodule Fastmail.Contacts.Card do
     rev = Keyword.get(opts, :rev, DateTime.utc_now() |> DateTime.to_iso8601())
     member_uids = Keyword.get(opts, :member_uids, [])
     %Group{name: name, uid: uid, rev: rev, member_uids: member_uids}
+  end
+
+  def for_individual(_opts \\ []) do
+    # TODO
+    "FIX ME"
   end
 end
