@@ -46,11 +46,11 @@ defmodule Fastmail.Contacts.CardsResponseTest do
       END:VCARD\r
       """
 
-      cards = CardsResponse.parse(body)
+      cards = CardsResponse.new(body) |> CardsResponse.parse()
       assert Enum.count(cards) == 3
       assert Enum.at(cards, 0).email == "test1@example.com"
       assert Enum.at(cards, 1).email == "test2@example.com"
-      assert Enum.at(cards, 2).formatted_name == "test group"
+      assert Enum.at(cards, 2).name == "test group"
     end
   end
 end
