@@ -28,7 +28,6 @@ defmodule Fastmail.Contacts.Card.Group do
         "END:VCARD"
       ]
       |> List.flatten()
-      # |> Enum.filter(&is_nil(&1))
       |> Enum.join("\r\n")
     end
   end
