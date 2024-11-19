@@ -21,8 +21,12 @@ defmodule Fastmail.Contacts.Card do
     %Group{name: name, uid: uid, rev: rev, member_uids: member_uids}
   end
 
-  def for_individual(_opts \\ []) do
-    # TODO
-    "FIX ME"
+  def for_individual(opts \\ []) do
+    name = Keyword.fetch!(opts, :name)
+    uid = Keyword.get(opts, :uid, Uniq.UUID.uuid4())
+    rev = Keyword.get(opts, :rev, DateTime.utc_now() |> DateTime.to_iso8601())
+    formatted_name = Keyword.fetch!(opts, :formatted_name)
+    email = Keyword.fetch!(opts, :email)
+    %Individual{name: name, uid: uid, rev: rev, formatted_name: formatted_name, email: email}
   end
 end
