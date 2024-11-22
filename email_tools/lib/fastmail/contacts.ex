@@ -2,7 +2,7 @@ defmodule Fastmail.Contacts do
   alias Fastmail.Contacts.Card
   alias Fastmail.Contacts
 
-  defstruct [:config, :path]
+  defstruct [:config]
 
   def connect() do
     connect(Contacts.Credentials.from_environment())
@@ -11,13 +11,21 @@ defmodule Fastmail.Contacts do
   def connect(%Contacts.Credentials{} = credentials) do
     config =
       Webdavex.Config.new(
-        base_url: "https://carddav.fastmail.com/",
+        base_url:
+          "https://carddav.fastmail.com/dav/addressbooks/user/#{credentials.username}/Default",
         headers: [{"Authorization", Contacts.Credentials.basic_auth(credentials)}]
       )
 
-    path = "dav/addressbooks/user/#{credentials.username}/Default"
-    {:ok, _result} = config |> Webdavex.Client.head(path)
-    %__MODULE__{config: config, path: path}
+    {:ok, _result} = config |> Webdavex.Client.head("/")
+    %__MODULE__{config: config}
+  end
+
+  def add!(contacts, card = %Contacts.Card.Individual{}) do
+    {:ok, _} =
+      contacts.config
+      |> Webdavex.Client.put("#{card.uid}.vcf", {:binary, to_string(card)})
+
+    contacts
   end
 
   def create_group(contacts, %Contacts.GroupName{value: name}) do
@@ -25,10 +33,6 @@ defmodule Fastmail.Contacts do
 
     {:ok, :created} =
       contacts.config
-      |> Webdavex.Client.put(path(contacts, "#{card.uid}.vcf"), {:binary, to_string(card)})
-  end
-
-  defp path(contacts, file) do
-    Path.join([contacts.path, file])
+      |> Webdavex.Client.put("#{card.uid}.vcf", {:binary, to_string(card)})
   end
 end

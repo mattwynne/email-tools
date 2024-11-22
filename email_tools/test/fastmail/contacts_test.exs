@@ -4,7 +4,6 @@ defmodule Fastmail.ContactsTest do
   alias Fastmail.Contacts.Card
   alias Fastmail.Contacts
   use ExUnit.Case, async: true
-  import SweetXml
   require Logger
 
   describe "conecting" do
@@ -14,39 +13,33 @@ defmodule Fastmail.ContactsTest do
     end
   end
 
-  describe "creating groups" do
-    test "creates a group" do
-      credentials = Credentials.from_environment()
-      contacts = Contacts.connect(credentials)
+  setup do
+    credentials = Credentials.from_environment()
+    contacts = Contacts.connect(credentials)
+    cards = get_cards(contacts)
+    delete_all(contacts, cards)
+    {:ok, %{contacts: contacts}}
+  end
 
+  describe "creating cards" do
+    test "creates a group", %{contacts: contacts} do
+      # TODO: use add! here too
       {:ok, :created} =
         contacts
         |> Contacts.create_group(Contacts.GroupName.of("Feed"))
 
-      groups = get_contact_groups(credentials)
-      on_exit(fn -> delete_groups(credentials, groups) end)
-      get_cards(contacts, groups)
-      assert Enum.count(groups) == 1
-      [card] = get_cards(contacts, groups)
-
+      assert [card = %Card.Group{}] = get_cards(contacts)
       assert card.name == "Feed"
-      assert %Card.Group{} = card
     end
 
-    @tag :wip
-    test "creates a contact" do
-      contacts = Contacts.connect()
-      # {:ok, :created} = Contacts.create_contact(contacts, "test@example.com")
+    test "creates a contact", %{contacts: contacts} do
+      # TODO: take a list of properties here, like Individual.new(Property.Email.new("test@test.com", :default), Property.SructuredName.new(:etc.)
+      # TODO: more validation of properties when constructing
+      card = Card.Individual.new("EMAIL;PREF": "test@test.com")
+      Contacts.add!(contacts, card)
 
-      %{username: username} = Contacts.Credentials.from_environment()
-      href = "https://carddav.fastmail.com/dav/addressbooks/user/#{username}/Default"
-      _cards = get_cards(contacts, [%{href: href}])
-
-      # assert {:ok, books} = DAVClient.fetch_address_books()
-      # assert {:ok, cards} = DAVClient.fetch_vcards(books[0])
-
-      # assert length(cards) == 1
-      # assert Regex.match?(~r/EMAIL.*:test@example.com/, cards[0].data)
+      assert [card = %Card.Individual{}] = get_cards(contacts)
+      assert card.email == "test@test.com"
     end
 
     #     test "lists groups", %{config: config} do
@@ -94,66 +87,19 @@ defmodule Fastmail.ContactsTest do
     #     end
   end
 
-  def delete_groups(credentials, groups) do
-    headers = [{"Authorization", Contacts.Credentials.basic_auth(credentials)}]
-
-    config =
-      Webdavex.Config.new(
-        base_url: "https://carddav.fastmail.com/",
-        headers: headers
-      )
-
-    groups
-    |> Enum.each(fn group ->
-      Webdavex.Client.delete(config, group.href)
+  def delete_all(%Contacts{config: config}, cards) do
+    cards
+    |> Enum.each(fn card ->
+      Webdavex.Client.delete(config, "#{card.uid}.vcf")
     end)
   end
 
-  def get_cards(contacts, groups) do
-    Enum.map(groups, fn group ->
-      {:ok, body} =
-        contacts.config
-        |> Webdavex.Client.get(group.href)
+  def get_cards(%Contacts{config: config}) do
+    {:ok, body} =
+      config
+      |> Webdavex.Client.get("/")
 
-      Logger.debug("Fetched card for group #{inspect(group)}: #{body}")
-
-      CardsResponse.new(body)
-    end)
-    |> Enum.map(&CardsResponse.parse/1)
-    |> List.flatten()
-  end
-
-  # TODO: move this function onto Contacts?
-  def get_contact_groups(credentials) do
-    headers = [
-      {"Authorization", Contacts.Credentials.basic_auth(credentials)},
-      {"Depth", "1"},
-      {"Content-Type", "text/xml"}
-    ]
-
-    # TODO: resolve duplication of this URL with Contacts
-    %{username: username} = credentials
-    url = "https://carddav.fastmail.com/dav/addressbooks/user/#{username}/Default"
-
-    body = """
-    <propfind xmlns='DAV:'>
-    <allprop/>
-    </propfind>
-    """
-
-    case :hackney.request(:propfind, url, headers, body, []) do
-      {:ok, 207, _response_headers, client_ref} ->
-        {:ok, body} = :hackney.body(client_ref)
-        Contacts.Groups.from_xml(body |> xpath(~x"/"))
-
-      {:ok, status, _headers, _client_ref} ->
-        Logger.error("Failed with status: #{status}")
-        {:error, :unexpected_status}
-
-      {:error, reason} ->
-        Logger.error("Request failed: #{inspect(reason)}")
-        {:error, reason}
-    end
+    CardsResponse.new(body) |> CardsResponse.parse()
   end
 end
 
