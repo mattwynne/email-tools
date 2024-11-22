@@ -35,11 +35,12 @@ defmodule Fastmail.ContactsTest do
     test "creates a contact", %{contacts: contacts} do
       # TODO: take a list of properties here, like Individual.new(Property.Email.new("test@test.com", :default), Property.SructuredName.new(:etc.)
       # TODO: more validation of properties when constructing
-      card = Card.Individual.new("EMAIL;PREF": "test@test.com")
+      email = Faker.Internet.email()
+      card = Card.Individual.new("EMAIL;PREF": email)
       Contacts.add!(contacts, card)
 
       assert [card = %Card.Individual{}] = get_cards(contacts)
-      assert card.email == "test@test.com"
+      assert card.email == email
     end
 
     #     test "lists groups", %{config: config} do
