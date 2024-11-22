@@ -150,7 +150,7 @@ defmodule Fastmail.Contacts.CardTest do
       N:#{name}\r
       FN:#{formatted_name}\r
       REV:#{rev}\r
-      EMAIL:#{email}\r
+      EMAIL;PREF:#{email}\r
       END:VCARD
       """
 

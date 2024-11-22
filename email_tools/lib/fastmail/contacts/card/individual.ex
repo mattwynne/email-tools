@@ -33,7 +33,7 @@ defmodule Fastmail.Contacts.Card.Individual do
         "N:#{card.name}",
         "FN:#{card.formatted_name}",
         "REV:#{card.rev}",
-        "EMAIL:#{card.email}",
+        "EMAIL;PREF:#{card.email}",
         "END:VCARD"
       ]
       |> List.flatten()
