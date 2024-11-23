@@ -2,13 +2,6 @@ defmodule Fastmail.Contacts.Card.Individual do
   alias Fastmail.Contacts.Card.Properties
   defstruct [:uid, :name, :rev, :formatted_name, :email]
 
-  # TODO: other props
-  def new(email: email) do
-    %__MODULE__{
-      email: email
-    }
-  end
-
   def new(properties = %Properties{}) do
     %__MODULE__{
       name: Properties.get(properties, :N).value,
