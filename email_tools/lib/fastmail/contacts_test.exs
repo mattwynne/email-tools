@@ -23,10 +23,9 @@ defmodule Fastmail.ContactsTest do
 
   describe "creating cards" do
     test "creates a group", %{contacts: contacts} do
-      # TODO: use add! here too
-      {:ok, :created} =
-        contacts
-        |> Contacts.create_group(Contacts.GroupName.of("Feed"))
+      # TODO: create a new
+      card = Card.for_group(name: "Feed")
+      Contacts.add!(contacts, card)
 
       assert [card = %Card.Group{}] = get_cards(contacts)
       assert card.name == "Feed"
@@ -36,7 +35,9 @@ defmodule Fastmail.ContactsTest do
       # TODO: take a list of properties here, like Individual.new(Property.Email.new("test@test.com", :default), Property.SructuredName.new(:etc.)
       # TODO: more validation of properties when constructing
       email = Faker.Internet.email()
-      card = Card.Individual.new(email: email)
+      name = Faker.Person.name()
+      formatted_name = Faker.Person.name()
+      card = Card.for_individual(name: name, formatted_name: formatted_name, email: email)
       Contacts.add!(contacts, card)
 
       assert [card = %Card.Individual{}] = get_cards(contacts)
