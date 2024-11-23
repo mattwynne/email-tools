@@ -1,15 +1,16 @@
 defmodule Fastmail.Contacts.Card.Group do
+  alias Fastmail.Contacts.Card.Properties
   defstruct [:uid, :name, :rev, :member_uids]
 
   def new(properties) do
     member_uids =
-      Keyword.get_values(properties, :"X-ADDRESSBOOKSERVER-MEMBER")
+      Properties.get_values(properties, :"X-ADDRESSBOOKSERVER-MEMBER")
       |> Enum.map(&String.replace(&1, "urn:uuid:", ""))
 
     %__MODULE__{
-      uid: Keyword.get(properties, :UID),
-      rev: Keyword.get(properties, :REV),
-      name: Keyword.get(properties, :N),
+      uid: Properties.get(properties, :UID).value,
+      rev: Properties.get(properties, :REV).value,
+      name: Properties.get(properties, :N).value,
       member_uids: member_uids
     }
   end
