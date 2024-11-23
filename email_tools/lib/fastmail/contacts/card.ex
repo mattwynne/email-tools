@@ -1,13 +1,13 @@
 defmodule Fastmail.Contacts.Card do
+  alias Fastmail.Contacts.Card.Properties
   alias Fastmail.Contacts.Card.Group
   alias Fastmail.Contacts.Card.Individual
-  alias Fastmail.Contacts.Card.Property
   require Logger
 
   def new(lines) when is_list(lines) do
-    properties = lines |> Enum.map(&Property.parse/1)
+    properties = Properties.new(lines)
 
-    case Keyword.get(properties, :"X-ADDRESSBOOKSERVER-KIND") do
+    case Properties.get(properties, "X-ADDRESSBOOKSERVER-KIND").value do
       "group" -> Group.new(properties)
       _ -> Individual.new(properties)
     end
