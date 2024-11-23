@@ -2,6 +2,8 @@ defmodule Fastmail.Contacts.Card.Property do
   alias Fastmail.Contacts.Card.Property.StructuredName
   alias Fastmail.Contacts.Card.Property.Value
 
+  defstruct [:key, :value]
+
   def parse(line) do
     [name, value] = String.split(line, ":", parts: 2)
 
@@ -14,7 +16,7 @@ defmodule Fastmail.Contacts.Card.Property do
         & &1.matches?(name, value)
       )
 
-    {String.to_atom(name), value_type.new(value)}
+    %__MODULE__{key: String.to_atom(name), value: value_type.new(value)}
   end
 
   defmodule Value do

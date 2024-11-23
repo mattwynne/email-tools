@@ -36,7 +36,7 @@ defmodule Fastmail.ContactsTest do
       # TODO: take a list of properties here, like Individual.new(Property.Email.new("test@test.com", :default), Property.SructuredName.new(:etc.)
       # TODO: more validation of properties when constructing
       email = Faker.Internet.email()
-      card = Card.Individual.new("EMAIL;PREF": email)
+      card = Card.Individual.new(email: email)
       Contacts.add!(contacts, card)
 
       assert [card = %Card.Individual{}] = get_cards(contacts)

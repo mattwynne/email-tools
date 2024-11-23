@@ -1,18 +1,26 @@
 defmodule Fastmail.Contacts.Card.Individual do
+  alias Fastmail.Contacts.Card.Properties
   defstruct [:uid, :name, :rev, :formatted_name, :email]
 
-  def new(properties) do
+  # TODO: other props
+  def new(email: email) do
     %__MODULE__{
-      name: Keyword.get(properties, :N),
-      uid: Keyword.get(properties, :UID),
-      rev: Keyword.get(properties, :REV),
-      formatted_name: Keyword.get(properties, :FN),
+      email: email
+    }
+  end
+
+  def new(properties = %Properties{}) do
+    %__MODULE__{
+      name: Properties.get(properties, :N).value,
+      uid: Properties.get(properties, :UID).value,
+      rev: Properties.get(properties, :REV).value,
+      formatted_name: Properties.get(properties, :FN).value,
       email: find_email(properties)
     }
   end
 
   defp find_email(properties) do
-    keys = Keyword.keys(properties) |> Enum.uniq()
+    keys = Properties.keys(properties) |> Enum.uniq()
 
     preferred_email_key =
       Enum.find(keys, fn key ->
@@ -21,7 +29,7 @@ defmodule Fastmail.Contacts.Card.Individual do
         Enum.any?(key_parts, &(&1 == "EMAIL")) && preferred?
       end)
 
-    Keyword.get(properties, preferred_email_key)
+    Properties.get(properties, preferred_email_key).value
   end
 
   defimpl String.Chars do
