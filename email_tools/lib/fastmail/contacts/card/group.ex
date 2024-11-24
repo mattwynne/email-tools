@@ -1,4 +1,5 @@
 defmodule Fastmail.Contacts.Card.Group do
+  alias Fastmail.Contacts.Card.Individual
   alias Fastmail.Contacts.Card.Properties
   defstruct [:uid, :name, :rev, :member_uids]
 
@@ -13,6 +14,10 @@ defmodule Fastmail.Contacts.Card.Group do
       name: Properties.get(properties, :N).value,
       member_uids: member_uids
     }
+  end
+
+  def add(group = %__MODULE__{}, individual = %Individual{}) do
+    %__MODULE__{group | member_uids: [individual.uid | group.member_uids]}
   end
 
   defimpl String.Chars do
