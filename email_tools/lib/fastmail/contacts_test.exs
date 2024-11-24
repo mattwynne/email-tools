@@ -1,9 +1,8 @@
 defmodule Fastmail.ContactsTest do
-  alias Fastmail.Contacts.CardsResponse
   alias Fastmail.Contacts.Credentials
   alias Fastmail.Contacts.Card
   alias Fastmail.Contacts
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
   require Logger
 
   describe "conecting" do
@@ -16,8 +15,7 @@ defmodule Fastmail.ContactsTest do
   setup do
     credentials = Credentials.from_environment()
     contacts = Contacts.connect(credentials)
-    cards = get_cards(contacts)
-    delete_all(contacts, cards)
+    delete_all(contacts, Contacts.all(contacts))
     {:ok, %{contacts: contacts}}
   end
 
@@ -26,7 +24,7 @@ defmodule Fastmail.ContactsTest do
       card = Card.for_group(name: "Feed")
       Contacts.add!(contacts, card)
 
-      assert [card = %Card.Group{}] = get_cards(contacts)
+      assert [card = %Card.Group{}] = Contacts.all(contacts)
       assert card.name == "Feed"
     end
 
@@ -34,7 +32,7 @@ defmodule Fastmail.ContactsTest do
       individual = create_individual()
       Contacts.add!(contacts, individual)
 
-      assert [card = %Card.Individual{}] = get_cards(contacts)
+      assert [card = %Card.Individual{}] = Contacts.all(contacts)
       assert card.email == individual.email
     end
 
@@ -91,47 +89,4 @@ defmodule Fastmail.ContactsTest do
       Webdavex.Client.delete(config, "#{card.uid}.vcf")
     end)
   end
-
-  def get_cards(%Contacts{config: config}) do
-    {:ok, body} =
-      config
-      |> Webdavex.Client.get("/")
-
-    CardsResponse.new(body) |> CardsResponse.parse()
-  end
 end
-
-#     test "lists contacts", %{config: config} do
-#       {:ok, contacts} = Contacts.create(config)
-#       :ok = Contacts.create_group_named(contacts, ContactsGroupName.of("Friends"))
-#       :ok = Contacts.create_contact(contacts, EmailAddress.of("test@test.com"))
-#       :ok = Contacts.create_contact(contacts, EmailAddress.of("someone@test.com"))
-
-#       contacts_list = Contacts.contacts(contacts)
-#       assert length(contacts_list) == 2
-#       assert Enum.map(contacts_list, & &1.email) == ["test@test.com", "someone@test.com"]
-#     end
-
-#     test "adds a contact to an existing group", %{config: config} do
-#       {:ok, contacts} = Contacts.create(config)
-#       group = ContactsGroupName.of("Friends")
-#       email = EmailAddress.of("test@test.com")
-#       :ok = Contacts.create_group_named(contacts, group)
-#       :ok = Contacts.create_contact(contacts, email)
-#       :ok = Contacts.add_to_group(contacts, email, group)
-
-#       assert {:ok, books} = DAVClient.fetch_address_books()
-#       assert {:ok, cards} = DAVClient.fetch_vcards(books[0])
-
-#       assert length(cards) == 2
-
-#       groups =
-#         Enum.filter(cards, fn card ->
-#           Regex.match?(~r/X-ADDRESSBOOKSERVER-KIND:group/, card.data)
-#         end)
-
-#       assert length(groups) == 1
-#       assert Regex.match?(~r/X-ADDRESSBOOKSERVER-MEMBER:urn:uuid:/, groups[0].data)
-#     end
-#   end
-# end
