@@ -1,4 +1,7 @@
 defmodule Fastmail.Contacts do
+  alias Fastmail.Contacts.Card.Individual
+  alias Fastmail.Contacts.Card.Group
+  alias Fastmail.Contacts.CardsResponse
   alias Fastmail.Contacts
 
   defstruct [:config]
@@ -25,5 +28,29 @@ defmodule Fastmail.Contacts do
       |> Webdavex.Client.put("#{uid}.vcf", {:binary, to_string(card)})
 
     contacts
+  end
+
+  def add_to_group(contacts, group, individual) do
+    # TODO: implement
+    contacts
+  end
+
+  def groups(contacts) do
+    cards(contacts)
+    |> Enum.filter(&match?(%Group{}, &1))
+  end
+
+  def individuals(contacts) do
+    cards(contacts)
+    |> Enum.filter(&match?(%Individual{}, &1))
+  end
+
+  defp cards(contacts) do
+    {:ok, body} =
+      contacts.config
+      |> Webdavex.Client.get("/")
+
+    CardsResponse.new(body)
+    |> CardsResponse.parse()
   end
 end
