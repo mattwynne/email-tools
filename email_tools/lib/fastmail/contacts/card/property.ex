@@ -42,9 +42,7 @@ defmodule Fastmail.Contacts.Card.Property do
       Regex.match?(~r/;/, value)
     end
 
-    def matches?(_name, _) do
-      false
-    end
+    def matches?(_name, _), do: false
 
     def new(value) do
       [

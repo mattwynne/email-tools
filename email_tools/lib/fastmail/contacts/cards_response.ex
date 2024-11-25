@@ -15,6 +15,8 @@ defmodule Fastmail.Contacts.CardsResponse do
   end
 
   defp group_lines_by_vcard(line, vcard_lines) do
+    dbg(line)
+
     case line do
       "BEGIN:VCARD" ->
         [[] | vcard_lines]
