@@ -1,5 +1,6 @@
 defmodule Fastmail.Contacts.CardTest do
   use ExUnit.Case, async: true
+  alias Fastmail.Contacts.CardsResponse
   alias Fastmail.Contacts.Card.Individual
   alias Fastmail.Contacts.Card.Property.StructuredName
   alias Fastmail.Contacts.Card
@@ -44,6 +45,26 @@ defmodule Fastmail.Contacts.CardTest do
       assert %StructuredName{family_name: "Wynne", given_name: "Matt"} = card.name
       assert card.email == "test@test.com"
       assert %Individual{} = card
+    end
+
+    test "parses a fastmail individual with all the fields" do
+      lines =
+        File.read!(
+          Path.join([
+            __DIR__,
+            "..",
+            "..",
+            "..",
+            "test",
+            "fixtures",
+            "Merlin Fritsch.vcf"
+          ])
+        )
+        |> CardsResponse.new()
+        |> dbg()
+        |> CardsResponse.parse()
+
+      Card.new(lines)
     end
 
     test "parses a group with multiple members" do
