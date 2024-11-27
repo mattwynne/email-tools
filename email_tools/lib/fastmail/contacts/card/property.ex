@@ -44,22 +44,23 @@ defmodule Fastmail.Contacts.Card.Property do
 
     def matches?(_name, _), do: false
 
-    def new(value) do
-      [
-        family_name,
-        given_name,
-        additional_names,
-        honorific_prefixes,
-        honorific_suffixes
-      ] = String.split(value, ";")
+    def new(args) when is_list(args) do
+      struct(__MODULE__, args)
+    end
 
-      %__MODULE__{
-        family_name: family_name,
-        given_name: given_name,
-        additional_names: additional_names,
-        honorific_prefixes: honorific_prefixes,
-        honorific_suffixes: honorific_suffixes
-      }
+    def new(value) when is_binary(value) do
+      new(
+        Enum.zip(
+          [
+            :family_name,
+            :given_name,
+            :additional_names,
+            :honorific_prefixes,
+            :honorific_suffixes
+          ],
+          String.split(value, ";")
+        )
+      )
     end
 
     defimpl String.Chars do
