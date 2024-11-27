@@ -48,7 +48,7 @@ defmodule Fastmail.Contacts.CardTest do
     end
 
     test "parses a fastmail individual with all the fields" do
-      lines =
+      [card] =
         File.read!(
           Path.join([
             __DIR__,
@@ -61,10 +61,9 @@ defmodule Fastmail.Contacts.CardTest do
           ])
         )
         |> CardsResponse.new()
-        |> dbg()
         |> CardsResponse.parse()
 
-      Card.new(lines)
+      assert card.name.given_name == "Merlin"
     end
 
     test "parses a group with multiple members" do
