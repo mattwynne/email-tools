@@ -14,8 +14,7 @@ defmodule Fastmail.Request do
         Jason.encode!(%{
           using: [
             "urn:ietf:params:jmap:core",
-            "urn:ietf:params:jmap:mail",
-            "urn:ietf:params:jmap:contacts"
+            "urn:ietf:params:jmap:mail"
           ],
           methodCalls: method_calls
         })
