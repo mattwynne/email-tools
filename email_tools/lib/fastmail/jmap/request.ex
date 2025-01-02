@@ -1,6 +1,4 @@
-defmodule Fastmail.Request do
-  # TODO: consider making these private methods on WebService
-
+defmodule Fastmail.Jmap.Request do
   def method_calls(url, token, method_calls) do
     Req.new(
       method: :post,

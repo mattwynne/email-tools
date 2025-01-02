@@ -34,10 +34,10 @@ defmodule EmailTools.FastmailClient do
   def handle_cast(:connect, state) do
     send(state.ui, {:state, state})
 
-    web_service = Fastmail.WebService.create(token: state.token)
+    web_service = Fastmail.Jmap.new(%Fastmail.Jmap.Credentials{token: state.token})
 
     state =
-      case web_service |> Fastmail.WebService.get_session() do
+      case web_service |> Fastmail.Jmap.get_session() do
         {:ok, session} ->
           state = state |> Map.put(:session, session)
           dbg(session)
@@ -75,7 +75,7 @@ defmodule EmailTools.FastmailClient do
     # TODO: move this HTTP call onto Fastmail.Session.method_calls
     response =
       Req.request!(
-        Fastmail.Request.method_calls(
+        Fastmail.Jmap.Request.method_calls(
           state.session.api_url,
           state.token,
           [[method, params, "0"]]

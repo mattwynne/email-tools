@@ -6,20 +6,23 @@ defmodule Fastmail.ContactsTest do
   require Logger
 
   describe "conecting" do
+    @tag :online
     test "connects using credentials from the environment" do
       credentials = Contacts.Credentials.from_environment()
       _service = Contacts.connect(credentials)
     end
   end
 
-  setup do
-    credentials = Credentials.from_environment()
-    contacts = Contacts.connect(credentials)
-    delete_all(contacts, Contacts.all(contacts))
-    {:ok, %{contacts: contacts}}
-  end
-
   describe "creating cards" do
+    setup(tags) do
+      dbg(tags)
+      credentials = Credentials.from_environment()
+      contacts = Contacts.connect(credentials)
+      delete_all(contacts, Contacts.all(contacts))
+      {:ok, %{contacts: contacts}}
+    end
+
+    @tag :online
     test "creates a group", %{contacts: contacts} do
       card = Card.for_group(name: "Feed")
       Contacts.add!(contacts, card)
@@ -28,6 +31,7 @@ defmodule Fastmail.ContactsTest do
       assert card.name == "Feed"
     end
 
+    @tag :online
     test "creates a contact", %{contacts: contacts} do
       individual = create_individual()
       Contacts.add!(contacts, individual)
@@ -36,6 +40,7 @@ defmodule Fastmail.ContactsTest do
       assert card.email == individual.email
     end
 
+    @tag :online
     test "lists groups", %{contacts: contacts} do
       contacts
       |> Contacts.add!(Card.for_group(name: "Friends"))
@@ -47,6 +52,7 @@ defmodule Fastmail.ContactsTest do
       assert Enum.map(groups, & &1.name) == ["Friends", "Family"]
     end
 
+    @tag :online
     test "lists individuals", %{contacts: contacts} do
       contacts
       |> Contacts.add!(Card.for_group(name: "Friends"))
@@ -58,6 +64,7 @@ defmodule Fastmail.ContactsTest do
       assert Enum.map(result, & &1.email) == ["test@test.com", "someone@test.com"]
     end
 
+    @tag :online
     test "adds an individual to an existing group", %{contacts: contacts} do
       group = Card.for_group(name: "Friends")
       individual = create_individual(email: "test@test.com")
@@ -81,12 +88,12 @@ defmodule Fastmail.ContactsTest do
       # TODO: more validation of properties when constructing
       Card.for_individual(name: name, formatted_name: formatted_name, email: email)
     end
-  end
 
-  def delete_all(%Contacts{config: config}, cards) do
-    cards
-    |> Enum.each(fn card ->
-      Webdavex.Client.delete(config, "#{card.uid}.vcf")
-    end)
+    def delete_all(%Contacts{config: config}, cards) do
+      cards
+      |> Enum.each(fn card ->
+        Webdavex.Client.delete(config, "#{card.uid}.vcf")
+      end)
+    end
   end
 end

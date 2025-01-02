@@ -1,4 +1,6 @@
-defmodule Fastmail.WebService do
+defmodule Fastmail.Jmap do
+  alias Fastmail.Jmap.Credentials
+
   defstruct [:get_session, :get_event_source, :token]
 
   defmodule Get do
@@ -28,7 +30,7 @@ defmodule Fastmail.WebService do
     end
   end
 
-  def create_null(opts \\ []) do
+  def null(opts \\ []) do
     noop = fn request -> {request, Req.Response.new()} end
 
     new(%__MODULE__{
@@ -38,9 +40,7 @@ defmodule Fastmail.WebService do
     })
   end
 
-  def create(opts) do
-    token = Keyword.fetch!(opts, :token)
-
+  def new(%Credentials{token: token}) do
     new(%__MODULE__{
       get_session: &Get.session/1,
       get_event_source: &Get.event_source/2,
@@ -48,14 +48,14 @@ defmodule Fastmail.WebService do
     })
   end
 
-  defp new(%__MODULE__{} = web_service) do
+  def new(%__MODULE__{} = web_service) do
     web_service
   end
 
   def get_session(web_service) do
     case Req.request(web_service.get_session.(web_service.token)) do
       {:ok, %{status: 200, body: body}} ->
-        {:ok, body |> Fastmail.Session.new(web_service)}
+        {:ok, body |> Fastmail.Jmap.Session.new(web_service)}
 
       {:ok, %{body: message}} ->
         {:error, RuntimeError.exception(message)}
