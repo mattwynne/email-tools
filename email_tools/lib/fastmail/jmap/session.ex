@@ -1,7 +1,7 @@
-defmodule Fastmail.Session do
+defmodule Fastmail.Jmap.Session do
   defstruct [:web_service, :data, :account_id, :api_url]
 
-  def create_null(opts \\ []) do
+  def null(opts \\ []) do
     data = %{
       "accounts" => %{
         "an-account-id" => %{}
@@ -14,7 +14,7 @@ defmodule Fastmail.Session do
 
     %__MODULE__{
       web_service:
-        Fastmail.WebService.create_null(
+        Fastmail.Jmap.null(
           get_event_source: fn request ->
             {
               request,
@@ -39,7 +39,7 @@ defmodule Fastmail.Session do
 
   def event_stream(session) do
     url = event_source_url(session.data)
-    session.web_service |> Fastmail.WebService.get_event_source(url)
+    session.web_service |> Fastmail.Jmap.get_event_source(url)
   end
 
   defp account_id(data) do
