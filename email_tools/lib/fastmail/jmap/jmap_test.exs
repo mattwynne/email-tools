@@ -5,8 +5,8 @@ defmodule Fastmail.JmapTest do
   describe "fetching a session" do
     @tag :online
     test "it calls the fastmail servers to connect" do
-      token = System.get_env("FASTMAIL_API_TOKEN")
-      web_service = Jmap.new(token: token)
+      credentials = Fastmail.Jmap.Credentials.from_environment()
+      web_service = Jmap.new(credentials)
       {:ok, _session} = web_service |> Jmap.get_session()
     end
 

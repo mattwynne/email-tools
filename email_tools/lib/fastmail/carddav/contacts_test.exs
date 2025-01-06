@@ -14,8 +14,7 @@ defmodule Fastmail.ContactsTest do
   end
 
   describe "creating cards" do
-    setup(tags) do
-      dbg(tags)
+    setup do
       credentials = Credentials.from_environment()
       contacts = Contacts.connect(credentials)
       delete_all(contacts, Contacts.all(contacts))
