@@ -1,9 +1,9 @@
 defmodule Fastmail.Jmap.Session do
   defmodule NullConfig do
-    defstruct [:on_get_session]
+    defstruct [:get_session]
 
     def new(opts \\ []) do
-      noop = fn ->
+      default_response =
         Req.Response.new(
           status: 200,
           body: %{
@@ -14,24 +14,24 @@ defmodule Fastmail.Jmap.Session do
             "apiUrl" => "https://myserver.com/api"
           }
         )
-      end
 
-      on_get_session = Keyword.get(opts, :on_get_session, noop)
-      %__MODULE__{on_get_session: on_get_session}
+      get_session = Keyword.get(opts, :get_session, default_response)
+      %__MODULE__{get_session: get_session}
     end
   end
 
-  alias Fastmail.Jmap
+  alias Fastmail.Jmap.Requests.GetEventSource
   alias Fastmail.Jmap.Credentials
   alias Fastmail.Jmap.Requests.GetSession
+  alias Fastmail.Jmap.Requests.GetEventSource
 
   defstruct [:credentials, :web_service, :data, :account_id, :api_url, :event_source_url]
 
   def null(%NullConfig{} = config) do
-    new(Credentials.null(), GetSession.null(config.on_get_session))
+    new(Credentials.null(), GetSession.null(config.get_session))
   end
 
-  # TODO: rewrite this in the style
+  # TODO: rewrite this in the new style
   def null(opts) do
     data = %{
       "accounts" => %{
@@ -74,16 +74,6 @@ defmodule Fastmail.Jmap.Session do
     end
   end
 
-  # TODO: aim to delete this
-  def new(data, %Jmap{} = web_service) do
-    %__MODULE__{
-      web_service: web_service,
-      account_id: account_id(data),
-      api_url: api_url(data),
-      event_source_url: event_source_url(data)
-    }
-  end
-
   defp request(%Req.Request{} = request) do
     case Req.request(request) do
       {:ok, %{status: 200, body: body}} ->
@@ -99,9 +89,7 @@ defmodule Fastmail.Jmap.Session do
 
   def event_stream(%__MODULE__{} = session) do
     # TODO: test, including error cases
-    Req.request(
-      Fastmail.Jmap.Get.event_source(session.credentials.token, session.event_source_url)
-    )
+    Req.request(GetEventSource.new(session.credentials, session.event_source_url))
   end
 
   defp account_id(data) do
