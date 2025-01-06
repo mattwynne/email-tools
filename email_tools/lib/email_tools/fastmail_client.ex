@@ -34,11 +34,11 @@ defmodule EmailTools.FastmailClient do
   def handle_cast(:connect, state) do
     send(state.ui, {:state, state})
 
-    web_service = Fastmail.Jmap.new(%Fastmail.Jmap.Credentials{token: state.token})
+    credentials = %Fastmail.Jmap.Credentials{token: state.token}
 
     state =
-      case web_service |> Fastmail.Jmap.get_session() do
-        {:ok, session} ->
+      case Fastmail.Jmap.Session.new(credentials) do
+        %Fastmail.Jmap.Session{} = session ->
           state = state |> Map.put(:session, session)
           dbg(session)
 

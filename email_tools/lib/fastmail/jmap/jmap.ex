@@ -65,9 +65,9 @@ defmodule Fastmail.Jmap do
     end
   end
 
-  def get_event_source(web_service, url) do
-    # TODO: handle errors
-    # TODO: test me
-    Req.request(web_service.get_event_source.(web_service.token, url))
-  end
+  # def get_event_source(web_service, url) do
+  #   # TODO: handle errors
+  #   # TODO: test me
+  #   Req.request(web_service.get_event_source.(web_service.token, url))
+  # end
 end
