@@ -1,5 +1,6 @@
 defmodule Fastmail.Jmap.SessionTest do
   use ExUnit.Case, async: true
+  alias Fastmail.Jmap.Session
   alias Fastmail.Jmap.Session.NullConfig
 
   describe "connecting" do
@@ -23,13 +24,22 @@ defmodule Fastmail.Jmap.SessionTest do
   describe "connecting - null mode" do
     test "fails to connect with bad credentials" do
       null_config =
-        NullConfig.default()
-        |> NullConfig.on_get_session(fn ->
-          RuntimeError.exception("non-existing domain")
-        end)
+        NullConfig.new(
+          on_get_session: fn ->
+            RuntimeError.exception("non-existing domain")
+          end
+        )
 
       assert {:error, error} = Fastmail.Jmap.Session.null(null_config)
       assert error.message =~ "domain"
+    end
+
+    test "connects OK with default null config" do
+      null_config = NullConfig.new()
+      assert %Session{} = session = Fastmail.Jmap.Session.null(null_config)
+      assert session.account_id == "some-account-id"
+      assert session.event_source_url == "https://myserver.com/events"
+      assert session.api_url == "https://myserver.com/api"
     end
   end
 
