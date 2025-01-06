@@ -2,13 +2,22 @@ defmodule Fastmail.Jmap.Session do
   defmodule NullConfig do
     defstruct [:on_get_session]
 
-    def default() do
-      noop = fn -> nil end
-      %__MODULE__{on_get_session: noop}
-    end
+    def new(opts \\ []) do
+      noop = fn ->
+        Req.Response.new(
+          status: 200,
+          body: %{
+            "accounts" => %{
+              "some-account-id" => %{}
+            },
+            "eventSourceUrl" => "https://myserver.com/events",
+            "apiUrl" => "https://myserver.com/api"
+          }
+        )
+      end
 
-    def on_get_session(%NullConfig{} = config, fun) do
-      %{config | on_get_session: fun}
+      on_get_session = Keyword.get(opts, :on_get_session, noop)
+      %__MODULE__{on_get_session: on_get_session}
     end
   end
 
