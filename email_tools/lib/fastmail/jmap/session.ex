@@ -1,7 +1,29 @@
 defmodule Fastmail.Jmap.Session do
-  defstruct [:web_service, :data, :account_id, :api_url]
+  defmodule NullConfig do
+    defstruct [:on_get_session]
 
-  def null(opts \\ []) do
+    def default() do
+      noop = fn -> nil end
+      %__MODULE__{on_get_session: noop}
+    end
+
+    def on_get_session(%NullConfig{} = config, fun) do
+      %{config | on_get_session: fun}
+    end
+  end
+
+  alias Fastmail.Jmap
+  alias Fastmail.Jmap.Credentials
+  alias Fastmail.Jmap.Requests.GetSession
+
+  defstruct [:credentials, :web_service, :data, :account_id, :api_url, :event_source_url]
+
+  def null(%NullConfig{} = config) do
+    new(Credentials.null(), GetSession.null(config.on_get_session))
+  end
+
+  # TODO: rewrite this in the style
+  def null(opts) do
     data = %{
       "accounts" => %{
         "an-account-id" => %{}
@@ -28,18 +50,46 @@ defmodule Fastmail.Jmap.Session do
     }
   end
 
-  def new(data, web_service) do
+  def new(%Credentials{} = credentials) do
+    new(credentials, Fastmail.Jmap.Requests.GetSession.new(credentials))
+  end
+
+  def new(%Credentials{} = credentials, %Req.Request{} = get_session) do
+    with {:ok, body} <- request(get_session) do
+      %__MODULE__{
+        credentials: credentials,
+        account_id: account_id(body),
+        api_url: api_url(body),
+        event_source_url: event_source_url(body)
+      }
+    end
+  end
+
+  # TODO: aim to delete this
+  def new(data, %Jmap{} = web_service) do
     %__MODULE__{
       web_service: web_service,
-      data: data,
       account_id: account_id(data),
-      api_url: api_url(data)
+      api_url: api_url(data),
+      event_source_url: event_source_url(data)
     }
   end
 
+  defp request(%Req.Request{} = request) do
+    case Req.request(request) do
+      {:ok, %{status: 200, body: body}} ->
+        {:ok, body}
+
+      {:ok, %{body: message}} ->
+        {:error, RuntimeError.exception(message)}
+
+      {:error, error} ->
+        {:error, error}
+    end
+  end
+
   def event_stream(session) do
-    url = event_source_url(session.data)
-    session.web_service |> Fastmail.Jmap.get_event_source(url)
+    session.web_service |> Fastmail.Jmap.get_event_source(session.event_source_url)
   end
 
   defp account_id(data) do
