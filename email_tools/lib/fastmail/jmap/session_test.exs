@@ -25,10 +25,17 @@ defmodule Fastmail.Jmap.SessionTest do
     test "fails to connect with bad credentials" do
       null_config =
         NullConfig.new(
-          on_get_session: fn ->
-            RuntimeError.exception("non-existing domain")
-          end
+          get_session:
+            Req.Response.new(status: 301, body: "Authorization header not a valid format")
         )
+
+      assert {:error, error} = Fastmail.Jmap.Session.null(null_config)
+      assert error.message =~ "Authorization"
+    end
+
+    test "fails with a bad URL" do
+      null_config =
+        NullConfig.new(get_session: RuntimeError.exception("non-existing domain"))
 
       assert {:error, error} = Fastmail.Jmap.Session.null(null_config)
       assert error.message =~ "domain"
@@ -39,22 +46,6 @@ defmodule Fastmail.Jmap.SessionTest do
       assert %Session{} = session = Fastmail.Jmap.Session.null(null_config)
       assert session.account_id == "some-account-id"
       assert session.event_source_url == "https://myserver.com/events"
-      assert session.api_url == "https://myserver.com/api"
-    end
-  end
-
-  describe "creating a new instance from a response JSON map" do
-    test "it can be configured as a connected session" do
-      data = %{
-        "accounts" => %{
-          "an-account-id" => %{}
-        },
-        "eventSourceUrl" => "https://myserver.com/events",
-        "apiUrl" => "https://myserver.com/api"
-      }
-
-      session = Fastmail.Jmap.Session.new(data, Fastmail.Jmap.null())
-      assert session.account_id == "an-account-id"
       assert session.api_url == "https://myserver.com/api"
     end
   end

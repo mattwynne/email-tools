@@ -12,12 +12,12 @@ defmodule Fastmail.Jmap.Requests.GetSession do
     )
   end
 
-  def null(fun) do
+  def null(response) do
     Req.new(
       adapter: fn request ->
         {
           request,
-          fun.()
+          response
         }
       end
     )
