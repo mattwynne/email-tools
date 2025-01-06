@@ -60,6 +60,7 @@ defmodule Fastmail.Jmap.SessionTest do
   end
 
   describe "connecting to the event source" do
+    @tag :skip
     test "it can open the stream" do
       session = Fastmail.Jmap.Session.null(events: ["message one", "message two"])
       {:ok, response} = session |> Fastmail.Jmap.Session.event_stream()

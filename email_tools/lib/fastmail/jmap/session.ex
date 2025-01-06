@@ -97,8 +97,11 @@ defmodule Fastmail.Jmap.Session do
     end
   end
 
-  def event_stream(session) do
-    session.web_service |> Fastmail.Jmap.get_event_source(session.event_source_url)
+  def event_stream(%__MODULE__{} = session) do
+    # TODO: test, including error cases
+    Req.request(
+      Fastmail.Jmap.Get.event_source(session.credentials.token, session.event_source_url)
+    )
   end
 
   defp account_id(data) do
