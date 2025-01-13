@@ -65,7 +65,8 @@ defmodule EmailTools.MixProject do
       {:tesla, "~> 1.12.1"},
       {:tzdata, "~> 1.1"},
       {:uniq, "~> 0.1"},
-      {:webdavex, "~> 0.3.3"}
+      {:webdavex, "~> 0.3.3"},
+      {:ex_unit_notifier, "~> 1.3", only: :test}
     ]
   end
 
