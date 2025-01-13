@@ -14,4 +14,15 @@ defmodule Fastmail.Jmap.Requests.GetEventSource do
       receive_timeout: :infinity
     )
   end
+
+  def null(events) do
+    Req.new(
+      adapter: fn request ->
+        {
+          request,
+          Req.Response.new(status: 200, body: events)
+        }
+      end
+    )
+  end
 end

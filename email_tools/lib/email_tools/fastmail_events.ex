@@ -1,4 +1,5 @@
 defmodule EmailTools.FastmailEvents do
+  alias Fastmail.Jmap.EventSource
   alias EmailTools.FastmailEvent
 
   def open_stream(session) do
@@ -21,7 +22,7 @@ defmodule EmailTools.FastmailEvents do
     # TODO: last_event_id is irrelevant until we get some kind of persistence.
 
     # TODO: factor out onto WebService
-    result = state.session |> Fastmail.Jmap.Session.event_stream()
+    result = state.session |> EventSource.new() |> EventSource.stream()
     # headers = %{
     #   "accept" => "text/event-stream",
     #   "last-event-id" => state.last_event_id

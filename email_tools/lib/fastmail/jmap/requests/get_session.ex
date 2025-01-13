@@ -22,4 +22,19 @@ defmodule Fastmail.Jmap.Requests.GetSession do
       end
     )
   end
+
+  def null() do
+    null(
+      Req.Response.new(
+        status: 200,
+        body: %{
+          "accounts" => %{
+            "some-account-id" => %{}
+          },
+          "eventSourceUrl" => "https://myserver.com/events",
+          "apiUrl" => "https://myserver.com/api"
+        }
+      )
+    )
+  end
 end
