@@ -18,12 +18,16 @@
   };
 
   scripts.setup.exec = ''
+    cd email_tools
     mix deps.get
     mix ecto.setup
   '';
 
   processes.phoenix = {
-    exec = "mix phx.server";
+    exec = ''
+      cd email_tools
+      mix phx.server
+    '';
     process-compose = {
       depends_on = {
         postgres = {
