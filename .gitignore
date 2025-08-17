@@ -4,3 +4,4 @@ out
 logs
 .local
 .direnv
+.devenv
