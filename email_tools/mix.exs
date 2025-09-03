@@ -35,6 +35,8 @@ defmodule EmailTools.MixProject do
     [
       {:bcrypt_elixir, "~> 3.0"},
       {:bandit, "~> 1.5"},
+      {:cloak, "~> 1.1"},
+      {:cloak_ecto, "~> 1.3"},
       {:dns_cluster, "~> 0.1.1"},
       {:ecto_sql, "~> 3.10"},
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},

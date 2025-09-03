@@ -5,6 +5,7 @@ defmodule EmailToolsWeb.UserSettingsController do
   alias EmailToolsWeb.UserAuth
 
   plug :assign_email_and_password_changesets
+  plug :assign_api_key_changeset
 
   def edit(conn, _params) do
     render(conn, :edit)
@@ -50,6 +51,21 @@ defmodule EmailToolsWeb.UserSettingsController do
     end
   end
 
+  def update(conn, %{"action" => "update_fastmail_api_key"} = params) do
+    %{"user" => user_params} = params
+    user = conn.assigns.current_user
+
+    case Accounts.update_user_fastmail_api_key(user, user_params) do
+      {:ok, _user} ->
+        conn
+        |> put_flash(:info, "Fastmail API key updated successfully.")
+        |> redirect(to: ~p"/users/settings")
+
+      {:error, changeset} ->
+        render(conn, :edit, api_key_changeset: changeset)
+    end
+  end
+
   def confirm_email(conn, %{"token" => token}) do
     case Accounts.update_user_email(conn.assigns.current_user, token) do
       :ok ->
@@ -70,5 +86,10 @@ defmodule EmailToolsWeb.UserSettingsController do
     conn
     |> assign(:email_changeset, Accounts.change_user_email(user))
     |> assign(:password_changeset, Accounts.change_user_password(user))
+  end
+
+  defp assign_api_key_changeset(conn, _opts) do
+    user = conn.assigns.current_user
+    assign(conn, :api_key_changeset, Accounts.change_user_fastmail_api_key(user))
   end
 end

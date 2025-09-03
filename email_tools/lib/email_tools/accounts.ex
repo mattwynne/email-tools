@@ -350,4 +350,56 @@ defmodule EmailTools.Accounts do
       {:error, :user, changeset, _} -> {:error, changeset}
     end
   end
+
+  ## Fastmail API Key
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for changing the user's Fastmail API key.
+
+  ## Examples
+
+      iex> change_user_fastmail_api_key(user)
+      %Ecto.Changeset{data: %User{}}
+
+  """
+  def change_user_fastmail_api_key(user, attrs \\ %{}) do
+    User.fastmail_api_key_changeset(user, attrs)
+  end
+
+  @doc """
+  Updates the user's Fastmail API key.
+
+  ## Examples
+
+      iex> update_user_fastmail_api_key(user, %{fastmail_api_key: "new_api_key"})
+      {:ok, %User{}}
+
+      iex> update_user_fastmail_api_key(user, %{fastmail_api_key: ""})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_user_fastmail_api_key(user, attrs) do
+    changeset = User.fastmail_api_key_changeset(user, attrs)
+
+    case Repo.update(changeset) do
+      {:ok, user} -> {:ok, user}
+      {:error, changeset} -> {:error, changeset}
+    end
+  end
+
+  @doc """
+  Gets the decrypted Fastmail API key for a user.
+  Returns nil if no key is set.
+
+  ## Examples
+
+      iex> get_user_fastmail_api_key(user)
+      "some_api_key"
+
+      iex> get_user_fastmail_api_key(user_without_key)
+      nil
+
+  """
+  def get_user_fastmail_api_key(%User{fastmail_api_key: nil}), do: nil
+  def get_user_fastmail_api_key(%User{fastmail_api_key: encrypted_key}), do: encrypted_key
 end

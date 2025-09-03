@@ -11,6 +11,7 @@ config :email_tools,
   ecto_repos: [EmailTools.Repo],
   generators: [timestamp_type: :utc_datetime]
 
+
 # Configures the endpoint
 config :email_tools, EmailToolsWeb.Endpoint,
   url: [host: "localhost"],
