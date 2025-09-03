@@ -9,6 +9,7 @@ defmodule EmailTools.Application do
   def start(_type, _args) do
     children = [
       EmailToolsWeb.Telemetry,
+      EmailTools.Vault,
       EmailTools.Repo,
       {DNSCluster, query: Application.get_env(:email_tools, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: EmailTools.PubSub},

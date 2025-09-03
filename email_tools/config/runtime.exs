@@ -117,3 +117,13 @@ if config_env() == :prod do
 end
 
 # config :logger, level: :debug
+
+# Configure Cloak encryption for all environments
+if cloak_key = System.get_env("CLOAK_KEY") do
+  config :email_tools, EmailTools.Vault,
+    ciphers: [
+      default:
+        {Cloak.Ciphers.AES.GCM,
+         tag: "AES.GCM.V1", key: Base.decode64!(cloak_key)}
+    ]
+end

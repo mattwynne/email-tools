@@ -8,6 +8,7 @@ defmodule EmailTools.Accounts.User do
     field :hashed_password, :string, redact: true
     field :current_password, :string, virtual: true, redact: true
     field :confirmed_at, :utc_datetime
+    field :fastmail_api_key, EmailTools.Encrypted.Binary
 
     timestamps(type: :utc_datetime)
   end
@@ -157,5 +158,14 @@ defmodule EmailTools.Accounts.User do
     else
       add_error(changeset, :current_password, "is not valid")
     end
+  end
+
+  @doc """
+  A user changeset for updating the fastmail API key.
+  """
+  def fastmail_api_key_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:fastmail_api_key])
+    |> validate_length(:fastmail_api_key, min: 1, max: 500)
   end
 end

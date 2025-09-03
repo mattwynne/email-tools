@@ -38,3 +38,11 @@ config :phoenix, :plug_init_mode, :runtime
 # Enable helpful, but potentially expensive runtime checks
 config :phoenix_live_view,
   enable_expensive_runtime_checks: true
+
+# Configure Cloak encryption for test
+config :email_tools, EmailTools.Vault,
+  ciphers: [
+    default:
+      {Cloak.Ciphers.AES.GCM,
+       tag: "AES.GCM.V1", key: Base.decode64!("/+f00WfounxCp809R7Qoho+nwqJxYYKLiuVhbTMJFNk=")}
+  ]

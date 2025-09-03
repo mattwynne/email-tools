@@ -3,10 +3,12 @@ defmodule EmailTools.FastmailClient do
   alias EmailTools.Email
   alias EmailTools.State
   alias EmailTools.FastmailEvents
+  alias EmailTools.Accounts
   use GenServer
 
   def start_link(opts \\ []) do
-    token = System.get_env("FASTMAIL_API_TOKEN")
+    user = Keyword.fetch!(opts, :user)
+    token = Accounts.get_user_fastmail_api_key(user)
 
     # TODO: should we do this here or in init?
     # TODO: add the web_service here
