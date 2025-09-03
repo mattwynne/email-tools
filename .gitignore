@@ -5,3 +5,6 @@ logs
 .local
 .direnv
 .devenv
+.devenv.flake.nix
+.claude
+email_tools/rel
