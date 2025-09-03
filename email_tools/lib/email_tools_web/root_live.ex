@@ -3,8 +3,11 @@ defmodule EmailToolsWeb.RootLive do
   use EmailToolsWeb, :live_view
   alias EmailTools.FastmailClient
 
+  on_mount {EmailToolsWeb.UserAuth, :ensure_authenticated}
+
   def mount(_params, _session, socket) do
-    fastmail = FastmailClient.start_link() |> FastmailClient.connect()
+    current_user = socket.assigns.current_user
+    fastmail = FastmailClient.start_link(user: current_user) |> FastmailClient.connect()
 
     {
       :ok,
