@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for email-tools-late-haze-202 on 2025-09-01T22:27:17-07:00
+# fly.toml app configuration file generated for email-tools on 2025-09-03T21:52:02-07:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'email-tools-late-haze-202'
+app = 'email-tools'
 primary_region = 'sea'
 kill_signal = 'SIGTERM'
 
@@ -13,7 +13,7 @@ kill_signal = 'SIGTERM'
   release_command = '/app/bin/migrate'
 
 [env]
-  PHX_HOST = 'email-tools-late-haze-202.fly.dev'
+  PHX_HOST = 'email-tools.fly.dev'
   PORT = '8080'
 
 [http_service]
@@ -30,6 +30,6 @@ kill_signal = 'SIGTERM'
     soft_limit = 1000
 
 [[vm]]
-  memory = '1gb'
+  memory = '2gb'
   cpu_kind = 'shared'
   cpus = 1
