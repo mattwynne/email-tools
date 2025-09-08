@@ -1,9 +1,36 @@
 <.header class="text-center">
   Account Settings
-  <:subtitle>Manage your account email address and password settings</:subtitle>
+  <:subtitle>Manage your account settings</:subtitle>
 </.header>
 
 <div class="space-y-12 divide-y">
+  <div>
+    <.simple_form
+      :let={f}
+      for={@api_key_changeset}
+      action={~p"/users/settings"}
+      id="update_fastmail_api_key"
+    >
+      <.error :if={@api_key_changeset.action}>
+        Oops, something went wrong! Please check the errors below.
+      </.error>
+
+      <input type="hidden" name="action" value="update_fastmail_api_key" />
+
+      <.input
+        field={f[:fastmail_api_key]}
+        type="password"
+        label="Fastmail API Key"
+        placeholder="Enter your Fastmail API key"
+      />
+      <p class="mt-2 text-sm text-gray-500">
+        This key will be encrypted and stored securely.
+      </p>
+      <:actions>
+        <.button phx-disable-with="Updating...">Update API Key</.button>
+      </:actions>
+    </.simple_form>
+  </div>
   <div>
     <.simple_form :let={f} for={@email_changeset} action={~p"/users/settings"} id="update_email">
       <.error :if={@email_changeset.action}>
@@ -57,33 +84,6 @@
       />
       <:actions>
         <.button phx-disable-with="Changing...">Change Password</.button>
-      </:actions>
-    </.simple_form>
-  </div>
-  <div>
-    <.simple_form
-      :let={f}
-      for={@api_key_changeset}
-      action={~p"/users/settings"}
-      id="update_fastmail_api_key"
-    >
-      <.error :if={@api_key_changeset.action}>
-        Oops, something went wrong! Please check the errors below.
-      </.error>
-
-      <input type="hidden" name="action" value="update_fastmail_api_key" />
-
-      <.input 
-        field={f[:fastmail_api_key]} 
-        type="password" 
-        label="Fastmail API Key" 
-        placeholder="Enter your Fastmail API key"
-      />
-      <p class="mt-2 text-sm text-gray-500">
-        This key will be encrypted and stored securely. It replaces the FASTMAIL_API_TOKEN environment variable.
-      </p>
-      <:actions>
-        <.button phx-disable-with="Updating...">Update API Key</.button>
       </:actions>
     </.simple_form>
   </div>
