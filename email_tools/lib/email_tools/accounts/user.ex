@@ -9,6 +9,7 @@ defmodule EmailTools.Accounts.User do
     field :current_password, :string, virtual: true, redact: true
     field :confirmed_at, :utc_datetime
     field :fastmail_api_key, EmailTools.Encrypted.Binary
+    field :invite_code, :string, virtual: true
 
     timestamps(type: :utc_datetime)
   end
@@ -38,7 +39,7 @@ defmodule EmailTools.Accounts.User do
   """
   def registration_changeset(user, attrs, opts \\ []) do
     user
-    |> cast(attrs, [:email, :password])
+    |> cast(attrs, [:email, :password, :invite_code])
     |> validate_email(opts)
     |> validate_password(opts)
   end

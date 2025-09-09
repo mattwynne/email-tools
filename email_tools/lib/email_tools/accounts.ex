@@ -75,9 +75,35 @@ defmodule EmailTools.Accounts do
 
   """
   def register_user(attrs) do
-    %User{}
-    |> User.registration_changeset(attrs)
-    |> Repo.insert()
+    with {:ok, validated_attrs} <- validate_invite_code(attrs) do
+      %User{}
+      |> User.registration_changeset(validated_attrs)
+      |> Repo.insert()
+    end
+  end
+
+  defp validate_invite_code(%{"invite_code" => invite_code} = attrs) do
+    expected_code = get_invite_code()
+    
+    if invite_code == expected_code do
+      {:ok, Map.delete(attrs, "invite_code")}
+    else
+      changeset = 
+        %User{}
+        |> User.registration_changeset(attrs)
+        |> Ecto.Changeset.add_error(:invite_code, "Invalid invite code")
+        |> Map.put(:action, :insert)
+      {:error, changeset}
+    end
+  end
+
+  defp validate_invite_code(attrs) do
+    changeset = 
+      %User{}
+      |> User.registration_changeset(attrs)
+      |> Ecto.Changeset.add_error(:invite_code, "Invite code is required")
+      |> Map.put(:action, :insert)
+    {:error, changeset}
   end
 
   @doc """
@@ -402,4 +428,30 @@ defmodule EmailTools.Accounts do
   """
   def get_user_fastmail_api_key(%User{fastmail_api_key: nil}), do: nil
   def get_user_fastmail_api_key(%User{fastmail_api_key: encrypted_key}), do: encrypted_key
+
+  @doc """
+  Sets the invite code environment variable for testing purposes.
+  
+  ## Examples
+  
+      iex> set_invite_code("secret123")
+      :ok
+  
+  """
+  def set_invite_code(code) when is_binary(code) do
+    System.put_env("INVITE_CODE", code)
+  end
+
+  @doc """
+  Gets the invite code from the environment variable.
+  
+  ## Examples
+  
+      iex> get_invite_code()
+      "secret123"
+  
+  """
+  def get_invite_code do
+    System.get_env("INVITE_CODE") || raise "INVITE_CODE environment variable not set"
+  end
 end

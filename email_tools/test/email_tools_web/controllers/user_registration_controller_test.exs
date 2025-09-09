@@ -2,6 +2,7 @@ defmodule EmailToolsWeb.UserRegistrationControllerTest do
   use EmailToolsWeb.ConnCase, async: true
 
   import EmailTools.AccountsFixtures
+  alias EmailTools.Accounts
 
   describe "GET /users/register" do
     test "renders registration page", %{conn: conn} do
@@ -21,12 +22,13 @@ defmodule EmailToolsWeb.UserRegistrationControllerTest do
 
   describe "POST /users/register" do
     @tag :capture_log
-    test "creates account and logs the user in", %{conn: conn} do
+    test "creates account and logs the user in with valid invite code", %{conn: conn} do
       email = unique_user_email()
+      Accounts.set_invite_code("secret123")
 
       conn =
         post(conn, ~p"/users/register", %{
-          "user" => valid_user_attributes(email: email)
+          "user" => valid_user_attributes(email: email) |> Map.put("invite_code", "secret123")
         })
 
       assert get_session(conn, :user_token)
@@ -40,16 +42,35 @@ defmodule EmailToolsWeb.UserRegistrationControllerTest do
       assert response =~ ~p"/users/log_out"
     end
 
-    test "render errors for invalid data", %{conn: conn} do
+    test "rejects registration without invite code", %{conn: conn} do
+      email = unique_user_email()
+
       conn =
         post(conn, ~p"/users/register", %{
-          "user" => %{"email" => "with spaces", "password" => "too short"}
+          "user" => valid_user_attributes(email: email)
+        })
+
+      response = html_response(conn, 200)
+      assert response =~ "Register"
+      # Registration was rejected and form is re-rendered
+      refute get_session(conn, :user_token)
+    end
+
+    test "render errors for invalid data", %{conn: conn} do
+      Accounts.set_invite_code("secret123")
+      
+      conn =
+        post(conn, ~p"/users/register", %{
+          "user" => %{"email" => "with spaces", "password" => "too short", "invite_code" => "wrong_code"}
         })
 
       response = html_response(conn, 200)
       assert response =~ "Register"
       assert response =~ "must have the @ sign and no spaces"
       assert response =~ "should be at least 12 character"
+      assert response =~ "Invalid invite code"
+      # Registration was rejected and form is re-rendered
+      refute get_session(conn, :user_token)
     end
   end
 end

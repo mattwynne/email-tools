@@ -15,9 +15,12 @@ defmodule EmailTools.AccountsFixtures do
   end
 
   def user_fixture(attrs \\ %{}) do
+    System.put_env("INVITE_CODE", "test_invite_code")
+    
     {:ok, user} =
       attrs
       |> valid_user_attributes()
+      |> Map.put("invite_code", "test_invite_code")
       |> EmailTools.Accounts.register_user()
 
     user

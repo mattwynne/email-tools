@@ -84,13 +84,33 @@ defmodule EmailTools.AccountsTest do
       assert "has already been taken" in errors_on(changeset).email
     end
 
-    test "registers users with a hashed password" do
+    test "registers users with a hashed password and valid invite code" do
+      Accounts.set_invite_code("secret123")
       email = unique_user_email()
-      {:ok, user} = Accounts.register_user(valid_user_attributes(email: email))
+      attrs = %{"email" => email, "password" => valid_user_password(), "invite_code" => "secret123"}
+      {:ok, user} = Accounts.register_user(attrs)
       assert user.email == email
       assert is_binary(user.hashed_password)
       assert is_nil(user.confirmed_at)
       assert is_nil(user.password)
+    end
+
+    test "requires valid invite code" do
+      Accounts.set_invite_code("secret123")
+      attrs = %{"email" => unique_user_email(), "password" => valid_user_password(), "invite_code" => "wrong_code"}
+      {:error, changeset} = Accounts.register_user(attrs)
+
+      assert %{invite_code: ["Invalid invite code"]} = errors_on(changeset)
+      assert changeset.action == :insert
+    end
+
+    test "requires invite code to be present" do
+      Accounts.set_invite_code("secret123")
+      attrs = %{"email" => unique_user_email(), "password" => valid_user_password()}
+      {:error, changeset} = Accounts.register_user(attrs)
+
+      assert %{invite_code: ["Invite code is required"]} = errors_on(changeset)
+      assert changeset.action == :insert
     end
   end
 
@@ -497,6 +517,27 @@ defmodule EmailTools.AccountsTest do
       _ = Accounts.generate_user_session_token(user)
       {:ok, _} = Accounts.reset_user_password(user, %{password: "new valid password"})
       refute Repo.get_by(UserToken, user_id: user.id)
+    end
+  end
+
+  describe "set_invite_code/1" do
+    test "sets the INVITE_CODE environment variable" do
+      Accounts.set_invite_code("test123")
+      assert System.get_env("INVITE_CODE") == "test123"
+    end
+  end
+
+  describe "get_invite_code/0" do
+    test "gets the INVITE_CODE environment variable" do
+      Accounts.set_invite_code("test456")
+      assert Accounts.get_invite_code() == "test456"
+    end
+
+    test "raises when INVITE_CODE environment variable is not set" do
+      System.delete_env("INVITE_CODE")
+      assert_raise RuntimeError, "INVITE_CODE environment variable not set", fn ->
+        Accounts.get_invite_code()
+      end
     end
   end
 
