@@ -39,6 +39,9 @@ config :phoenix, :plug_init_mode, :runtime
 config :phoenix_live_view,
   enable_expensive_runtime_checks: true
 
+# Configure phoenix_test
+config :phoenix_test, :endpoint, EmailToolsWeb.Endpoint
+
 # Configure Cloak encryption for test
 config :email_tools, EmailTools.Vault,
   ciphers: [
