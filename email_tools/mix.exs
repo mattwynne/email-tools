@@ -59,6 +59,7 @@ defmodule EmailTools.MixProject do
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 1.0.0-rc.1", override: true},
       {:phoenix, "~> 1.7.14"},
+      {:phoenix_test, "~> 0.7.1", only: :test, runtime: false},
       {:postgrex, ">= 0.0.0"},
       {:req, "~> 0.5.5"},
       {:swoosh, "~> 1.5"},
