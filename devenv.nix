@@ -6,6 +6,7 @@
     erlang
     nodejs
     postgresql
+    flyctl
   ];
 
   languages.elixir.enable = true;
