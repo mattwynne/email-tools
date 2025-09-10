@@ -23,7 +23,8 @@ defmodule EmailToolsWeb.RootLive do
   @spec render(any()) :: Phoenix.LiveView.Rendered.t()
   def render(assigns) do
     ~H"""
-    <h1>test</h1>
+    <h1 :if={@connected?}>Connected</h1>
+    <h1 :if={!@connected?}>Not Connected</h1>
     <ul :if={@mailboxes}>
       <%= for mailbox <- @mailboxes["list"] do %>
         <li>
@@ -38,13 +39,14 @@ defmodule EmailToolsWeb.RootLive do
     <h1 class="text-2xl">State:</h1>
     <pre>
     <code>
-    <%= inspect(@state, pretty: true) %>
+    <%= inspect(Map.take(@state, [:mailboxes]), pretty: true) %>
     </code>
     </pre>
     """
   end
 
   def handle_info({:state, state}, socket) do
+    # TODO: consider creating a separate ViewState model that the fastmail client emits. Need to keep the token more secret.
     {
       :noreply,
       socket
