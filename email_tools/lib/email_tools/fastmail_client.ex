@@ -34,7 +34,7 @@ defmodule EmailTools.FastmailClient do
 
   @impl true
   def handle_cast(:connect, state) do
-    send(state.ui, {:state, state})
+    emit(state)
 
     credentials = %Fastmail.Jmap.Credentials{token: state.token}
 
@@ -44,7 +44,7 @@ defmodule EmailTools.FastmailClient do
           state = state |> Map.put(:session, session)
           dbg(session)
 
-          send(state.ui, {:state, state})
+          emit(state)
 
           state
           |> stream_events()
@@ -69,7 +69,7 @@ defmodule EmailTools.FastmailClient do
       state
       |> Map.put(:latest, changes)
 
-    send(state.ui, {:state, state})
+    emit(state)
     {:noreply, state}
   end
 
@@ -112,7 +112,7 @@ defmodule EmailTools.FastmailClient do
 
     state = state |> Map.put(:mailboxes, payload)
 
-    send(state.ui, {:state, state})
+    emit(state)
     {:noreply, state}
   end
 
@@ -128,7 +128,7 @@ defmodule EmailTools.FastmailClient do
         )
       )
 
-    send(state.ui, {:state, state})
+    emit(state)
     {:noreply, state}
   end
 
@@ -261,5 +261,9 @@ defmodule EmailTools.FastmailClient do
         payload
       }
     )
+  end
+
+  defp emit(state) do
+    send(state.ui, {:state, Map.take(state, [:mailboxes, :emails_by_mailbox])})
   end
 end
