@@ -48,9 +48,12 @@
   '';
 
   enterTest = ''
-    wait_for_port 5432
-    devenv run setup
+    echo "Running setup..."
     cd email_tools
+    mix deps.get
+    mix ecto.setup
+    echo "Setup complete"
+    echo "Running mix test..."
     mix test
   '';
 }
