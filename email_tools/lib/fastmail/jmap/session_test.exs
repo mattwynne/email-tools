@@ -7,7 +7,8 @@ defmodule Fastmail.Jmap.SessionTest do
       credentials = Fastmail.Jmap.Credentials.from_environment()
       session = Fastmail.Jmap.Session.new(credentials)
       assert session.credentials == credentials
-      assert session.account_id == "u360641ae"
+      # assert session.account_id == "u360641ae" # Matt
+      assert session.account_id == "u4d014069" # Test
       assert session.api_url == "https://api.fastmail.com/jmap/api/"
       assert session.event_source_url == "https://api.fastmail.com/jmap/event/"
     end
