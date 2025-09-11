@@ -1,4 +1,4 @@
-name: Fly Deploy
+name: CI/CD pipeline
 on:
   push:
     branches:
@@ -67,7 +67,7 @@ jobs:
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
-#      - run: flyctl deploy --remote-only email_tools
-#        env:
-#          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      - run: flyctl deploy --remote-only email_tools
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
