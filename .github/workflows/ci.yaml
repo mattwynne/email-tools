@@ -22,7 +22,7 @@ jobs:
         uses: nix-community/cache-nix-action@v6
         with:
           # restore and save a cache using this key
-          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix', '**/flake.lock') }}
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix', '**/*.lock') }}
           # if there's no cache hit, restore a cache by this prefix
           restore-prefixes-first-match: nix-${{ runner.os }}-
           # collect garbage until the Nix store size (in bytes) is at most this number
@@ -47,6 +47,17 @@ jobs:
 
       - name: Install devenv.sh
         run: nix profile install nixpkgs#devenv
+
+      - name: Cache Elixir dependencies
+        id: cache-deps
+        uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-
 
       - run: devenv test
         env:
