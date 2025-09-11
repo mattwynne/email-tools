@@ -1,5 +1,4 @@
-{ pkgs, ... }:
-
+{ pkgs, lib, config, ... }:
 {
   packages = with pkgs; [
     elixir
@@ -25,23 +24,33 @@
     mix ecto.setup
   '';
 
-  processes.phoenix = {
-    exec = ''
-      cd email_tools
-      mix phx.server
-    '';
-    process-compose = {
-      depends_on = {
-        postgres = {
-          condition = "process_healthy";
+  processes = {} //
+    lib.optionalAttrs (!config.devenv.isTesting) {
+      phoenix = {
+        exec = ''
+          cd email_tools
+          mix phx.server
+        '';
+        process-compose = {
+          depends_on = {
+            postgres = {
+              condition = "process_healthy";
+            };
+          };
         };
       };
     };
-  };
 
   enterShell = ''
     echo "🧪 Elixir/Phoenix development environment loaded"
     echo "Run 'devenv run setup' for one-time project setup"
     echo "Run 'devenv up' to start services"
+  '';
+
+  enterTest = ''
+    wait_for_port 5432
+    devenv run setup
+    cd email_tools
+    mix test
   '';
 }

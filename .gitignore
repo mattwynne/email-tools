@@ -8,3 +8,13 @@ logs
 .devenv.flake.nix
 .claude
 email_tools/rel
+
+# Devenv
+.devenv*
+devenv.local.nix
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml
