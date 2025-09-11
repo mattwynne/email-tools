@@ -7,6 +7,7 @@
     nodejs
     postgresql
     flyctl
+    gh
   ];
 
   languages.elixir.enable = true;
