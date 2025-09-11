@@ -7,7 +7,6 @@ logs
 .devenv
 .devenv.flake.nix
 .claude
-email_tools/rel
 
 # Devenv
 .devenv*
