@@ -61,8 +61,8 @@ jobs:
 
       - run: devenv test
         env:
-          FASTMAIL_USERNAME: {{ secrets.FASTMAIL_USERNAME }}
-          FASTMAIL_API_KEY: {{ secrets.FASTMAIL_API_KEY }}
+          FASTMAIL_USERNAME: ${{ secrets.FASTMAIL_USERNAME }}
+          FASTMAIL_API_KEY: ${{ secrets.FASTMAIL_API_KEY }}
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
