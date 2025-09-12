@@ -938,3 +938,4 @@
 {"date":"2025-09-10T00:31:59.302Z","totals":{"messages":382},"mailboxes":[{"name":"Inbox","messages":105},{"name":"Feed","messages":90},{"name":"Paperwork","messages":147},{"name":"Screener","messages":40}]}
 {"date":"2025-09-11T00:32:29.004Z","totals":{"messages":392},"mailboxes":[{"name":"Inbox","messages":109},{"name":"Feed","messages":98},{"name":"Paperwork","messages":155},{"name":"Screener","messages":30}]}
 {"date":"2025-09-11T03:26:35.262Z","totals":{"messages":365},"mailboxes":[{"name":"Inbox","messages":102},{"name":"Feed","messages":98},{"name":"Paperwork","messages":156},{"name":"Screener","messages":9}]}
+{"date":"2025-09-12T00:31:35.981Z","totals":{"messages":0},"mailboxes":[{"name":"Inbox","messages":0}]}
