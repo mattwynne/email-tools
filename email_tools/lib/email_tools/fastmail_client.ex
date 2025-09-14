@@ -188,7 +188,7 @@ defmodule EmailTools.FastmailClient do
         )
       end)
 
-    # send(state.ui, {:state, state})
+    emit(state)
 
     {:noreply, state}
   end
@@ -222,6 +222,21 @@ defmodule EmailTools.FastmailClient do
   end
 
   defp handle_changes(_, _, _), do: nil
+
+  defp get_changes("Email", since, state) do
+    response =
+      Req.request!(
+        Fastmail.Jmap.Request.method_calls(
+          state.session.api_url,
+          state.token,
+          Fastmail.Jmap.MethodCalls.GetAllChangedEmails.new(state.session.account_id, since)
+        )
+      )
+
+    dbg(response)
+    method_response = Enum.at(response.body["methodResponses"], 1)
+    send(self(), method_response)
+  end
 
   defp get_changes(type, since, state) do
     method_call(
