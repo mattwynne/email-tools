@@ -1,4 +1,5 @@
 defmodule Fastmail.Jmap.Request do
+  # TODO: why is this on e function and others are in the Requests module as modules themselves?
   def method_calls(url, token, method_calls) do
     Req.new(
       method: :post,
