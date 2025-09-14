@@ -164,6 +164,22 @@ defmodule EmailToolsWeb.UserAuth do
     end
   end
 
+  def on_mount(:ensure_fastmail_api_key, _params, session, socket) do
+    socket = mount_current_user(socket, session)
+
+    if socket.assigns.current_user.fastmail_api_key do
+      {:cont, socket}
+    else
+      socket =
+        socket
+        |> Phoenix.LiveView.put_flash(:error, "Please configure your fastmail API key.")
+        |> Phoenix.LiveView.redirect(to: ~p"/users/settings")
+
+      {:halt, socket}
+    end
+  end
+
+
   def on_mount(:redirect_if_user_is_authenticated, _params, session, socket) do
     socket = mount_current_user(socket, session)
 

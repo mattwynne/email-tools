@@ -4,6 +4,7 @@ defmodule EmailToolsWeb.RootLive do
   alias EmailTools.FastmailClient
 
   on_mount {EmailToolsWeb.UserAuth, :ensure_authenticated}
+  on_mount {EmailToolsWeb.UserAuth, :ensure_fastmail_api_key}
 
   def mount(_params, _session, socket) do
     current_user = socket.assigns.current_user
