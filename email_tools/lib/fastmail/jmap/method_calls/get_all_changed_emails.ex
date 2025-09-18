@@ -1,8 +1,8 @@
-defmodule Fastmail.Jmap.MethodCalls.GetAllChangedEmails do
-  def new(account_id, since_state) do
+defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
+  def new(account_id, type, since_state) do
     [
       [
-        "Email/changes",
+        "#{type}/changes",
         %{
           accountId: account_id,
           sinceState: since_state
@@ -10,11 +10,11 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedEmails do
         "changes"
       ],
       [
-        "Email/get",
+        "#{type}/get",
         %{
           accountId: account_id,
           "#ids": %{
-            name: "Email/changes",
+            name: "#{type}/changes",
             path: "/updated",
             resultOf: "changes"
           }
