@@ -214,7 +214,10 @@ defmodule EmailTools.FastmailClient do
     ["Email"]
     |> Enum.each(fn type ->
       if old[type] != new[type] do
-        get_changes(type, old[type], state)
+        request(
+          Fastmail.Jmap.MethodCalls.GetAllChanged.new(state.session.account_id, type, old[type]),
+          state
+        )
       end
     end)
 
@@ -223,19 +226,16 @@ defmodule EmailTools.FastmailClient do
 
   defp handle_changes(_, _, _), do: nil
 
-  defp get_changes(type, since, state) do
-    response =
-      Req.request!(
-        Fastmail.Jmap.Request.method_calls(
-          state.session.api_url,
-          state.token,
-          Fastmail.Jmap.MethodCalls.GetAllChanged.new(state.session.account_id, type, since)
-        )
+  defp request(request, state) do
+    Req.request!(
+      Fastmail.Jmap.Request.method_calls(
+        state.session.api_url,
+        state.token,
+        request
       )
-
-    dbg(response)
-    method_response = Enum.at(response.body["methodResponses"], 1)
-    send(self(), method_response)
+    )
+    |> then(& &1.body["methodResponses"])
+    |> Enum.each(fn response -> send(self(), response) end)
   end
 
   defp fetch_initial_state(state) do
