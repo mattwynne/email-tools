@@ -1,3 +1,4 @@
+# TODO: Rename to FastmailAccount or ConnectedFastmailAccount - this will be the live state of an account
 defmodule EmailTools.FastmailClient do
   alias EmailTools.Mailbox
   alias EmailTools.Email
@@ -98,15 +99,9 @@ defmodule EmailTools.FastmailClient do
   @impl true
   def handle_info(["Mailbox/get", payload, _], state) do
     Enum.each(payload["list"], fn mailbox ->
-      # TODO: factor out some kind of request builder
-      method_call(
-        "Email/query",
-        %{
-          accountId: state.session.account_id,
-          filter: %{
-            inMailbox: mailbox["id"]
-          }
-        }
+      request(
+        Fastmail.Jmap.MethodCalls.QueryAllEmails.new(state.session.account_id, mailbox["id"]),
+        state
       )
     end)
 
@@ -135,10 +130,10 @@ defmodule EmailTools.FastmailClient do
   def handle_info(["Email/changes", result, _], state) do
     ids = result["updated"]
 
-    method_call("Email/get", %{
-      accountId: state.session.account_id,
-      ids: ids
-    })
+    request(
+      Fastmail.Jmap.MethodCalls.GetEmailsByIds.new(state.session.account_id, ids),
+      state
+    )
 
     {:noreply, state}
   end
@@ -234,41 +229,39 @@ defmodule EmailTools.FastmailClient do
         request
       )
     )
+    |> dbg()
     |> then(& &1.body["methodResponses"])
     |> Enum.each(fn response -> send(self(), response) end)
   end
 
   defp fetch_initial_state(state) do
-    method_call("AddressBook/get", %{
-      accountId: state.session.account_id,
-      ids: nil
-    })
-
-    method_call(
-      "Mailbox/get",
-      %{
-        accountId: state.session.account_id,
-        ids: nil
-      }
+    request(
+      [
+        [
+          "AddressBook/get",
+          %{
+            accountId: state.session.account_id,
+            ids: nil
+          },
+          "contacts"
+        ],
+        [
+          "Mailbox/get",
+          %{
+            accountId: state.session.account_id,
+            ids: nil
+          },
+          "mailboxes"
+        ]
+      ],
+      state
     )
 
     state
   end
 
-  defp method_call(method, payload) do
-    dbg([:method_call, method])
-
-    GenServer.cast(
-      self(),
-      {
-        :method_call,
-        method,
-        payload
-      }
-    )
-  end
-
   defp emit(state) do
     send(state.ui, {:state, Map.take(state, [:mailboxes, :emails_by_mailbox])})
+    state
   end
 end
