@@ -1,5 +1,4 @@
-# TODO: Rename to FastmailAccount or ConnectedFastmailAccount - this will be the live state of an account
-defmodule EmailTools.FastmailClient do
+defmodule EmailTools.FastmailAccount do
   alias EmailTools.Mailbox
   alias EmailTools.Email
   alias EmailTools.State

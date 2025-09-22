@@ -1,6 +1,6 @@
-defmodule FastmailClientTest do
+defmodule FastmailAccountTest do
   use ExUnit.Case, async: true
-  alias EmailTools.FastmailClient
+  alias EmailTools.FastmailAccount
 
   describe "getting new email details" do
     test "updates the emails_by_mailbox mapping" do
@@ -27,7 +27,7 @@ defmodule FastmailClientTest do
         ]
       }
 
-      {:noreply, new_state} = FastmailClient.handle_info(["Email/get", result, "a"], state)
+      {:noreply, new_state} = FastmailAccount.handle_info(["Email/get", result, "a"], state)
 
       assert new_state.emails_by_mailbox == %{
                "inbox-id" => [],
