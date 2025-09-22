@@ -1,23 +1,31 @@
 defmodule EmailToolsWeb.RootLive do
   alias EmailTools.State
   use EmailToolsWeb, :live_view
-  alias EmailTools.FastmailClient
+  alias EmailTools.FastmailClientManager
 
   on_mount {EmailToolsWeb.UserAuth, :ensure_authenticated}
   on_mount {EmailToolsWeb.UserAuth, :ensure_fastmail_api_key}
 
   def mount(_params, _session, socket) do
     current_user = socket.assigns.current_user
-    fastmail = FastmailClient.start_link(user: current_user) |> FastmailClient.connect()
+
+    # Subscribe to updates from the user's FastmailClient
+    Phoenix.PubSub.subscribe(EmailTools.PubSub, "fastmail_client:#{current_user.id}")
+
+    # Get the FastmailClient for this user (should already be running)
+    client_pid = FastmailClientManager.get_client_pid(current_user.id)
+
+    # Get initial state from the client
+    initial_client_state = EmailTools.FastmailClient.get_state(client_pid)
 
     {
       :ok,
       socket
-      |> assign(:fastmail, fastmail)
-      |> assign(:connected?, false)
-      |> assign(:state, State.new())
-      |> assign(:mailboxes, nil)
-      |> assign(:emails_by_mailbox, %{})
+      |> assign(:fastmail_client_pid, client_pid)
+      |> assign(:connected?, State.connected?(initial_client_state))
+      |> assign(:state, initial_client_state)
+      |> assign(:mailboxes, initial_client_state.mailboxes)
+      |> assign(:emails_by_mailbox, initial_client_state.emails_by_mailbox)
     }
   end
 
