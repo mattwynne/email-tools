@@ -250,6 +250,7 @@ defmodule EmailTools.FastmailAccount do
       "fastmail_client:#{state.user_id}",
       {:state, Map.take(state, [:mailboxes, :emails_by_mailbox])}
     )
+
     state
   end
 end
