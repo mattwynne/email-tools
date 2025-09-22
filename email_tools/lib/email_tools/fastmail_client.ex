@@ -12,25 +12,35 @@ defmodule EmailTools.FastmailClient do
     token = Accounts.get_user_fastmail_api_key(user)
 
     # TODO: should we do this here or in init?
-    # TODO: add the web_service here
     state = %{
       token: token,
-      ui: self(),
+      user_id: user.id,
       mailboxes: nil,
       emails_by_mailbox: %{}
     }
 
-    {:ok, pid} = GenServer.start_link(__MODULE__, state, opts)
-    pid
+    GenServer.start_link(__MODULE__, state, opts)
   end
 
   def connect(pid) do
     GenServer.cast(pid, :connect)
   end
 
+  def get_state(pid) do
+    GenServer.call(pid, :get_state)
+  end
+
   @impl true
   def init(state) do
+    # Auto-connect when the GenServer starts
+    GenServer.cast(self(), :connect)
     {:ok, state}
+  end
+
+  @impl true
+  def handle_call(:get_state, _from, state) do
+    client_state = Map.take(state, [:mailboxes, :emails_by_mailbox])
+    {:reply, client_state, state}
   end
 
   @impl true
@@ -236,7 +246,11 @@ defmodule EmailTools.FastmailClient do
   end
 
   defp emit(state) do
-    send(state.ui, {:state, Map.take(state, [:mailboxes, :emails_by_mailbox])})
+    Phoenix.PubSub.broadcast(
+      EmailTools.PubSub,
+      "fastmail_client:#{state.user_id}",
+      {:state, Map.take(state, [:mailboxes, :emails_by_mailbox])}
+    )
     state
   end
 end

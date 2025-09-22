@@ -13,10 +13,11 @@ defmodule EmailTools.Application do
       EmailTools.Repo,
       {DNSCluster, query: Application.get_env(:email_tools, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: EmailTools.PubSub},
+      # TODO: There's coupling here of the name of the registry in the FastmailClientManager
+      {Registry, keys: :unique, name: EmailTools.FastmailClientRegistry},
+      EmailTools.FastmailClientManager,
       # Start the Finch HTTP client for sending emails
       {Finch, name: EmailTools.Finch},
-      # Start a worker by calling: EmailTools.Worker.start_link(arg)
-      # {EmailTools.Worker, arg},
       # Start to serve requests, typically the last entry
       EmailToolsWeb.Endpoint
     ]
@@ -24,7 +25,16 @@ defmodule EmailTools.Application do
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: EmailTools.Supervisor]
-    Supervisor.start_link(children, opts)
+
+    case Supervisor.start_link(children, opts) do
+      {:ok, pid} ->
+        # Start FastmailClients for all users with API keys after the supervisor starts
+        Task.start(fn -> EmailTools.FastmailClientManager.start_clients_for_all_users() end)
+        {:ok, pid}
+
+      error ->
+        error
+    end
   end
 
   # Tell Phoenix to update the endpoint configuration
