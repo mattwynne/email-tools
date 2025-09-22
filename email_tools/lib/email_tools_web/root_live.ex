@@ -1,7 +1,7 @@
 defmodule EmailToolsWeb.RootLive do
   alias EmailTools.State
   use EmailToolsWeb, :live_view
-  alias EmailTools.FastmailClientManager
+  alias EmailTools.FastmailAccounts
 
   on_mount {EmailToolsWeb.UserAuth, :ensure_authenticated}
   on_mount {EmailToolsWeb.UserAuth, :ensure_fastmail_api_key}
@@ -13,7 +13,7 @@ defmodule EmailToolsWeb.RootLive do
     Phoenix.PubSub.subscribe(EmailTools.PubSub, "fastmail_client:#{current_user.id}")
 
     # Get the FastmailAccount for this user (should already be running)
-    account_pid = FastmailClientManager.get_client_pid(current_user.id)
+    account_pid = FastmailAccounts.get_account_pid(current_user.id)
 
     # Get initial state from the account
     initial_account_state = EmailTools.FastmailAccount.get_state(account_pid)

@@ -1,4 +1,4 @@
-defmodule EmailTools.FastmailClientManager do
+defmodule EmailTools.FastmailAccounts do
   @moduledoc """
   A DynamicSupervisor that manages FastmailAccount processes for each user.
   Automatically starts accounts for users with API keys and provides functions
@@ -20,7 +20,7 @@ defmodule EmailTools.FastmailClientManager do
   Starts a FastmailAccount for the given user.
   Returns {:ok, pid} if successful, or {:error, reason} if it fails.
   """
-  def start_client_for_user(user) do
+  def start_account_for_user(user) do
     case Accounts.get_user_fastmail_api_key(user) do
       nil ->
         {:error, :no_api_key}
@@ -34,8 +34,8 @@ defmodule EmailTools.FastmailClientManager do
   @doc """
   Stops the FastmailAccount for the given user.
   """
-  def stop_client_for_user(user) do
-    case get_client_pid(user.id) do
+  def stop_account_for_user(user) do
+    case get_account_pid(user.id) do
       nil -> :ok
       pid -> DynamicSupervisor.terminate_child(__MODULE__, pid)
     end
@@ -45,8 +45,8 @@ defmodule EmailTools.FastmailClientManager do
   Gets the PID of the FastmailAccount for the given user ID.
   Returns nil if no account is running for that user.
   """
-  def get_client_pid(user_id) do
-    case Registry.lookup(EmailTools.FastmailClientRegistry, user_id) do
+  def get_account_pid(user_id) do
+    case Registry.lookup(EmailTools.FastmailAccountRegistry, user_id) do
       [{pid, _}] -> pid
       [] -> nil
     end
@@ -56,11 +56,11 @@ defmodule EmailTools.FastmailClientManager do
   Starts FastmailAccounts for all users who have API keys configured.
   Called during application startup.
   """
-  def start_clients_for_all_users do
+  def start_accounts_for_all_users do
     users_with_api_keys = list_users_with_api_keys()
 
     Enum.each(users_with_api_keys, fn user ->
-      case start_client_for_user(user) do
+      case start_account_for_user(user) do
         {:ok, _pid} ->
           :ok
 
@@ -76,13 +76,13 @@ defmodule EmailTools.FastmailClientManager do
   @doc """
   Restarts the FastmailAccount for a user. Useful when their API key changes.
   """
-  def restart_client_for_user(user) do
-    stop_client_for_user(user)
-    start_client_for_user(user)
+  def restart_account_for_user(user) do
+    stop_account_for_user(user)
+    start_account_for_user(user)
   end
 
   defp via_tuple(user_id) do
-    {:via, Registry, {EmailTools.FastmailClientRegistry, user_id}}
+    {:via, Registry, {EmailTools.FastmailAccountRegistry, user_id}}
   end
 
   defp list_users_with_api_keys do

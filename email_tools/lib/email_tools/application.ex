@@ -13,9 +13,9 @@ defmodule EmailTools.Application do
       EmailTools.Repo,
       {DNSCluster, query: Application.get_env(:email_tools, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: EmailTools.PubSub},
-      # TODO: There's coupling here of the name of the registry in the FastmailClientManager
-      {Registry, keys: :unique, name: EmailTools.FastmailClientRegistry},
-      EmailTools.FastmailClientManager,
+      # TODO: There's coupling here of the name of the registry in the FastmailAccounts
+      {Registry, keys: :unique, name: EmailTools.FastmailAccountRegistry},
+      EmailTools.FastmailAccounts,
       # Start the Finch HTTP client for sending emails
       {Finch, name: EmailTools.Finch},
       # Start to serve requests, typically the last entry
@@ -29,7 +29,7 @@ defmodule EmailTools.Application do
     case Supervisor.start_link(children, opts) do
       {:ok, pid} ->
         # Start FastmailAccounts for all users with API keys after the supervisor starts
-        Task.start(fn -> EmailTools.FastmailClientManager.start_clients_for_all_users() end)
+        Task.start(fn -> EmailTools.FastmailAccounts.start_accounts_for_all_users() end)
         {:ok, pid}
 
       error ->
