@@ -1,7 +1,7 @@
 defmodule EmailToolsWeb.RootLive do
   alias EmailTools.State
   use EmailToolsWeb, :live_view
-  alias EmailTools.FastmailAccounts
+  alias EmailTools.{FastmailAccounts, FastmailAccount}
 
   on_mount {EmailToolsWeb.UserAuth, :ensure_authenticated}
   on_mount {EmailToolsWeb.UserAuth, :ensure_fastmail_api_key}
@@ -9,19 +9,16 @@ defmodule EmailToolsWeb.RootLive do
   def mount(_params, _session, socket) do
     current_user = socket.assigns.current_user
 
-    # Subscribe to updates from the user's FastmailAccount
+    # TODO: de-duplicate channel name
     Phoenix.PubSub.subscribe(EmailTools.PubSub, "fastmail_client:#{current_user.id}")
 
-    # Get the FastmailAccount for this user (should already be running)
-    account_pid = FastmailAccounts.get_account_pid(current_user.id)
-
-    # Get initial state from the account
-    initial_account_state = EmailTools.FastmailAccount.get_state(account_pid)
+    initial_account_state =
+      FastmailAccounts.get_account_pid(current_user.id)
+      |> FastmailAccount.get_state()
 
     {
       :ok,
       socket
-      |> assign(:fastmail_account_pid, account_pid)
       |> assign(:connected?, State.connected?(initial_account_state))
       |> assign(:state, initial_account_state)
       |> assign(:mailboxes, initial_account_state.mailboxes)
