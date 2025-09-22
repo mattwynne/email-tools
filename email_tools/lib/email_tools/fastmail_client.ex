@@ -42,12 +42,9 @@ defmodule EmailTools.FastmailClient do
     state =
       case Fastmail.Jmap.Session.new(credentials) do
         %Fastmail.Jmap.Session{} = session ->
-          state = state |> Map.put(:session, session)
-          dbg(session)
-
-          emit(state)
-
           state
+          |> Map.put(:session, session)
+          |> emit()
           |> stream_events()
           |> fetch_initial_state()
 
@@ -69,29 +66,7 @@ defmodule EmailTools.FastmailClient do
     state =
       state
       |> Map.put(:latest, changes)
-
-    emit(state)
-    {:noreply, state}
-  end
-
-  def handle_cast({:method_call, method, params}, state) do
-    # TODO: move this HTTP call onto Fastmail.Session.method_calls
-    response =
-      Req.request!(
-        Fastmail.Jmap.Request.method_calls(
-          state.session.api_url,
-          state.token,
-          [[method, params, "0"]]
-        )
-      )
-
-    dbg(response)
-    method_response = Enum.at(response.body["methodResponses"], 0)
-
-    send(
-      self(),
-      method_response
-    )
+      |> emit()
 
     {:noreply, state}
   end
