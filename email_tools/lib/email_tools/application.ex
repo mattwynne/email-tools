@@ -28,7 +28,7 @@ defmodule EmailTools.Application do
 
     case Supervisor.start_link(children, opts) do
       {:ok, pid} ->
-        # Start FastmailClients for all users with API keys after the supervisor starts
+        # Start FastmailAccounts for all users with API keys after the supervisor starts
         Task.start(fn -> EmailTools.FastmailClientManager.start_clients_for_all_users() end)
         {:ok, pid}
 
