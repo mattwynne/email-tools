@@ -1,5 +1,4 @@
 defmodule EmailToolsWeb.RootLive do
-  alias EmailTools.State
   use EmailToolsWeb, :live_view
   alias EmailTools.{FastmailAccounts, FastmailAccount}
 
@@ -21,7 +20,6 @@ defmodule EmailToolsWeb.RootLive do
     {
       :ok,
       socket
-      |> assign(:connected?, State.connected?(initial_account_state))
       |> assign(:state, initial_account_state)
       |> assign(:mailboxes, initial_account_state.mailboxes)
       |> assign(:emails_by_mailbox, initial_account_state.emails_by_mailbox)
@@ -31,8 +29,6 @@ defmodule EmailToolsWeb.RootLive do
   @spec render(any()) :: Phoenix.LiveView.Rendered.t()
   def render(assigns) do
     ~H"""
-    <h1 :if={@connected?}>Connected</h1>
-    <h1 :if={!@connected?}>Not Connected</h1>
     <ul :if={@mailboxes}>
       <%= for mailbox <- @mailboxes["list"] do %>
         <li>
@@ -59,7 +55,6 @@ defmodule EmailToolsWeb.RootLive do
       :noreply,
       socket
       |> assign(state: state)
-      |> assign(connected?: State.connected?(state))
       |> assign(mailboxes: state.mailboxes)
       |> assign(emails_by_mailbox: state.emails_by_mailbox)
     }
