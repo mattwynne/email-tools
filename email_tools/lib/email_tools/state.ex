@@ -14,7 +14,6 @@ defmodule EmailTools.State do
         request
       )
     )
-    |> dbg()
     |> then(& &1.body["methodResponses"])
     |> Enum.each(fn response -> send(self(), response) end)
   end
