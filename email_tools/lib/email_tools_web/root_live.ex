@@ -11,7 +11,7 @@ defmodule EmailToolsWeb.RootLive do
 
     Phoenix.PubSub.subscribe(
       EmailTools.PubSub,
-      FastmailAccount.pubsub_channel_for(current_user)
+      FastmailAccount.pubsub_topic_for(current_user)
     )
 
     initial_account_state =
