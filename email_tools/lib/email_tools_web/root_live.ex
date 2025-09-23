@@ -9,8 +9,10 @@ defmodule EmailToolsWeb.RootLive do
   def mount(_params, _session, socket) do
     current_user = socket.assigns.current_user
 
-    # TODO: de-duplicate channel name
-    Phoenix.PubSub.subscribe(EmailTools.PubSub, "fastmail_client:#{current_user.id}")
+    Phoenix.PubSub.subscribe(
+      EmailTools.PubSub,
+      FastmailAccount.pubsub_channel_for(current_user)
+    )
 
     initial_account_state =
       FastmailAccounts.get_account_pid(current_user.id)
