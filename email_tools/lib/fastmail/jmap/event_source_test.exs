@@ -15,7 +15,7 @@ defmodule Fastmail.Jmap.EventSourceTest do
 
   describe "event source - connected" do
     test "it can open the stream" do
-      session = Fastmail.Jmap.Session.new(Credentials.from_environment())
+      session = Fastmail.Jmap.Session.new(Credentials.from_environment("TEST_FASTMAIL_API_TOKEN"))
       event_source = Fastmail.Jmap.EventSource.new(session)
       {:ok, response} = EventSource.stream(event_source)
 
