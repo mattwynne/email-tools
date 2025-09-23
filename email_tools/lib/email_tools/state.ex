@@ -2,6 +2,23 @@ defmodule EmailTools.State do
   alias EmailTools.Mailbox
   alias EmailTools.Email
 
+  def to_event(state) do
+    {:state, Map.take(state, [:mailboxes, :emails_by_mailbox])}
+  end
+
+  def request(state, request) do
+    Req.request!(
+      Fastmail.Jmap.Request.method_calls(
+        state.session.api_url,
+        state.session.credentials.token,
+        request
+      )
+    )
+    |> dbg()
+    |> then(& &1.body["methodResponses"])
+    |> Enum.each(fn response -> send(self(), response) end)
+  end
+
   def new(state \\ %{}) do
     state
   end

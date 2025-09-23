@@ -7,9 +7,9 @@ defmodule Fastmail.Jmap.Credentials do
     }
   end
 
-  def from_environment() do
+  def from_environment(key \\ "FASTMAIL_API_TOKEN") do
     %__MODULE__{
-      token: System.fetch_env!("FASTMAIL_API_TOKEN")
+      token: System.fetch_env!(key)
     }
   end
 end
