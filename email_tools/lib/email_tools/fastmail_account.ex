@@ -11,7 +11,15 @@ defmodule EmailTools.FastmailAccount do
     user = Keyword.fetch!(opts, :user)
     token = Accounts.get_user_fastmail_api_key(user)
 
-    GenServer.start_link(__MODULE__, [token: token, user_id: user.id], opts)
+    GenServer.start_link(
+      __MODULE__,
+      [token: token, pubsub_channel: pubsub_channel_for(user)],
+      opts
+    )
+  end
+
+  def pubsub_channel_for(user) do
+    "fastmail-account:#{user.id}"
   end
 
   def get_state(pid) do
@@ -19,11 +27,15 @@ defmodule EmailTools.FastmailAccount do
   end
 
   @impl true
-  def init(token: token, user_id: user_id) do
+  def init(token: token, pubsub_channel: pubsub_channel) do
     credentials = %Fastmail.Jmap.Credentials{token: token}
 
     with %Fastmail.Jmap.Session{} = session <- Fastmail.Jmap.Session.new(credentials) do
-      %{user_id: user_id, session: session}
+      %{
+        pubsub_channel: pubsub_channel,
+        session: session,
+        emails_by_mailbox: %{}
+      }
       |> emit()
       |> stream_events()
       |> fetch_initial_state()
@@ -207,7 +219,7 @@ defmodule EmailTools.FastmailAccount do
   defp emit(state) do
     Phoenix.PubSub.broadcast(
       EmailTools.PubSub,
-      "fastmail_client:#{state.user_id}",
+      state.pubsub_channel,
       State.to_event(state)
     )
 
