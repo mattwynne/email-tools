@@ -23,10 +23,6 @@ defmodule EmailTools.State do
     state
   end
 
-  def connected?(state) do
-    Map.has_key?(state, :session)
-  end
-
   def changes(state, email) do
     email_id = email |> Email.id()
     old_mailbox_ids = state |> mailbox_ids_for(email_id) |> MapSet.new()

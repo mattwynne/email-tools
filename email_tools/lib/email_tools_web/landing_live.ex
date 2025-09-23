@@ -1,10 +1,6 @@
 defmodule EmailToolsWeb.LandingLive do
   use EmailToolsWeb, :live_view
 
-  def mount(_params, _session, socket) do
-    {:ok, socket |> assign(:connected?, false)}
-  end
-
   def render(assigns) do
     ~H"""
     <div class="max-w-2xl mx-auto px-4 py-16">
