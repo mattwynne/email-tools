@@ -34,7 +34,8 @@ defmodule EmailTools.FastmailAccount do
       %{
         pubsub_channel: pubsub_channel,
         session: session,
-        emails_by_mailbox: %{}
+        emails_by_mailbox: %{},
+        mailboxes: %{}
       }
       |> emit()
       |> stream_events()
@@ -194,14 +195,6 @@ defmodule EmailTools.FastmailAccount do
     State.request(
       state,
       [
-        [
-          "AddressBook/get",
-          %{
-            accountId: state.session.account_id,
-            ids: nil
-          },
-          "contacts"
-        ],
         [
           "Mailbox/get",
           %{

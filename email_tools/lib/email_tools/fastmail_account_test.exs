@@ -5,7 +5,7 @@ defmodule FastmailAccountTest do
   describe "getting new email details" do
     test "updates the emails_by_mailbox mapping" do
       state = %{
-        user_id: 1,
+        pubsub_channel: "fastmail-account:1",
         mailboxes: %{
           "list" => [
             %{"id" => "inbox-id", "name" => "Inbox"},
