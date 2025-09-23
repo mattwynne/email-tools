@@ -1,20 +1,23 @@
 defmodule FastmailAccountTest do
   use ExUnit.Case, async: true
+  alias EmailTools.State
   alias EmailTools.FastmailAccount
 
   describe "getting new email details" do
     test "updates the emails_by_mailbox mapping" do
       state = %{
         pubsub_topic: "fastmail-account:1",
-        mailboxes: %{
-          "list" => [
-            %{"id" => "inbox-id", "name" => "Inbox"},
-            %{"id" => "some-mailbox-id", "name" => "Some mailbox"}
-          ]
-        },
-        emails_by_mailbox: %{
-          "inbox-id" => ["some-email-id"],
-          "some-mailbox-id" => []
+        account_state: %State{
+          mailboxes: %{
+            "list" => [
+              %{"id" => "inbox-id", "name" => "Inbox"},
+              %{"id" => "some-mailbox-id", "name" => "Some mailbox"}
+            ]
+          },
+          emails_by_mailbox: %{
+            "inbox-id" => ["some-email-id"],
+            "some-mailbox-id" => []
+          }
         }
       }
 
@@ -29,7 +32,7 @@ defmodule FastmailAccountTest do
 
       {:noreply, new_state} = FastmailAccount.handle_info(["Email/get", result, "a"], state)
 
-      assert new_state.emails_by_mailbox == %{
+      assert new_state.account_state.emails_by_mailbox == %{
                "inbox-id" => [],
                "some-mailbox-id" => ["some-email-id"]
              }
