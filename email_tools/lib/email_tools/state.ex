@@ -7,6 +7,7 @@ defmodule EmailTools.State do
   end
 
   def request(state, request) do
+    # TODO: move to session
     Req.request!(
       Fastmail.Jmap.Request.method_calls(
         state.session.api_url,
