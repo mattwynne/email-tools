@@ -13,7 +13,10 @@ defmodule EmailTools.FastmailAccount do
 
     GenServer.start_link(
       __MODULE__,
-      [token: token, pubsub_topic: pubsub_topic_for(user)],
+      [
+        token: token,
+        pubsub_topic: pubsub_topic_for(user)
+      ],
       opts
     )
   end
@@ -27,10 +30,6 @@ defmodule EmailTools.FastmailAccount do
   end
 
   @impl true
-  @spec init([{:pubsub_channel, any()} | {:token, any()}, ...]) ::
-          {:ok,
-           %{:events => pid(), optional(:pubsub_channel) => binary(), optional(any()) => any()}}
-          | {:stop, struct()}
   def init(token: token, pubsub_topic: pubsub_topic) do
     credentials = %Fastmail.Jmap.Credentials{token: token}
 
@@ -38,8 +37,7 @@ defmodule EmailTools.FastmailAccount do
       %{
         pubsub_topic: pubsub_topic,
         session: session,
-        emails_by_mailbox: %{},
-        mailboxes: %{}
+        account_state: State.new()
       }
       |> emit()
       |> stream_events()
@@ -52,8 +50,7 @@ defmodule EmailTools.FastmailAccount do
 
   @impl true
   def handle_call(:get_state, _from, state) do
-    client_state = Map.take(state, [:mailboxes, :emails_by_mailbox])
-    {:reply, client_state, state}
+    {:reply, state.account_state, state}
   end
 
   @impl true
@@ -74,12 +71,17 @@ defmodule EmailTools.FastmailAccount do
   def handle_info(["Mailbox/get", payload, _], state) do
     Enum.each(payload["list"], fn mailbox ->
       state
-      |> State.request(
+      |> request(
         Fastmail.Jmap.MethodCalls.QueryAllEmails.new(state.session.account_id, mailbox["id"])
       )
     end)
 
-    state = state |> Map.put(:mailboxes, payload)
+    state =
+      state
+      |> Map.put(
+        :account_state,
+        State.with_mailboxes(state.account_state, payload)
+      )
 
     emit(state)
     {:noreply, state}
@@ -89,9 +91,9 @@ defmodule EmailTools.FastmailAccount do
     state =
       state
       |> Map.put(
-        :emails_by_mailbox,
-        Map.put(
-          state.emails_by_mailbox,
+        :account_state,
+        State.set_emails_for_mailbox(
+          state.account_state,
           result["filter"]["inMailbox"],
           result["ids"]
         )
@@ -104,7 +106,7 @@ defmodule EmailTools.FastmailAccount do
   def handle_info(["Email/changes", result, _], state) do
     ids = result["updated"]
 
-    State.request(
+    request(
       state,
       Fastmail.Jmap.MethodCalls.GetEmailsByIds.new(state.session.account_id, ids)
     )
@@ -117,14 +119,14 @@ defmodule EmailTools.FastmailAccount do
 
     state =
       Enum.reduce(emails, state, fn email, state ->
-        {added, removed} = state |> State.changes(email)
+        {added, removed} = state.account_state |> State.changes(email)
 
         Enum.each(added, fn mailbox_id ->
           [
             :email_added,
             System.os_time(:millisecond),
             Email.subject(email),
-            Mailbox.name(State.mailbox(state, mailbox_id))
+            Mailbox.name(State.mailbox(state.account_state, mailbox_id))
           ]
         end)
 
@@ -139,22 +141,25 @@ defmodule EmailTools.FastmailAccount do
           # ])
         end)
 
-        state =
+        account_state =
           Enum.reduce(
             removed,
-            state,
-            fn mailbox_id, state ->
-              state |> State.remove_from_mailbox(mailbox_id, email |> Email.id())
+            state.account_state,
+            fn mailbox_id, account_state ->
+              account_state |> State.remove_from_mailbox(mailbox_id, email |> Email.id())
             end
           )
 
-        Enum.reduce(
-          added,
-          state,
-          fn mailbox_id, state ->
-            state |> State.add_to_mailbox(mailbox_id, email |> Email.id())
-          end
-        )
+        account_state =
+          Enum.reduce(
+            added,
+            account_state,
+            fn mailbox_id, account_state ->
+              account_state |> State.add_to_mailbox(mailbox_id, email |> Email.id())
+            end
+          )
+
+        Map.put(state, :account_state, account_state)
       end)
 
     emit(state)
@@ -183,7 +188,7 @@ defmodule EmailTools.FastmailAccount do
     ["Email"]
     |> Enum.each(fn type ->
       if old[type] != new[type] do
-        State.request(
+        request(
           state,
           Fastmail.Jmap.MethodCalls.GetAllChanged.new(state.session.account_id, type, old[type])
         )
@@ -196,7 +201,7 @@ defmodule EmailTools.FastmailAccount do
   defp handle_changes(_, _, _), do: nil
 
   defp fetch_initial_state(state) do
-    State.request(
+    request(
       state,
       [
         [
@@ -217,11 +222,24 @@ defmodule EmailTools.FastmailAccount do
     Phoenix.PubSub.broadcast(
       EmailTools.PubSub,
       state.pubsub_topic,
-      State.to_event(state)
+      State.to_event(state.account_state)
     )
 
     state
   end
 
   defp ok(state), do: {:ok, state}
+
+  def request(state, request) do
+    # TODO: move to session
+    Req.request!(
+      Fastmail.Jmap.Request.method_calls(
+        state.session.api_url,
+        state.session.credentials.token,
+        request
+      )
+    )
+    |> then(& &1.body["methodResponses"])
+    |> Enum.each(fn response -> send(self(), response) end)
+  end
 end

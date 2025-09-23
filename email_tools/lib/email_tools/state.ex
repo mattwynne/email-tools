@@ -2,28 +2,20 @@ defmodule EmailTools.State do
   alias EmailTools.Mailbox
   alias EmailTools.Email
 
-  def to_event(state) do
-    {:state, Map.take(state, [:mailboxes, :emails_by_mailbox])}
+  defstruct [:mailboxes, :emails_by_mailbox]
+
+  def to_event(%__MODULE__{} = state) do
+    {:state, state}
   end
 
-  def request(state, request) do
-    # TODO: move to session
-    Req.request!(
-      Fastmail.Jmap.Request.method_calls(
-        state.session.api_url,
-        state.session.credentials.token,
-        request
-      )
-    )
-    |> then(& &1.body["methodResponses"])
-    |> Enum.each(fn response -> send(self(), response) end)
+  def new() do
+    %__MODULE__{
+      mailboxes: %{},
+      emails_by_mailbox: %{}
+    }
   end
 
-  def new(state \\ %{}) do
-    state
-  end
-
-  def changes(state, email) do
+  def changes(%__MODULE__{} = state, email) do
     email_id = email |> Email.id()
     old_mailbox_ids = state |> mailbox_ids_for(email_id) |> MapSet.new()
     new_mailbox_ids = email |> Email.mailbox_ids() |> MapSet.new()
@@ -32,13 +24,27 @@ defmodule EmailTools.State do
     {added, removed}
   end
 
-  def mailbox_ids_for(state, email_id) do
+  # TODO: test me
+  def with_mailboxes(%__MODULE__{} = state, mailboxes) do
+    Map.put(state, :mailboxes, mailboxes)
+  end
+
+  # TODO: test me
+  def set_emails_for_mailbox(%__MODULE__{} = state, mailbox, emails) do
+    Map.put(
+      state,
+      :emails_by_mailbox,
+      Map.put(state.emails_by_mailbox, mailbox, emails)
+    )
+  end
+
+  def mailbox_ids_for(%__MODULE__{} = state, email_id) do
     state
     |> mailbox_ids()
     |> Enum.filter(&contains_email?(state, &1, email_id))
   end
 
-  def remove_from_mailbox(state, mailbox_id, email_id) do
+  def remove_from_mailbox(%__MODULE__{} = state, mailbox_id, email_id) do
     update_emails_by_mailbox(
       state,
       mailbox_id,
@@ -49,7 +55,7 @@ defmodule EmailTools.State do
     )
   end
 
-  def add_to_mailbox(state, mailbox_id, email_id) do
+  def add_to_mailbox(%__MODULE__{} = state, mailbox_id, email_id) do
     update_emails_by_mailbox(
       state,
       mailbox_id,
@@ -57,7 +63,7 @@ defmodule EmailTools.State do
     )
   end
 
-  defp update_emails_by_mailbox(state, mailbox_id, email_ids) do
+  defp update_emails_by_mailbox(%__MODULE__{} = state, mailbox_id, email_ids) do
     Map.put(
       state,
       :emails_by_mailbox,
@@ -69,16 +75,16 @@ defmodule EmailTools.State do
     )
   end
 
-  defp mailbox_ids(state) do
+  defp mailbox_ids(%__MODULE__{} = state) do
     state.emails_by_mailbox
     |> Map.keys()
   end
 
-  defp contains_email?(state, mailbox_id, email_id) do
+  defp contains_email?(%__MODULE__{} = state, mailbox_id, email_id) do
     Enum.member?(state.emails_by_mailbox[mailbox_id], email_id)
   end
 
-  def mailbox(state, id) do
+  def mailbox(%__MODULE__{} = state, id) do
     Enum.find(state.mailboxes["list"], &(Mailbox.id(&1) == id))
   end
 end

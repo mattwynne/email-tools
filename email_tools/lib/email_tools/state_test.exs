@@ -5,7 +5,7 @@ defmodule StateTest do
 
   describe "getting the mailboxes that an email is currently in" do
     test "it returns the relevant mailbox_ids" do
-      state = %{
+      state = %State{
         emails_by_mailbox: %{
           "inbox-id" => ["some-email-id"],
           "some-mailbox-id" => []
@@ -18,14 +18,14 @@ defmodule StateTest do
 
   describe "removing an email from a mailbox" do
     test "removes an email that's in a single mailbox" do
-      state = %{
+      state = %State{
         emails_by_mailbox: %{
           "inbox-id" => ["some-email-id"],
           "some-mailbox-id" => []
         }
       }
 
-      assert state |> State.remove_from_mailbox("inbox-id", "some-email-id") == %{
+      assert state |> State.remove_from_mailbox("inbox-id", "some-email-id") == %State{
                emails_by_mailbox: %{
                  "inbox-id" => [],
                  "some-mailbox-id" => []
@@ -34,14 +34,14 @@ defmodule StateTest do
     end
 
     test "removes an email that's in a multiple mailboxes" do
-      state = %{
+      state = %State{
         emails_by_mailbox: %{
           "inbox-id" => ["some-email-id", "another-email-id"],
           "some-mailbox-id" => ["some-email-id"]
         }
       }
 
-      assert state |> State.remove_from_mailbox("inbox-id", "some-email-id") == %{
+      assert state |> State.remove_from_mailbox("inbox-id", "some-email-id") == %State{
                emails_by_mailbox: %{
                  "inbox-id" => ["another-email-id"],
                  "some-mailbox-id" => ["some-email-id"]
@@ -52,14 +52,14 @@ defmodule StateTest do
 
   describe "adding an email to a mailbox" do
     test "it adds an email to an empty mailbox" do
-      state = %{
+      state = %State{
         emails_by_mailbox: %{
           "inbox-id" => [],
           "some-mailbox-id" => []
         }
       }
 
-      assert state |> State.add_to_mailbox("inbox-id", "some-email-id") == %{
+      assert state |> State.add_to_mailbox("inbox-id", "some-email-id") == %State{
                emails_by_mailbox: %{
                  "inbox-id" => ["some-email-id"],
                  "some-mailbox-id" => []
@@ -69,7 +69,7 @@ defmodule StateTest do
   end
 
   describe "getting details of a mailbox" do
-    state = %{
+    state = %State{
       mailboxes: %{
         "accountId" => "u4d014069",
         "list" => [
