@@ -215,21 +215,21 @@ defmodule EmailTools.FastmailAccount do
 
   defp ok(state), do: {:ok, state}
 
-  # TODO: move to session
-  def method_calls(%{session: session}, request_mod, params \\ []) do
+  # TODO: move onto Session
+  def method_calls(%{session: session}, method_calls_mod, params \\ []) do
     params =
       struct(
-        Module.concat(request_mod, Params),
+        Module.concat(method_calls_mod, Params),
         Keyword.merge(params, account_id: session.account_id)
       )
 
-    request = request_mod.new(params)
+    method_calls = method_calls_mod.new(params)
 
     Req.request!(
-      Fastmail.Jmap.Request.method_calls(
+      Fastmail.Jmap.Requests.MethodCalls.new(
         session.api_url,
         session.credentials.token,
-        request
+        method_calls
       )
     )
     |> then(& &1.body["methodResponses"])
