@@ -25,8 +25,17 @@ defmodule EmailTools.FastmailAccounts do
       nil ->
         {:error, :no_api_key}
 
-      _api_key ->
-        child_spec = {FastmailAccount, [user: user, name: via_tuple(user.id)]}
+      token ->
+        child_spec =
+          {
+            FastmailAccount,
+            [
+              token: token,
+              pubsub_topic: FastmailAccount.pubsub_topic_for(user),
+              name: via_tuple(user.id)
+            ]
+          }
+
         DynamicSupervisor.start_child(__MODULE__, child_spec)
     end
   end

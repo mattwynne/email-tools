@@ -3,19 +3,17 @@ defmodule EmailTools.FastmailAccount do
   alias EmailTools.Email
   alias EmailTools.State
   alias EmailTools.FastmailEvents
-  alias EmailTools.Accounts
   use GenServer
 
   def start_link(opts \\ []) do
-    # TODO: these can move outside this thing
-    user = Keyword.fetch!(opts, :user)
-    token = Accounts.get_user_fastmail_api_key(user)
+    token = Keyword.fetch!(opts, :token)
+    pubsub_topic = Keyword.fetch!(opts, :pubsub_topic)
 
     GenServer.start_link(
       __MODULE__,
       [
         token: token,
-        pubsub_topic: pubsub_topic_for(user)
+        pubsub_topic: pubsub_topic
       ],
       opts
     )
