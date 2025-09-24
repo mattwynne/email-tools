@@ -1,4 +1,5 @@
 defmodule EmailTools.FastmailAccount do
+  alias Fastmail.Jmap.MethodCalls.GetAllChanged
   alias EmailTools.Mailbox
   alias EmailTools.Email
   alias EmailTools.State
@@ -69,7 +70,7 @@ defmodule EmailTools.FastmailAccount do
   def handle_info(["Mailbox/get", payload, _], state) do
     Enum.each(payload["list"], fn mailbox ->
       state
-      |> request(
+      |> method_calls(
         Fastmail.Jmap.MethodCalls.QueryAllEmails.new(state.session.account_id, mailbox["id"])
       )
     end)
@@ -104,7 +105,7 @@ defmodule EmailTools.FastmailAccount do
   def handle_info(["Email/changes", result, _], state) do
     ids = result["updated"]
 
-    request(
+    method_calls(
       state,
       Fastmail.Jmap.MethodCalls.GetEmailsByIds.new(state.session.account_id, ids)
     )
@@ -186,9 +187,11 @@ defmodule EmailTools.FastmailAccount do
     ["Email"]
     |> Enum.each(fn type ->
       if old[type] != new[type] do
-        request(
-          state,
-          Fastmail.Jmap.MethodCalls.GetAllChanged.new(state.session.account_id, type, old[type])
+        state
+        |> method_calls(
+          GetAllChanged,
+          type: type,
+          since_state: old[type]
         )
       end
     end)
@@ -199,21 +202,17 @@ defmodule EmailTools.FastmailAccount do
   defp handle_changes(_, _, _), do: nil
 
   defp fetch_initial_state(state) do
-    request(
-      state,
-      [
-        [
-          "Mailbox/get",
-          %{
-            accountId: state.session.account_id,
-            ids: nil
-          },
-          "mailboxes"
-        ]
-      ]
-    )
-
     state
+    |> method_calls([
+      [
+        "Mailbox/get",
+        %{
+          accountId: state.session.account_id,
+          ids: nil
+        },
+        "mailboxes"
+      ]
+    ])
   end
 
   defp emit(state) do
@@ -228,7 +227,18 @@ defmodule EmailTools.FastmailAccount do
 
   defp ok(state), do: {:ok, state}
 
-  def request(state, request) do
+  def method_calls(state, request_mod, params) do
+    params =
+      struct(
+        Module.concat(request_mod, Params),
+        Keyword.merge(params, account_id: state.session.account_id)
+      )
+
+    request = request_mod.new(params)
+    method_calls(state, request)
+  end
+
+  def method_calls(state, request) do
     # TODO: move to session
     Req.request!(
       Fastmail.Jmap.Request.method_calls(
@@ -239,5 +249,7 @@ defmodule EmailTools.FastmailAccount do
     )
     |> then(& &1.body["methodResponses"])
     |> Enum.each(fn response -> send(self(), response) end)
+
+    state
   end
 end
