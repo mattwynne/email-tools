@@ -1,5 +1,9 @@
 defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
-  def new(account_id, type, since_state) do
+  defmodule Params do
+    defstruct [:account_id, :type, :since_state]
+  end
+
+  def new(%Params{} = %{account_id: account_id, type: type, since_state: since_state}) do
     [
       [
         "#{type}/changes",
