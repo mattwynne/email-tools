@@ -75,7 +75,7 @@ defmodule Fastmail.Jmap.SessionTest do
     test "allows configuring method call responses" do
       session =
         Session.null(
-          method_calls: fn _, _ ->
+          method_calls:
             MethodCalls.null(
               Req.Response.new(
                 status: 200,
@@ -95,7 +95,6 @@ defmodule Fastmail.Jmap.SessionTest do
                 }
               )
             )
-          end
         )
 
       assert [

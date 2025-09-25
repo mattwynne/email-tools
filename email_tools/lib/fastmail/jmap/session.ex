@@ -8,21 +8,24 @@ defmodule Fastmail.Jmap.Session do
   def null(opts \\ []) do
     new(Credentials.null(),
       get_session: Keyword.get(opts, :get_session, GetSession.null()),
-      method_calls: Keyword.get(opts, :method_calls, fn _, _ -> MethodCalls.null() end)
+      method_calls: Keyword.get(opts, :method_calls, MethodCalls.null())
     )
   end
 
   def new(%Credentials{} = credentials, opts \\ []) do
     %Req.Request{} = get_session = Keyword.get(opts, :get_session, GetSession.new(credentials))
 
-    build_method_calls_request =
-      Keyword.get(opts, :method_calls, fn session, method_calls ->
+    build_method_calls_request = fn session, method_calls ->
+      Keyword.get(
+        opts,
+        :method_calls,
         MethodCalls.new(
           session.api_url,
           session.credentials.token,
           method_calls
         )
-      end)
+      )
+    end
 
     with {:ok, body} <- request(get_session) do
       %__MODULE__{
