@@ -1,5 +1,9 @@
 defmodule Fastmail.Jmap.SessionTest do
   use ExUnit.Case, async: true
+  alias Fastmail.Jmap.Requests.MethodCalls
+  alias Fastmail.Jmap.Credentials
+  alias Fastmail.Jmap.Requests.GetSession
+  alias Fastmail.Jmap.MethodCalls.GetAllMailboxes
   alias Fastmail.Jmap.Session
 
   describe "connecting" do
@@ -23,9 +27,14 @@ defmodule Fastmail.Jmap.SessionTest do
   describe "connecting - null mode" do
     test "fails to connect with bad credentials" do
       assert {:error, error} =
-               Fastmail.Jmap.Session.null(
-                 response:
-                   Req.Response.new(status: 301, body: "Authorization header not a valid format")
+               Session.null(
+                 get_session:
+                   GetSession.null(
+                     Req.Response.new(
+                       status: 301,
+                       body: "Authorization header not a valid format"
+                     )
+                   )
                )
 
       assert error.message =~ "Authorization"
@@ -33,16 +42,95 @@ defmodule Fastmail.Jmap.SessionTest do
 
     test "fails with a bad URL" do
       assert {:error, error} =
-               Fastmail.Jmap.Session.null(response: RuntimeError.exception("non-existing domain"))
+               Session.null(
+                 get_session: GetSession.null(RuntimeError.exception("non-existing domain"))
+               )
 
       assert error.message =~ "domain"
     end
 
     test "connects OK with default null config" do
-      assert %Session{} = session = Fastmail.Jmap.Session.null()
+      assert %Session{} = session = Session.null()
       assert session.account_id == "some-account-id"
       assert session.event_source_url == "https://myserver.com/events"
       assert session.api_url == "https://myserver.com/api"
+    end
+  end
+
+  describe "method_calls - null mode" do
+    test "always returns an empty Email/get whatever you call it with" do
+      session = Session.null()
+
+      assert [
+               [
+                 "Email/get",
+                 %{
+                   "list" => []
+                 },
+                 "0"
+               ]
+             ] = session |> Session.method_calls(GetAllMailboxes)
+    end
+
+    test "allows configuring method call responses" do
+      session =
+        Session.null(
+          method_calls: fn _, _ ->
+            MethodCalls.null(
+              Req.Response.new(
+                status: 200,
+                body: %{
+                  "methodResponses" => [
+                    [
+                      "Mailbox/get",
+                      %{
+                        "list" => [
+                          %{"name" => "Ponies"},
+                          %{"name" => "Rainbows"}
+                        ]
+                      },
+                      "0"
+                    ]
+                  ]
+                }
+              )
+            )
+          end
+        )
+
+      assert [
+               [
+                 "Mailbox/get",
+                 %{
+                   "list" => [
+                     %{"name" => "Ponies"},
+                     %{"name" => "Rainbows"}
+                   ]
+                 },
+                 "0"
+               ]
+             ] == session |> Session.method_calls(GetAllMailboxes)
+    end
+  end
+
+  describe "method_calls - connected mode" do
+    test "makes a real request" do
+      credentials = Credentials.from_environment("TEST_FASTMAIL_API_TOKEN")
+      session = Session.new(credentials)
+
+      assert [
+               [
+                 "Mailbox/get",
+                 %{
+                   "list" => [
+                     %{"name" => "Inbox"},
+                     %{"name" => "Archive"}
+                     | _
+                   ]
+                 },
+                 "mailboxes"
+               ]
+             ] = session |> Session.method_calls(GetAllMailboxes)
     end
   end
 end

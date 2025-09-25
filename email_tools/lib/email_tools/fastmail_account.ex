@@ -89,6 +89,8 @@ defmodule EmailTools.FastmailAccount do
   end
 
   def handle_info(["Email/query", result, _], state) do
+    dbg(result)
+
     state =
       state
       |> Map.put(
@@ -187,7 +189,7 @@ defmodule EmailTools.FastmailAccount do
     old = old_changes[account_id]
     dbg(old)
 
-    ["Email"]
+    ["Email", "Mailbox", "Thread"]
     |> Enum.each(fn type ->
       if old[type] != new[type] do
         state |> method_calls(GetAllChanged, type: type, since_state: old[type])

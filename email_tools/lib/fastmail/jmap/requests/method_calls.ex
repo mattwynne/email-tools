@@ -19,4 +19,34 @@ defmodule Fastmail.Jmap.Requests.MethodCalls do
         })
     )
   end
+
+  def null(response) do
+    Req.new(
+      adapter: fn request ->
+        {
+          request,
+          response
+        }
+      end
+    )
+  end
+
+  def null() do
+    null(
+      Req.Response.new(
+        status: 200,
+        body: %{
+          "methodResponses" => [
+            [
+              "Email/get",
+              %{
+                "list" => []
+              },
+              "0"
+            ]
+          ]
+        }
+      )
+    )
+  end
 end
