@@ -1,4 +1,5 @@
 defmodule EmailTools.FastmailAccount do
+  alias Fastmail.Jmap.Session
   alias Fastmail.Jmap.MethodCalls.GetAllChanged
   alias Fastmail.Jmap.MethodCalls.GetAllMailboxes
   alias EmailTools.Mailbox
@@ -217,24 +218,9 @@ defmodule EmailTools.FastmailAccount do
 
   defp ok(state), do: {:ok, state}
 
-  # TODO: move onto Session
   def method_calls(%{session: session}, method_calls_mod, params \\ []) do
-    params =
-      struct(
-        Module.concat(method_calls_mod, Params),
-        Keyword.merge(params, account_id: session.account_id)
-      )
-
-    method_calls = method_calls_mod.new(params)
-
-    Req.request!(
-      Fastmail.Jmap.Requests.MethodCalls.new(
-        session.api_url,
-        session.credentials.token,
-        method_calls
-      )
-    )
-    |> then(& &1.body["methodResponses"])
+    session
+    |> Session.method_calls(method_calls_mod, params)
     |> Enum.each(fn response -> send(self(), response) end)
   end
 end
