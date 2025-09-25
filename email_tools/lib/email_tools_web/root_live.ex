@@ -21,7 +21,7 @@ defmodule EmailToolsWeb.RootLive do
       :ok,
       socket
       |> assign(:state, initial_account_state)
-      |> assign(:mailboxes, initial_account_state.mailboxes)
+      |> assign(:mailboxes, initial_account_state.mailboxes || %{"list" => []})
       |> assign(:emails_by_mailbox, initial_account_state.emails_by_mailbox)
     }
   end
