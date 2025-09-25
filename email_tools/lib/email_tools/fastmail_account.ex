@@ -9,13 +9,23 @@ defmodule EmailTools.FastmailAccount do
   use GenServer
 
   def start_link(opts \\ []) do
-    token = Keyword.fetch!(opts, :token)
     pubsub_topic = Keyword.fetch!(opts, :pubsub_topic)
+
+    session =
+      case Keyword.fetch(opts, :session) do
+        {:ok, session} ->
+          session
+
+        :error ->
+          token = Keyword.fetch!(opts, :token)
+          credentials = %Fastmail.Jmap.Credentials{token: token}
+          Session.new(credentials)
+      end
 
     GenServer.start_link(
       __MODULE__,
       [
-        token: token,
+        session: session,
         pubsub_topic: pubsub_topic
       ],
       opts
@@ -31,21 +41,21 @@ defmodule EmailTools.FastmailAccount do
   end
 
   @impl true
-  def init(token: token, pubsub_topic: pubsub_topic) do
-    credentials = %Fastmail.Jmap.Credentials{token: token}
+  def init(session: session, pubsub_topic: pubsub_topic) do
+    case session do
+      %Session{} = session ->
+        %{
+          pubsub_topic: pubsub_topic,
+          session: session,
+          account_state: State.new()
+        }
+        |> emit()
+        |> stream_events()
+        |> fetch_initial_state()
+        |> ok()
 
-    with %Fastmail.Jmap.Session{} = session <- Fastmail.Jmap.Session.new(credentials) do
-      %{
-        pubsub_topic: pubsub_topic,
-        session: session,
-        account_state: State.new()
-      }
-      |> emit()
-      |> stream_events()
-      |> fetch_initial_state()
-      |> ok()
-    else
-      {:error, error} -> {:stop, error}
+      {:error, error} ->
+        {:stop, error}
     end
   end
 
