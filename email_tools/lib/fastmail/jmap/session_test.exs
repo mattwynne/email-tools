@@ -57,6 +57,28 @@ defmodule Fastmail.Jmap.SessionTest do
     end
   end
 
+  describe "event_source - null mode" do
+    test "can stream pre-canned events" do
+      event_source = Fastmail.Jmap.EventSource.null(events: ["event one", "event two"])
+      session = Session.null(event_source: event_source)
+
+      {:ok, response} = session.event_source |> Fastmail.Jmap.EventSource.stream()
+      messages = Enum.map(response.body, fn message -> message end)
+      assert messages == ["event one", "event two"]
+    end
+  end
+
+  describe "event_source - connected" do
+    test "can open the stream and check headers" do
+      credentials = Credentials.from_environment("TEST_FASTMAIL_API_TOKEN")
+      session = Session.new(credentials)
+      {:ok, response} = session.event_source |> Fastmail.Jmap.EventSource.stream()
+
+      ["text/event-stream; charset=utf-8"] =
+        Req.Response.get_header(response, "content-type")
+    end
+  end
+
   describe "method_calls - null mode" do
     test "always returns an empty Email/get whatever you call it with" do
       session = Session.null()
