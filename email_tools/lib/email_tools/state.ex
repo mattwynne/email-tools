@@ -26,7 +26,21 @@ defmodule EmailTools.State do
 
   # TODO: test me
   def with_mailboxes(%__MODULE__{} = state, mailboxes) do
-    Map.put(state, :mailboxes, mailboxes)
+    existing_mailboxes = state.mailboxes["list"] || []
+    new_mailboxes = mailboxes["list"] || []
+
+    # Create a map of existing mailboxes by id for efficient lookup
+    existing_by_id = Map.new(existing_mailboxes, &{&1["id"], &1})
+
+    # Merge new mailboxes, preferring new ones over existing ones with the same id
+    merged_mailboxes =
+      new_mailboxes
+      |> Enum.reduce(existing_by_id, fn mailbox, acc ->
+        Map.put(acc, mailbox["id"], mailbox)
+      end)
+      |> Map.values()
+
+    Map.put(state, :mailboxes, Map.put(mailboxes, "list", merged_mailboxes))
   end
 
   # TODO: test me
