@@ -21,7 +21,6 @@ defmodule EmailTools.FastmailEvents do
   def handle_cast(:connect, state) do
     # TODO: last_event_id is irrelevant until we get some kind of persistence.
 
-    result = state.session.event_source |> EventSource.stream()
     # headers = %{
     #   "accept" => "text/event-stream",
     #   "last-event-id" => state.last_event_id
@@ -32,8 +31,7 @@ defmodule EmailTools.FastmailEvents do
     #   into: :self,
     #   receive_timeout: :infinity
     # )
-
-    case result do
+    case state.session.event_source |> EventSource.stream() do
       {:ok, response} ->
         Enum.each(response.body, fn message ->
           event = FastmailEvent.new(message)
