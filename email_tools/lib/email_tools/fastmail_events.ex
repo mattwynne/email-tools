@@ -21,8 +21,7 @@ defmodule EmailTools.FastmailEvents do
   def handle_cast(:connect, state) do
     # TODO: last_event_id is irrelevant until we get some kind of persistence.
 
-    # TODO: factor out onto WebService
-    result = state.session |> EventSource.new() |> EventSource.stream()
+    result = state.session.event_source |> EventSource.stream()
     # headers = %{
     #   "accept" => "text/event-stream",
     #   "last-event-id" => state.last_event_id

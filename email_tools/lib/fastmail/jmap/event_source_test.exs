@@ -4,12 +4,20 @@ defmodule Fastmail.Jmap.EventSourceTest do
   use ExUnit.Case, async: true
 
   describe "event source - null mode" do
-    test "it can open the stream" do
+    test "it can open the stream with explicit events" do
       event_source = Fastmail.Jmap.EventSource.null(events: ["message one", "message two"])
       {:ok, response} = event_source |> Fastmail.Jmap.EventSource.stream()
 
       messages = Enum.map(response.body, fn message -> message end)
       assert messages == ["message one", "message two"]
+    end
+
+    test "it defaults to empty events when called without parameters" do
+      event_source = Fastmail.Jmap.EventSource.null()
+      {:ok, response} = event_source |> Fastmail.Jmap.EventSource.stream()
+
+      messages = Enum.map(response.body, fn message -> message end)
+      assert messages == []
     end
   end
 
