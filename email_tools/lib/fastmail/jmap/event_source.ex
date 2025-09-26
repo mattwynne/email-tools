@@ -12,6 +12,7 @@ defmodule Fastmail.Jmap.EventSource do
     new(Fastmail.Jmap.Requests.GetEventSource.null(events))
   end
 
+  # TODO: can we delete this now?
   def new(%Session{} = session) do
     new(session.credentials, session.event_source_url)
   end
