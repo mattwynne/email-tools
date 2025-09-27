@@ -3,7 +3,7 @@
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'inbox-coach'
+app = 'email-tools'
 primary_region = 'sea'
 kill_signal = 'SIGTERM'
 
@@ -13,7 +13,7 @@ kill_signal = 'SIGTERM'
   release_command = '/app/bin/migrate'
 
 [env]
-  PHX_HOST = 'inbox-coach.fly.dev'
+  PHX_HOST = 'email-tools.fly.dev'
   PORT = '8080'
 
 [http_service]
