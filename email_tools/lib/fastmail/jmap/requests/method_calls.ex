@@ -1,6 +1,6 @@
 defmodule Fastmail.Jmap.Requests.MethodCalls do
   # TODO: Add null version, and tests
-  def new(url, token, method_calls) do
+  def new(method_calls, url, token) do
     Req.new(
       method: :post,
       url: url,
@@ -36,15 +36,7 @@ defmodule Fastmail.Jmap.Requests.MethodCalls do
       Req.Response.new(
         status: 200,
         body: %{
-          "methodResponses" => [
-            [
-              "Email/get",
-              %{
-                "list" => []
-              },
-              "0"
-            ]
-          ]
+          "methodResponses" => []
         }
       )
     )

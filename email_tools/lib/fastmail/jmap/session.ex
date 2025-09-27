@@ -9,14 +9,16 @@ defmodule Fastmail.Jmap.Session do
     :account_id,
     :api_url,
     :event_source_url,
-    :build_method_calls_request,
+    :execute,
     :event_source
   ]
 
   def null(opts \\ []) do
+    Keyword.validate!(opts, [:get_session, :execute, :event_source])
+
     new(Credentials.null(),
       get_session: Keyword.get(opts, :get_session, GetSession.null()),
-      method_calls: Keyword.get(opts, :method_calls, MethodCalls.null()),
+      execute: Keyword.get(opts, :execute, fn _mod, _param -> MethodCalls.null() end),
       event_source: Keyword.get(opts, :event_source, EventSource.null())
     )
   end
@@ -24,17 +26,7 @@ defmodule Fastmail.Jmap.Session do
   def new(%Credentials{} = credentials, opts \\ []) do
     %Req.Request{} = get_session = Keyword.get(opts, :get_session, GetSession.new(credentials))
 
-    build_method_calls_request = fn session, method_calls ->
-      Keyword.get(
-        opts,
-        :method_calls,
-        MethodCalls.new(
-          session.api_url,
-          session.credentials.token,
-          method_calls
-        )
-      )
-    end
+    execute = Keyword.get(opts, :execute, :real)
 
     with {:ok, body} <- request(get_session) do
       event_source_url = event_source_url(body)
@@ -47,23 +39,34 @@ defmodule Fastmail.Jmap.Session do
         account_id: account_id(body),
         api_url: api_url(body),
         event_source_url: event_source_url,
-        build_method_calls_request: build_method_calls_request,
+        execute: execute,
         event_source: event_source
       }
     end
   end
 
-  def execute(%__MODULE__{} = session, method_calls_mod, params \\ []) do
-    method_calls =
-      struct(
-        Module.concat(method_calls_mod, Params),
-        Keyword.merge(params, account_id: session.account_id)
-      )
-      |> method_calls_mod.new()
+  def execute(session, mod, params \\ [])
 
-    {:ok, body} =
-      session.build_method_calls_request.(session, method_calls)
-      |> request
+  def execute(%__MODULE__{execute: stub}, mod, params) when is_function(stub) do
+    stub.(mod, params) |> execute
+  end
+
+  def execute(
+        %__MODULE__{api_url: api_url, credentials: %{token: token}} = session,
+        method_calls_mod,
+        params
+      ) do
+    struct(
+      Module.concat(method_calls_mod, Params),
+      Keyword.merge(params, account_id: session.account_id)
+    )
+    |> method_calls_mod.new()
+    |> MethodCalls.new(api_url, token)
+    |> execute
+  end
+
+  defp execute(%Req.Request{} = request) do
+    {:ok, body} = request |> request
 
     body["methodResponses"]
   end

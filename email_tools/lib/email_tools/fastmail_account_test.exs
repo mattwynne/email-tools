@@ -1,33 +1,54 @@
 defmodule FastmailAccountTest do
   use ExUnit.Case, async: true
+  alias Fastmail.Jmap.MethodCalls
+  alias Fastmail.Jmap.Requests
   alias EmailTools.State
   alias EmailTools.FastmailAccount
   alias Fastmail.Jmap.Session
 
   describe "null mode" do
     test "connects and fetches initial state" do
-      mailbox_response =
-        Fastmail.Jmap.Requests.MethodCalls.null(
-          Req.Response.new(
-            status: 200,
-            body: %{
-              "methodResponses" => [
-                [
-                  "Mailbox/get",
-                  %{
-                    "list" => [
-                      %{"id" => "inbox-id", "name" => "Inbox"},
-                      %{"id" => "sent-id", "name" => "Sent"}
+      execute =
+        fn
+          MethodCalls.GetAllMailboxes, [] ->
+            Requests.MethodCalls.null(
+              Req.Response.new(
+                status: 200,
+                body: %{
+                  "methodResponses" => [
+                    [
+                      "Mailbox/get",
+                      %{
+                        "list" => [
+                          %{"id" => "inbox-id", "name" => "Inbox"},
+                          %{"id" => "sent-id", "name" => "Sent"}
+                        ]
+                      },
+                      "0"
                     ]
-                  },
-                  "c1"
-                ]
-              ]
-            }
-          )
-        )
+                  ]
+                }
+              )
+            )
 
-      session = Session.null(method_calls: mailbox_response)
+          MethodCalls.QueryAllEmails, in_mailbox: _ ->
+            Requests.MethodCalls.null(
+              Req.Response.new(
+                status: 200,
+                body: %{
+                  "methodResponses" => [
+                    [
+                      "Email/query",
+                      %{},
+                      "0"
+                    ]
+                  ]
+                }
+              )
+            )
+        end
+
+      session = Session.null(execute: execute)
 
       {:ok, account} = FastmailAccount.start_link(session: session, pubsub_topic: "test")
 

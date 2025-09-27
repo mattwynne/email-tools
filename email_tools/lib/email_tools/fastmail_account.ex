@@ -100,8 +100,6 @@ defmodule EmailTools.FastmailAccount do
   end
 
   def handle_info(["Email/query", result, _], state) do
-    dbg(result)
-
     state =
       state
       |> Map.put(
