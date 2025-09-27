@@ -86,7 +86,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-mix-
 
-      - run: flyctl deploy --remote-only email_tools
+      - run: flyctl deploy --remote-only inbox_coach
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
