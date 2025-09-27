@@ -1,5 +1,6 @@
 defmodule Fastmail.Jmap.SessionTest do
   use ExUnit.Case, async: true
+  alias Fastmail.Jmap.MethodCalls.QueryAllEmails
   alias Fastmail.Jmap.Requests.MethodCalls
   alias Fastmail.Jmap.Credentials
   alias Fastmail.Jmap.Requests.GetSession
@@ -80,43 +81,56 @@ defmodule Fastmail.Jmap.SessionTest do
   end
 
   describe "method_calls - null mode" do
-    test "always returns an empty Email/get whatever you call it with" do
+    test "with no configuration, returns an empty result whatever you call it with" do
       session = Session.null()
 
-      assert [
-               [
-                 "Email/get",
-                 %{
-                   "list" => []
-                 },
-                 "0"
-               ]
-             ] = session |> Session.execute(GetAllMailboxes)
+      assert [] = session |> Session.execute(GetAllMailboxes)
     end
 
-    test "allows configuring method call responses" do
+    test "allows configuring multiple method call responses" do
       session =
         Session.null(
-          method_calls:
-            MethodCalls.null(
-              Req.Response.new(
-                status: 200,
-                body: %{
-                  "methodResponses" => [
-                    [
-                      "Mailbox/get",
-                      %{
-                        "list" => [
-                          %{"name" => "Ponies"},
-                          %{"name" => "Rainbows"}
-                        ]
-                      },
-                      "0"
+          execute: fn
+            QueryAllEmails, in_mailbox: "Ponies" ->
+              MethodCalls.null(
+                Req.Response.new(
+                  status: 200,
+                  body: %{
+                    "methodResponses" => [
+                      [
+                        "Email/query",
+                        %{
+                          "filter" => %{"inMailbox" => "Ponies"},
+                          "ids" => ["email-1", "email-2"]
+                        },
+                        "0"
+                      ]
                     ]
-                  ]
-                }
+                  }
+                )
               )
-            )
+
+            GetAllMailboxes, [] ->
+              MethodCalls.null(
+                Req.Response.new(
+                  status: 200,
+                  body: %{
+                    "methodResponses" => [
+                      [
+                        "Mailbox/get",
+                        %{
+                          "list" => [
+                            %{"id" => "Ponies"},
+                            %{"id" => "Rainbows"}
+                          ]
+                        },
+                        "0"
+                      ]
+                    ]
+                  }
+                )
+              )
+          end
         )
 
       assert [
@@ -124,13 +138,26 @@ defmodule Fastmail.Jmap.SessionTest do
                  "Mailbox/get",
                  %{
                    "list" => [
-                     %{"name" => "Ponies"},
-                     %{"name" => "Rainbows"}
+                     %{"id" => "Ponies"},
+                     %{"id" => "Rainbows"}
                    ]
                  },
                  "0"
                ]
              ] == session |> Session.execute(GetAllMailboxes)
+
+      assert [
+               [
+                 "Email/query",
+                 %{
+                   "filter" => %{
+                     "inMailbox" => "Ponies"
+                   },
+                   "ids" => ["email-1", "email-2"]
+                 },
+                 "0"
+               ]
+             ] == session |> Session.execute(QueryAllEmails, in_mailbox: "Ponies")
     end
   end
 
