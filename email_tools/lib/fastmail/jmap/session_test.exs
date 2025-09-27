@@ -91,7 +91,7 @@ defmodule Fastmail.Jmap.SessionTest do
                  },
                  "0"
                ]
-             ] = session |> Session.method_calls(GetAllMailboxes)
+             ] = session |> Session.execute(GetAllMailboxes)
     end
 
     test "allows configuring method call responses" do
@@ -130,7 +130,7 @@ defmodule Fastmail.Jmap.SessionTest do
                  },
                  "0"
                ]
-             ] == session |> Session.method_calls(GetAllMailboxes)
+             ] == session |> Session.execute(GetAllMailboxes)
     end
   end
 
@@ -151,7 +151,7 @@ defmodule Fastmail.Jmap.SessionTest do
                  },
                  "mailboxes"
                ]
-             ] = session |> Session.method_calls(GetAllMailboxes)
+             ] = session |> Session.execute(GetAllMailboxes)
     end
   end
 end

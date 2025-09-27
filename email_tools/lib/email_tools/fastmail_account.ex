@@ -82,7 +82,7 @@ defmodule EmailTools.FastmailAccount do
   def handle_info(["Mailbox/get", payload, _], state) do
     Enum.each(payload["list"], fn mailbox ->
       state
-      |> method_calls(
+      |> execute(
         Fastmail.Jmap.MethodCalls.QueryAllEmails,
         in_mailbox: mailbox["id"]
       )
@@ -120,7 +120,7 @@ defmodule EmailTools.FastmailAccount do
   def handle_info(["Email/changes", result, _], state) do
     ids = result["updated"]
 
-    method_calls(
+    execute(
       state,
       Fastmail.Jmap.MethodCalls.GetEmailsByIds,
       ids: ids
@@ -203,7 +203,7 @@ defmodule EmailTools.FastmailAccount do
     ["Email", "Mailbox", "Thread"]
     |> Enum.each(fn type ->
       if old[type] != new[type] do
-        state |> method_calls(GetAllChanged, type: type, since_state: old[type])
+        state |> execute(GetAllChanged, type: type, since_state: old[type])
       end
     end)
 
@@ -213,7 +213,7 @@ defmodule EmailTools.FastmailAccount do
   defp handle_changes(_, _, _), do: nil
 
   defp fetch_initial_state(state) do
-    state |> tap(&method_calls(&1, GetAllMailboxes))
+    state |> tap(&execute(&1, GetAllMailboxes))
   end
 
   defp emit(state) do
@@ -228,9 +228,9 @@ defmodule EmailTools.FastmailAccount do
 
   defp ok(state), do: {:ok, state}
 
-  def method_calls(%{session: session}, method_calls_mod, params \\ []) do
+  def execute(%{session: session}, method_calls_mod, params \\ []) do
     session
-    |> Session.method_calls(method_calls_mod, params)
+    |> Session.execute(method_calls_mod, params)
     |> Enum.each(fn response -> send(self(), response) end)
   end
 end

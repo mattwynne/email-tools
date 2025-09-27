@@ -4,7 +4,14 @@ defmodule Fastmail.Jmap.Session do
   alias Fastmail.Jmap.Requests.MethodCalls
   alias Fastmail.Jmap.EventSource
 
-  defstruct [:credentials, :account_id, :api_url, :event_source_url, :build_method_calls_request, :event_source]
+  defstruct [
+    :credentials,
+    :account_id,
+    :api_url,
+    :event_source_url,
+    :build_method_calls_request,
+    :event_source
+  ]
 
   def null(opts \\ []) do
     new(Credentials.null(),
@@ -31,7 +38,9 @@ defmodule Fastmail.Jmap.Session do
 
     with {:ok, body} <- request(get_session) do
       event_source_url = event_source_url(body)
-      event_source = Keyword.get(opts, :event_source, EventSource.new(credentials, event_source_url))
+
+      event_source =
+        Keyword.get(opts, :event_source, EventSource.new(credentials, event_source_url))
 
       %__MODULE__{
         credentials: credentials,
@@ -44,17 +53,18 @@ defmodule Fastmail.Jmap.Session do
     end
   end
 
-  def method_calls(%__MODULE__{} = session, method_calls_mod, params \\ []) do
-    params =
+  def execute(%__MODULE__{} = session, method_calls_mod, params \\ []) do
+    method_calls =
       struct(
         Module.concat(method_calls_mod, Params),
         Keyword.merge(params, account_id: session.account_id)
       )
+      |> method_calls_mod.new()
 
-    method_calls = method_calls_mod.new(params)
-    request = session.build_method_calls_request.(session, method_calls)
+    {:ok, body} =
+      session.build_method_calls_request.(session, method_calls)
+      |> request
 
-    {:ok, body} = request(request)
     body["methodResponses"]
   end
 
