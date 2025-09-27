@@ -14,12 +14,12 @@
   services.postgres = {
     enable = true;
     package = pkgs.postgresql_15;
-    initialDatabases = [{ name = "email_tools_dev"; }];
+    initialDatabases = [{ name = "inbox_coach_dev"; }];
     initialScript = "CREATE USER postgres SUPERUSER;";
   };
 
   scripts.setup.exec = ''
-    cd email_tools
+    cd inbox_coach
     mix deps.get
     mix ecto.setup
   '';
@@ -28,7 +28,7 @@
     lib.optionalAttrs (!config.devenv.isTesting) {
       phoenix = {
         exec = ''
-          cd email_tools
+          cd inbox_coach
           mix phx.server
         '';
         process-compose = {
@@ -49,7 +49,7 @@
 
   enterTest = ''
     echo "Running setup..."
-    cd email_tools
+    cd inbox_coach
     mix deps.get
     mix ecto.setup
     echo "Setup complete"
