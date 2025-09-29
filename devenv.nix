@@ -7,6 +7,7 @@
     postgresql
     flyctl
     gh
+    lolcat
   ];
 
   languages.elixir.enable = true;
@@ -24,7 +25,8 @@
     mix ecto.setup
   '';
 
-  processes = {
+  processes = {} //
+    lib.optionalAttrs (!config.devenv.isTesting) {
       phoenix = {
         exec = ''
           cd inbox_coach
@@ -38,25 +40,13 @@
           };
         };
       };
-      tests = {} // lib.optionalAttrs (!config.devenv.isTesting) {
-        exec = ''
-          cd inbox_coach
-          mix test.interactive
-        '';
-        process-compose = {
-          depends_on = {
-            postgres = {
-              condition = "process_healthy";
-            };
-          };
-        };
-      };
     };
 
   enterShell = ''
-    echo "🧪 Elixir/Phoenix development environment loaded"
-    echo "Run 'devenv run setup' for one-time project setup"
-    echo "Run 'devenv up' to start services"
+    cat logo | lolcat -p .5
+    echo
+    echo "Run 'devenv up -d' to start services"
+    echo "Run 'setup' for one-time project setup"
   '';
 
   enterTest = ''
