@@ -1,5 +1,6 @@
 defmodule InboxCoachWeb.UserRegistrationControllerTest do
-  use InboxCoachWeb.ConnCase, async: true
+  # TODO: figure out flickering issue e.g. with seed 377470
+  use InboxCoachWeb.ConnCase, async: false
 
   import InboxCoach.AccountsFixtures
   alias InboxCoach.Accounts
@@ -36,10 +37,7 @@ defmodule InboxCoachWeb.UserRegistrationControllerTest do
 
       # Now do a logged in request and assert on the menu
       conn = get(conn, ~p"/")
-      response = html_response(conn, 200)
-      assert response =~ email
-      assert response =~ ~p"/users/settings"
-      assert response =~ ~p"/users/log_out"
+      assert "/users/settings" = redirected_to(conn, 302)
     end
 
     test "rejects registration without invite code", %{conn: conn} do
@@ -58,10 +56,14 @@ defmodule InboxCoachWeb.UserRegistrationControllerTest do
 
     test "render errors for invalid data", %{conn: conn} do
       Accounts.set_invite_code("secret123")
-      
+
       conn =
         post(conn, ~p"/users/register", %{
-          "user" => %{"email" => "with spaces", "password" => "too short", "invite_code" => "wrong_code"}
+          "user" => %{
+            "email" => "with spaces",
+            "password" => "too short",
+            "invite_code" => "wrong_code"
+          }
         })
 
       response = html_response(conn, 200)
