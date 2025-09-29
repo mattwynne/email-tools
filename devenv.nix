@@ -56,6 +56,6 @@
     mix ecto.setup
     echo "Setup complete"
     echo "Running mix test..."
-    mix test
+    mix test.all
   '';
 }

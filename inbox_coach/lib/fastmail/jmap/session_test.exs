@@ -8,6 +8,7 @@ defmodule Fastmail.Jmap.SessionTest do
   alias Fastmail.Jmap.Session
 
   describe "connecting" do
+    @tag :online
     test "connects when created" do
       credentials = Fastmail.Jmap.Credentials.from_environment("TEST_FASTMAIL_API_TOKEN")
       session = Fastmail.Jmap.Session.new(credentials)
@@ -17,6 +18,7 @@ defmodule Fastmail.Jmap.SessionTest do
       assert session.event_source_url == "https://api.fastmail.com/jmap/event/"
     end
 
+    @tag :online
     test "fails to connect with bad credentials" do
       credentials = Fastmail.Jmap.Credentials.null()
 
@@ -70,6 +72,7 @@ defmodule Fastmail.Jmap.SessionTest do
   end
 
   describe "event_source - connected" do
+    @tag :online
     test "can open the stream and check headers" do
       credentials = Credentials.from_environment("TEST_FASTMAIL_API_TOKEN")
       session = Session.new(credentials)
@@ -162,6 +165,7 @@ defmodule Fastmail.Jmap.SessionTest do
   end
 
   describe "method_calls - connected mode" do
+    @tag :online
     test "makes a real request" do
       credentials = Credentials.from_environment("TEST_FASTMAIL_API_TOKEN")
       session = Session.new(credentials)

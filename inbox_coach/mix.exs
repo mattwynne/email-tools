@@ -23,6 +23,10 @@ defmodule InboxCoach.MixProject do
       extra_applications: [:logger, :runtime_tools]
     ]
   end
+ 
+  def cli do
+    [preferred_envs: ["test.all": :test]]
+  end
 
   # Specifies which paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support"]
@@ -85,7 +89,8 @@ defmodule InboxCoach.MixProject do
       setup: ["deps.get", "ecto.setup", "assets.setup", "assets.build"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
+      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test --exclude online"],
+      "test.all": ["ecto.create --quiet", "ecto.migrate --quiet", "test --include online"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
       "assets.build": ["tailwind inbox_coach", "esbuild inbox_coach"],
       "assets.deploy": [
