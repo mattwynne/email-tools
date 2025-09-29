@@ -8,15 +8,15 @@ defmodule InboxCoachWeb.UserSettingsControllerTest do
 
   describe "GET /users/settings" do
     test "renders settings page", %{conn: conn} do
-      conn = get(conn, ~p"/users/settings")
-      response = html_response(conn, 200)
-      assert response =~ "Settings"
+      conn
+      |> visit("/users/settings")
+      |> assert_has("h1", text: "Settings")
     end
 
     test "redirects if user is not logged in" do
-      conn = build_conn()
-      conn = get(conn, ~p"/users/settings")
-      assert redirected_to(conn) == ~p"/users/log_in"
+      build_conn()
+      |> visit("/users/settings")
+      |> assert_path("/users/log_in")
     end
   end
 
