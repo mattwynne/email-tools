@@ -24,12 +24,24 @@
     mix ecto.setup
   '';
 
-  processes = {} //
-    lib.optionalAttrs (!config.devenv.isTesting) {
+  processes = {
       phoenix = {
         exec = ''
           cd inbox_coach
           mix phx.server
+        '';
+        process-compose = {
+          depends_on = {
+            postgres = {
+              condition = "process_healthy";
+            };
+          };
+        };
+      };
+      tests = {} // lib.optionalAttrs (!config.devenv.isTesting) {
+        exec = ''
+          cd inbox_coach
+          mix test.interactive
         '';
         process-compose = {
           depends_on = {
