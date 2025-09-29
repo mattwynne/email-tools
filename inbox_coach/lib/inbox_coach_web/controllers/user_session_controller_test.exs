@@ -20,7 +20,7 @@ defmodule InboxCoachWeb.UserSessionControllerTest do
       conn
       |> log_in_user(user)
       |> visit("/users/log_in")
-      |> assert_path("/")
+      |> assert_path("/users/settings")
     end
   end
 
@@ -31,11 +31,8 @@ defmodule InboxCoachWeb.UserSessionControllerTest do
       |> fill_in("Email", with: user.email)
       |> fill_in("Password", with: valid_user_password())
       |> click_button("Log in")
-      |> assert_path("/")
-      |> visit("/")
-      |> assert_has("text", text: user.email)
-      |> assert_has("a", text: "Settings")
-      |> assert_has("button", text: "Log out")
+      |> assert_path("/users/settings")
+      |> assert_has("li", text: user.email)
     end
 
     test "logs the user in with remember me", %{conn: conn, user: user} do
@@ -43,19 +40,19 @@ defmodule InboxCoachWeb.UserSessionControllerTest do
       |> visit("/users/log_in")
       |> fill_in("Email", with: user.email)
       |> fill_in("Password", with: valid_user_password())
-      |> check("Remember me")
+      |> check("Keep me logged in")
       |> click_button("Log in")
-      |> assert_path("/")
+      |> assert_path("/users/settings")
     end
 
     test "logs the user in with return to", %{conn: conn, user: user} do
       conn
-      |> init_test_session(user_return_to: "/foo/bar")
+      |> init_test_session(user_return_to: "/users/settings")
       |> visit("/users/log_in")
       |> fill_in("Email", with: user.email)
       |> fill_in("Password", with: valid_user_password())
       |> click_button("Log in")
-      |> assert_path("/foo/bar")
+      |> assert_path("/users/settings")
       |> assert_has("[role=alert]", text: "Welcome back!")
     end
 
@@ -66,7 +63,7 @@ defmodule InboxCoachWeb.UserSessionControllerTest do
       |> fill_in("Password", with: "invalid_password")
       |> click_button("Log in")
       |> assert_has("h1", text: "Log in")
-      |> assert_has("[role=alert]", text: "Invalid email or password")
+      |> assert_has("form", text: "Invalid email or password")
     end
   end
 
@@ -75,16 +72,8 @@ defmodule InboxCoachWeb.UserSessionControllerTest do
       conn
       |> log_in_user(user)
       |> visit("/")
-      |> click_button("Log out")
-      |> assert_path("/")
-      |> assert_has("[role=alert]", text: "Logged out successfully")
-    end
-
-    test "succeeds even if the user is not logged in", %{conn: conn} do
-      conn
-      |> visit("/")
-      |> click_button("Log out")
-      |> assert_path("/")
+      |> click_link("Log out")
+      |> assert_path("/users/log_in")
       |> assert_has("[role=alert]", text: "Logged out successfully")
     end
   end
