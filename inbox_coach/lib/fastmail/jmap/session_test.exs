@@ -90,7 +90,7 @@ defmodule Fastmail.Jmap.SessionTest do
       assert [] = session |> Session.execute(GetAllMailboxes)
     end
 
-    test "allows configuring multiple method call responses" do
+    test "allows configuring multiple method call responses using a function" do
       session =
         Session.null(
           execute: fn
@@ -161,6 +161,79 @@ defmodule Fastmail.Jmap.SessionTest do
                  "0"
                ]
              ] == session |> Session.execute(QueryAllEmails, in_mailbox: "Ponies")
+    end
+
+    test "allows configuring multiple method call responses using a list of module/response tuples" do
+      session =
+        Session.null(
+          execute: [
+            {{QueryAllEmails, in_mailbox: "Ponies"},
+             [
+               "Email/query",
+               %{
+                 "filter" => %{"inMailbox" => "Ponies"},
+                 "ids" => ["email-1", "email-2"]
+               },
+               "0"
+             ]},
+            {{GetAllMailboxes},
+             [
+               "Mailbox/get",
+               %{
+                 "list" => [
+                   %{"id" => "Ponies"},
+                   %{"id" => "Rainbows"}
+                 ]
+               },
+               "0"
+             ]}
+          ]
+        )
+
+      assert [
+               [
+                 "Mailbox/get",
+                 %{
+                   "list" => [
+                     %{"id" => "Ponies"},
+                     %{"id" => "Rainbows"}
+                   ]
+                 },
+                 "0"
+               ]
+             ] == session |> Session.execute(GetAllMailboxes)
+
+      assert [
+               [
+                 "Email/query",
+                 %{
+                   "filter" => %{
+                     "inMailbox" => "Ponies"
+                   },
+                   "ids" => ["email-1", "email-2"]
+                 },
+                 "0"
+               ]
+             ] == session |> Session.execute(QueryAllEmails, in_mailbox: "Ponies")
+    end
+
+    test "throws a helpful error when trying to call a method that hasn't been stubbed" do
+      session =
+        Session.null(
+          execute: [
+            {{QueryAllEmails, in_mailbox: "Ponies"},
+             [
+               "Email/query",
+               %{
+                 "filter" => %{"inMailbox" => "Ponies"},
+                 "ids" => ["email-1", "email-2"]
+               },
+               "0"
+             ]}
+          ]
+        )
+
+      assert_raise RuntimeError, fn -> Session.execute(session, GetAllMailboxes) end
     end
   end
 

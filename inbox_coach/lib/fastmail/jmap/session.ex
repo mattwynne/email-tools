@@ -51,6 +51,19 @@ defmodule Fastmail.Jmap.Session do
     stub.(mod, params) |> execute
   end
 
+  def execute(%__MODULE__{execute: stub}, mod, params) when is_list(stub) do
+    Enum.find_value(stub, fn
+      {{^mod}, response} when params == [] ->
+        [response]
+
+      {{^mod, ^params}, response} ->
+        [response]
+
+      _ ->
+        nil
+    end) || raise "No stub configured for #{inspect({mod, params})} in #{inspect(stub)}"
+  end
+
   def execute(
         %__MODULE__{api_url: api_url, credentials: %{token: token}} = session,
         method_calls_mod,
