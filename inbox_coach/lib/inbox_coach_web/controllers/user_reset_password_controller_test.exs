@@ -11,9 +11,9 @@ defmodule InboxCoachWeb.UserResetPasswordControllerTest do
 
   describe "GET /users/reset_password" do
     test "renders the reset password page", %{conn: conn} do
-      conn = get(conn, ~p"/users/reset_password")
-      response = html_response(conn, 200)
-      assert response =~ "Forgot your password?"
+      conn
+      |> visit("/users/reset_password")
+      |> assert_has("h1", text: "Forgot your password?")
     end
   end
 
