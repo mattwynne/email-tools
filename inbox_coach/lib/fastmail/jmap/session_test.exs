@@ -1,7 +1,6 @@
 defmodule Fastmail.Jmap.SessionTest do
   use ExUnit.Case, async: true
   alias Fastmail.Jmap.MethodCalls.QueryAllEmails
-  alias Fastmail.Jmap.Requests.MethodCalls
   alias Fastmail.Jmap.Credentials
   alias Fastmail.Jmap.Requests.GetSession
   alias Fastmail.Jmap.MethodCalls.GetAllMailboxes
@@ -93,47 +92,28 @@ defmodule Fastmail.Jmap.SessionTest do
     test "allows configuring multiple method call responses using a function" do
       session =
         Session.null(
-          execute: fn
-            QueryAllEmails, in_mailbox: "Ponies" ->
-              MethodCalls.null(
-                Req.Response.new(
-                  status: 200,
-                  body: %{
-                    "methodResponses" => [
-                      [
-                        "Email/query",
-                        %{
-                          "filter" => %{"inMailbox" => "Ponies"},
-                          "ids" => ["email-1", "email-2"]
-                        },
-                        "0"
-                      ]
-                    ]
-                  }
-                )
-              )
-
-            GetAllMailboxes, [] ->
-              MethodCalls.null(
-                Req.Response.new(
-                  status: 200,
-                  body: %{
-                    "methodResponses" => [
-                      [
-                        "Mailbox/get",
-                        %{
-                          "list" => [
-                            %{"id" => "Ponies"},
-                            %{"id" => "Rainbows"}
-                          ]
-                        },
-                        "0"
-                      ]
-                    ]
-                  }
-                )
-              )
-          end
+          execute: [
+            {{QueryAllEmails, in_mailbox: "Ponies"},
+             [
+               "Email/query",
+               %{
+                 "filter" => %{"inMailbox" => "Ponies"},
+                 "ids" => ["email-1", "email-2"]
+               },
+               "0"
+             ]},
+            {{GetAllMailboxes},
+             [
+               "Mailbox/get",
+               %{
+                 "list" => [
+                   %{"id" => "Ponies"},
+                   %{"id" => "Rainbows"}
+                 ]
+               },
+               "0"
+             ]}
+          ]
         )
 
       assert [
