@@ -19,6 +19,29 @@ defmodule Fastmail.Jmap.EventSourceTest do
       messages = Enum.map(response.body, fn message -> message end)
       assert messages == []
     end
+
+    test "it can receive events sent at will during the test" do
+      test = self()
+
+      listener =
+        Task.async(fn ->
+          events = fn ->
+            receive do
+              {:send, event} -> event
+            end
+          end
+
+          event_source = EventSource.null(events: events)
+          {:ok, response} = event_source |> EventSource.stream()
+
+          Enum.each(response.body, fn event ->
+            send(test, {:event, event})
+          end)
+        end)
+
+      send(listener.pid, {:send, "first message"})
+      assert_receive {:event, "first message"}
+    end
   end
 
   describe "event source - connected" do

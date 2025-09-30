@@ -15,12 +15,26 @@ defmodule Fastmail.Jmap.Requests.GetEventSource do
     )
   end
 
-  def null(events) do
+  def null(events) when is_list(events) do
     Req.new(
       adapter: fn request ->
         {
           request,
           Req.Response.new(status: 200, body: events)
+        }
+      end
+    )
+  end
+
+  def null(events) when is_function(events, 0) do
+    Req.new(
+      adapter: fn request ->
+        {
+          request,
+          Req.Response.new(
+            status: 200,
+            body: Stream.repeatedly(events)
+          )
         }
       end
     )
