@@ -1,7 +1,12 @@
 defmodule InboxCoach.FastmailEvent do
   defstruct [:id, :name, :data]
 
-  def new(message) do
+  # TODO: purely for testing. Could this move into the tests somewhere?
+  def new(message) when is_map(message) do
+    struct!(__MODULE__, data: message)
+  end
+
+  def new(message) when is_binary(message) do
     String.split(message, "\r\n")
     |> Enum.reduce(
       %__MODULE__{},

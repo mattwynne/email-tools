@@ -34,6 +34,7 @@ defmodule InboxCoach.FastmailEvents do
     case state.session.event_source |> EventSource.stream() do
       {:ok, response} ->
         Enum.each(response.body, fn message ->
+          dbg(message)
           event = FastmailEvent.new(message)
 
           if !FastmailEvent.empty?(event) do
