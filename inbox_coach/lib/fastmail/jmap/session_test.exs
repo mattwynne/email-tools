@@ -1,5 +1,6 @@
 defmodule Fastmail.Jmap.SessionTest do
   use ExUnit.Case, async: true
+  import ExUnit.CaptureLog
   alias Fastmail.Jmap.MethodCalls.QueryAllEmails
   alias Fastmail.Jmap.Credentials
   alias Fastmail.Jmap.Requests.GetSession
@@ -237,6 +238,36 @@ defmodule Fastmail.Jmap.SessionTest do
                  "mailboxes"
                ]
              ] = session |> Session.execute(GetAllMailboxes)
+    end
+  end
+
+  describe "debug logging" do
+    test "logs request and response for method calls" do
+      session =
+        Session.null(
+          execute: [
+            {{GetAllMailboxes},
+             [
+               "Mailbox/get",
+               %{
+                 "list" => [
+                   %{"id" => "Ponies"}
+                 ]
+               },
+               "0"
+             ]}
+          ]
+        )
+
+      log =
+        capture_log([log_level: :debug], fn ->
+          Session.execute(session, GetAllMailboxes)
+        end)
+
+      assert log =~ "JMAP Request"
+      assert log =~ "GetAllMailboxes"
+      assert log =~ "JMAP Response"
+      assert log =~ "Mailbox/get"
     end
   end
 end
