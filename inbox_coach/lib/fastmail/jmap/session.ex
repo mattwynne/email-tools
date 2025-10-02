@@ -83,7 +83,10 @@ defmodule Fastmail.Jmap.Session do
   end
 
   defp execute(%Req.Request{} = request) do
+    Logger.debug("JMAP Request:\n#{inspect(Jason.decode!(request.body), pretty: true)}")
+
     {:ok, body} = request |> request
+    Logger.debug("JMAP Response:\n#{inspect(body, pretty: true)}")
 
     body["methodResponses"]
   end
