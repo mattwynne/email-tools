@@ -20,7 +20,9 @@ defmodule Fastmail.Jmap.Requests.MethodCalls do
     )
   end
 
-  def null(response) do
+  def null(), do: null([])
+
+  def null(%Req.Response{} = response) do
     Req.new(
       adapter: fn request ->
         {
@@ -31,12 +33,12 @@ defmodule Fastmail.Jmap.Requests.MethodCalls do
     )
   end
 
-  def null() do
+  def null(method_responses) when is_list(method_responses) do
     null(
       Req.Response.new(
         status: 200,
         body: %{
-          "methodResponses" => []
+          "methodResponses" => method_responses
         }
       )
     )

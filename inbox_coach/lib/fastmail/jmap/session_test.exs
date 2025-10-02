@@ -181,7 +181,8 @@ defmodule Fastmail.Jmap.SessionTest do
                  },
                  "0"
                ]
-             ] == session |> Session.execute(GetAllMailboxes)
+             ] ==
+               session |> Session.execute(GetAllMailboxes)
 
       assert [
                [
