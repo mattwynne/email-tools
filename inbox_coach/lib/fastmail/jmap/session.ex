@@ -65,6 +65,7 @@ defmodule Fastmail.Jmap.Session do
      end) ||
        raise("No stub configured for #{inspect({mod, params})} in #{inspect(stub)}"))
     |> MethodCalls.null()
+    |> log_request(mod, params)
     |> execute
   end
 
@@ -79,16 +80,25 @@ defmodule Fastmail.Jmap.Session do
     )
     |> method_calls_mod.new()
     |> MethodCalls.new(api_url, token)
+    |> log_request
     |> execute
   end
 
   defp execute(%Req.Request{} = request) do
-    Logger.debug("JMAP Request:\n#{inspect(Jason.decode!(request.body), pretty: true)}")
-
     {:ok, body} = request |> request
-    Logger.debug("JMAP Response:\n#{inspect(body, pretty: true)}")
+    Logger.debug("JMAP response:\n#{inspect(body, pretty: true)}")
 
     body["methodResponses"]
+  end
+
+  defp log_request(%Req.Request{body: nil} = request, mod, params) do
+    Logger.debug("JMAP request:\n#{inspect([:stub, mod, params], pretty: true)}")
+    request
+  end
+
+  defp log_request(%Req.Request{body: body} = request) do
+    Logger.debug("JMAP request:\n#{inspect(Jason.decode!(body), pretty: true)}")
+    request
   end
 
   defp request(%Req.Request{} = request) do
