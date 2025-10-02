@@ -1,4 +1,5 @@
 defmodule Fastmail.Jmap.Session do
+  require Logger
   alias Fastmail.Jmap.Credentials
   alias Fastmail.Jmap.Requests.GetSession
   alias Fastmail.Jmap.Requests.MethodCalls
@@ -52,16 +53,19 @@ defmodule Fastmail.Jmap.Session do
   end
 
   def execute(%__MODULE__{execute: stub}, mod, params) when is_list(stub) do
-    Enum.find_value(stub, fn
-      {{^mod}, response} when params == [] ->
-        [response]
+    (Enum.find_value(stub, fn
+       {{^mod}, response} when params == [] ->
+         [response]
 
-      {{^mod, ^params}, response} ->
-        [response]
+       {{^mod, ^params}, response} ->
+         [response]
 
-      _ ->
-        nil
-    end) || raise "No stub configured for #{inspect({mod, params})} in #{inspect(stub)}"
+       _ ->
+         nil
+     end) ||
+       raise("No stub configured for #{inspect({mod, params})} in #{inspect(stub)}"))
+    |> MethodCalls.null()
+    |> execute
   end
 
   def execute(
