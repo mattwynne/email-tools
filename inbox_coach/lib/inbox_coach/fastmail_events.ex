@@ -1,6 +1,7 @@
 defmodule InboxCoach.FastmailEvents do
   alias Fastmail.Jmap.EventSource
   alias InboxCoach.FastmailEvent
+  require Logger
 
   def open_stream(session) do
     state = %{
@@ -34,7 +35,7 @@ defmodule InboxCoach.FastmailEvents do
     case state.session.event_source |> EventSource.stream() do
       {:ok, response} ->
         Enum.each(response.body, fn message ->
-          dbg(message)
+          Logger.debug("Event: #{inspect(message)}")
           event = FastmailEvent.new(message)
 
           if !FastmailEvent.empty?(event) do

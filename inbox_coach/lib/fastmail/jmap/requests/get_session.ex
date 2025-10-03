@@ -12,6 +12,25 @@ defmodule Fastmail.Jmap.Requests.GetSession do
     )
   end
 
+  def null(opts \\ [])
+
+  def null(opts) when is_list(opts) do
+    account_id = Keyword.get(opts, :account_id, "some-account-id")
+
+    null(
+      Req.Response.new(
+        status: 200,
+        body: %{
+          "accounts" => %{
+            account_id => %{}
+          },
+          "eventSourceUrl" => "https://myserver.com/events",
+          "apiUrl" => "https://myserver.com/api"
+        }
+      )
+    )
+  end
+
   def null(response) do
     Req.new(
       adapter: fn request ->
@@ -20,21 +39,6 @@ defmodule Fastmail.Jmap.Requests.GetSession do
           response
         }
       end
-    )
-  end
-
-  def null() do
-    null(
-      Req.Response.new(
-        status: 200,
-        body: %{
-          "accounts" => %{
-            "some-account-id" => %{}
-          },
-          "eventSourceUrl" => "https://myserver.com/events",
-          "apiUrl" => "https://myserver.com/api"
-        }
-      )
     )
   end
 end

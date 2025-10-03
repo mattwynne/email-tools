@@ -1,5 +1,6 @@
 defmodule FastmailAccountTest do
   use ExUnit.Case, async: true
+  alias Fastmail.Jmap.Requests.GetSession
   alias Fastmail.Jmap.EventSource
   alias Fastmail.Jmap.MethodCalls
   alias InboxCoach.State
@@ -88,6 +89,7 @@ defmodule FastmailAccountTest do
   end
 
   test "handling events" do
+    # Logger.configure(level: :debug)
     test = self()
 
     events = fn ->
@@ -100,6 +102,7 @@ defmodule FastmailAccountTest do
 
     session =
       Session.null(
+        get_session: GetSession.null(account_id: "account-id"),
         event_source: EventSource.null(events: events),
         execute: [
           {{MethodCalls.GetAllMailboxes},
@@ -116,26 +119,56 @@ defmodule FastmailAccountTest do
           {{MethodCalls.QueryAllEmails, in_mailbox: "inbox-id"},
            [
              "Email/query",
-             %{"list" => ["email-1"]},
+             %{"ids" => ["email-1"]},
              "0"
            ]},
           {{MethodCalls.QueryAllEmails, in_mailbox: "sent-id"},
            [
              "Email/query",
-             %{"list" => ["email-2"]},
+             %{"ids" => ["email-2"]},
              "0"
            ]}
         ]
       )
 
-    Phoenix.PubSub.subscribe(InboxCoach.PubSub, "test")
+    Phoenix.PubSub.subscribe(
+      InboxCoach.PubSub,
+      "test"
+    )
+
     {:ok, account} = FastmailAccount.start_link(session: session, pubsub_topic: "test")
-    assert_receive({:state, brandNewState})
-    dbg(brandNewState)
-    assert_receive({:state, initialState})
-    dbg(initialState)
-    assert_receive({:state, state3})
-    dbg(state3)
+
+    assert_receive({:ready, _})
+
+    assert_receive({:state, %InboxCoach.State{emails_by_mailbox: %{}, mailboxes: %{}}})
+
+    assert_receive(
+      {:state,
+       %InboxCoach.State{
+         emails_by_mailbox: %{},
+         mailboxes: %{
+           "list" => [
+             %{"id" => "inbox-id", "name" => "Inbox"},
+             %{"id" => "sent-id", "name" => "Sent"}
+           ]
+         }
+       }}
+    )
+
+    assert_receive(
+      {:state,
+       %InboxCoach.State{
+         emails_by_mailbox: %{
+           "inbox-id" => ["email-1"]
+         },
+         mailboxes: %{
+           "list" => [
+             %{"id" => "inbox-id", "name" => "Inbox"},
+             %{"id" => "sent-id", "name" => "Sent"}
+           ]
+         }
+       }}
+    )
 
     events =
       receive do
@@ -160,8 +193,6 @@ defmodule FastmailAccountTest do
       }
     )
 
-    assert_receive({:state, state4})
-    dbg(state4)
-    assert state2 = account |> FastmailAccount.get_state()
+    assert account |> FastmailAccount.get_state()
   end
 end
