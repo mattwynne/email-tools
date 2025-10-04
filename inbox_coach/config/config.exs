@@ -11,7 +11,6 @@ config :inbox_coach,
   ecto_repos: [InboxCoach.Repo],
   generators: [timestamp_type: :utc_datetime]
 
-
 # Configures the endpoint
 config :inbox_coach, InboxCoachWeb.Endpoint,
   url: [host: "localhost"],
@@ -66,3 +65,6 @@ config :phoenix, :json_library, Jason
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
+
+config :mix_test_interactive,
+  clear: true

@@ -86,18 +86,27 @@ defmodule Fastmail.Jmap.Session do
 
   defp execute(%Req.Request{} = request) do
     {:ok, body} = request |> request
-    Logger.debug("JMAP response:\n#{inspect(body, pretty: true)}")
+
+    Logger.debug(
+      "[jmap-response] #{inspect(body, pretty: true, syntax_colors: IO.ANSI.syntax_colors())}"
+    )
 
     body["methodResponses"]
   end
 
   defp log_request(%Req.Request{body: nil} = request, mod, params) do
-    Logger.debug("JMAP request:\n#{inspect([:stub, mod, params], pretty: true)}")
+    Logger.debug(
+      "[jmap-request] #{inspect([:stub, mod, params], pretty: true, syntax_colors: IO.ANSI.syntax_colors())}"
+    )
+
     request
   end
 
   defp log_request(%Req.Request{body: body} = request) do
-    Logger.debug("JMAP request:\n#{inspect(Jason.decode!(body), pretty: true)}")
+    Logger.debug(
+      "[jmap-request] #{inspect(Jason.decode!(body), pretty: true, syntax_colors: IO.ANSI.syntax_colors())}"
+    )
+
     request
   end
 
