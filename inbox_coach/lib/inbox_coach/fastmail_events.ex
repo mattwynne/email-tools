@@ -35,7 +35,10 @@ defmodule InboxCoach.FastmailEvents do
     case state.session.event_source |> EventSource.stream() do
       {:ok, response} ->
         Enum.each(response.body, fn message ->
-          Logger.debug("Event: #{inspect(message)}")
+          Logger.debug(
+            "[jmap-event] #{inspect(message, pretty: true, syntax_colors: IO.ANSI.syntax_colors())}"
+          )
+
           event = FastmailEvent.new(message)
 
           if !FastmailEvent.empty?(event) do

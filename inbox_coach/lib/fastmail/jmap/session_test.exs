@@ -266,8 +266,8 @@ defmodule Fastmail.Jmap.SessionTest do
           Logger.configure(level: :warning)
         end)
 
-      assert log =~ "JMAP request"
-      assert log =~ "JMAP response"
+      assert log =~ "[jmap-request]"
+      assert log =~ "[jmap-response]"
       assert log =~ "methodResponses"
       assert log =~ "Mailbox/get"
     end

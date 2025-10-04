@@ -66,7 +66,6 @@ defmodule InboxCoach.FastmailAccount do
 
   @impl true
   def handle_cast({:event, data}, state) do
-    dbg([:client, :event, data])
     changes = data["changed"]
     handle_changes(changes, state.session.account_id, state)
 
@@ -196,7 +195,6 @@ defmodule InboxCoach.FastmailAccount do
   defp handle_changes(changes, account_id, %{latest: old_changes} = state) do
     new = changes[account_id]
     old = old_changes[account_id]
-    dbg(old)
 
     ["Email", "Mailbox", "Thread"]
     |> Enum.each(fn type ->
