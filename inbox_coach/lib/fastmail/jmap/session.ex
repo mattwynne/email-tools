@@ -70,10 +70,26 @@ defmodule Fastmail.Jmap.Session do
   end
 
   def execute(
+        %__MODULE__{api_url: api_url, account_id: account_id, credentials: %{token: token}},
+        method_name,
+        params
+      ) when is_binary(method_name) do
+    params_map =
+      params
+      |> Enum.into(%{})
+      |> Map.put("accountId", account_id)
+
+    [[method_name, params_map, "0"]]
+    |> MethodCalls.new(api_url, token)
+    |> log_request
+    |> execute
+  end
+
+  def execute(
         %__MODULE__{api_url: api_url, credentials: %{token: token}} = session,
         method_calls_mod,
         params
-      ) do
+      ) when is_atom(method_calls_mod) do
     struct(
       Module.concat(method_calls_mod, Params),
       Keyword.merge(params, account_id: session.account_id)
