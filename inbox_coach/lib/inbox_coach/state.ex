@@ -10,9 +10,13 @@ defmodule InboxCoach.State do
 
   def new() do
     %__MODULE__{
-      mailboxes: %{},
+      mailboxes: %{"list" => []},
       emails_by_mailbox: %{}
     }
+  end
+
+  def mailboxes(%__MODULE__{} = state) do
+    state.mailboxes["list"] |> Enum.map(&Mailbox.new/1)
   end
 
   def changes(%__MODULE__{} = state, email) do
@@ -99,6 +103,6 @@ defmodule InboxCoach.State do
   end
 
   def mailbox(%__MODULE__{} = state, id) do
-    Enum.find(state.mailboxes["list"], &(Mailbox.id(&1) == id))
+    Enum.find(mailboxes(state), &(&1.id == id))
   end
 end

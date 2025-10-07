@@ -176,6 +176,8 @@ defmodule FastmailAccountTest do
     {:ok, _account} = FastmailAccount.start_link(session: session, pubsub_topic: "test")
 
     assert_receive({:ready, events})
+    assert_receive({:state, state})
+    assert InboxCoach.State.mailboxes(state) |> Enum.empty?()
 
     send(
       events,
@@ -195,32 +197,11 @@ defmodule FastmailAccountTest do
       }
     )
 
-    assert_receive({:state, %InboxCoach.State{emails_by_mailbox: %{}, mailboxes: %{}}})
-
-    assert_receive(
-      {:state,
-       %InboxCoach.State{
-         emails_by_mailbox: %{},
-         mailboxes: %{
-           "list" => [
-             %{"id" => "inbox-id", "name" => "Inbox"},
-             %{"id" => "sent-id", "name" => "Sent"}
-           ]
-         }
-       }}
-    )
-
     assert_receive(
       {:state,
        %InboxCoach.State{
          emails_by_mailbox: %{
            "inbox-id" => ["email-1"]
-         },
-         mailboxes: %{
-           "list" => [
-             %{"id" => "inbox-id", "name" => "Inbox"},
-             %{"id" => "sent-id", "name" => "Sent"}
-           ]
          }
        }}
     )
@@ -231,32 +212,8 @@ defmodule FastmailAccountTest do
          emails_by_mailbox: %{
            "inbox-id" => ["email-1"],
            "sent-id" => ["email-2"]
-         },
-         mailboxes: %{
-           "list" => [
-             %{"id" => "inbox-id", "name" => "Inbox"},
-             %{"id" => "sent-id", "name" => "Sent"}
-           ]
          }
        }}
-    )
-
-    send(
-      events,
-      {
-        :event,
-        %{
-          "changed" => %{
-            "account-id" => %{
-              "Email" => "state-1",
-              "EmailDelivery" => "state-1",
-              "Mailbox" => "state-1",
-              "Thread" => "state-1"
-            }
-          },
-          "type" => "connect"
-        }
-      }
     )
 
     send(
@@ -283,12 +240,6 @@ defmodule FastmailAccountTest do
          emails_by_mailbox: %{
            "inbox-id" => [],
            "sent-id" => ["email-2", "email-1"]
-         },
-         mailboxes: %{
-           "list" => [
-             %{"id" => "inbox-id", "name" => "Inbox"},
-             %{"id" => "sent-id", "name" => "Sent"}
-           ]
          }
        }}
     )
