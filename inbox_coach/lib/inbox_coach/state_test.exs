@@ -249,10 +249,39 @@ defmodule StateTest do
         }
       }
 
-      assert state
-             |> State.mailbox("7a02d2a5-15c5-4fd5-99f7-1e3b511a991c")
-             |> Mailbox.name() ==
-               "Inbox"
+      mailbox = state |> State.mailbox("7a02d2a5-15c5-4fd5-99f7-1e3b511a991c")
+      assert mailbox.name == "Inbox"
+    end
+  end
+
+  describe "listing mailboxes" do
+    test "returns an empty list by default" do
+      assert State.new() |> State.mailboxes() |> Enum.empty?()
+    end
+
+    test "returns the mailboxes in the list" do
+      mailboxes =
+        %State{
+          mailboxes: %{
+            "accountId" => "u4d014069",
+            "list" => [
+              %{
+                "id" => "inbox-id",
+                "name" => "Inbox"
+              },
+              %{
+                "id" => "sent-id",
+                "name" => "Sent"
+              }
+            ]
+          }
+        }
+        |> State.mailboxes()
+
+      assert [
+               %Mailbox{id: "inbox-id", name: "Inbox"},
+               %Mailbox{id: "sent-id", name: "Sent"}
+             ] = mailboxes
     end
   end
 end

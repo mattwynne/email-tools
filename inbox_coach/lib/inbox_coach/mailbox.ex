@@ -1,6 +1,11 @@
 defmodule InboxCoach.Mailbox do
-  def id(mailbox) do
-    mailbox["id"]
+  defstruct [:id, :name]
+
+  def new(mailbox) do
+    %__MODULE__{
+      id: mailbox["id"],
+      name: mailbox["name"]
+    }
   end
 
   def name(mailbox) do

@@ -2,7 +2,6 @@ defmodule InboxCoach.FastmailAccount do
   alias Fastmail.Jmap.Session
   alias Fastmail.Jmap.MethodCalls.GetAllChanged
   alias Fastmail.Jmap.MethodCalls.GetAllMailboxes
-  alias InboxCoach.Mailbox
   alias InboxCoach.Email
   alias InboxCoach.State
   alias InboxCoach.FastmailEvents
@@ -138,7 +137,7 @@ defmodule InboxCoach.FastmailAccount do
             :email_added,
             System.os_time(:millisecond),
             Email.subject(email),
-            Mailbox.name(State.mailbox(state.account_state, mailbox_id))
+            State.mailbox(state.account_state, mailbox_id).name
           ]
         end)
 
