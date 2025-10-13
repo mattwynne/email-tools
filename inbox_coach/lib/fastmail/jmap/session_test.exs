@@ -84,10 +84,10 @@ defmodule Fastmail.Jmap.SessionTest do
   end
 
   describe "method_calls - null mode" do
-    test "with no configuration, returns an empty result whatever you call it with" do
+    test "with no configuration, throws an error if you try to execute a method call" do
       session = Session.null()
 
-      assert [] = session |> Session.execute(GetAllMailboxes)
+      assert_raise RuntimeError, fn -> Session.execute(session, GetAllMailboxes) end
     end
 
     test "allows configuring multiple method call responses using a function" do
@@ -108,27 +108,23 @@ defmodule Fastmail.Jmap.SessionTest do
                "Mailbox/get",
                %{
                  "list" => [
-                   %{"id" => "Ponies"},
-                   %{"id" => "Rainbows"}
-                 ]
+                   %{"id" => "Ponies", "name" => "Ponies Mailbox"},
+                   %{"id" => "Rainbows", "name" => "Rainbows Mailbox"}
+                 ],
+                 "state" => "test-state-123"
                },
                "0"
              ]}
           ]
         )
 
-      assert [
-               [
-                 "Mailbox/get",
-                 %{
-                   "list" => [
-                     %{"id" => "Ponies"},
-                     %{"id" => "Rainbows"}
-                   ]
-                 },
-                 "0"
+      assert %GetAllMailboxes.Response{
+               state: "test-state-123",
+               mailboxes: [
+                 %Fastmail.Jmap.Mailbox{id: "Ponies", name: "Ponies Mailbox"},
+                 %Fastmail.Jmap.Mailbox{id: "Rainbows", name: "Rainbows Mailbox"}
                ]
-             ] == session |> Session.execute(GetAllMailboxes)
+             } == session |> Session.execute(GetAllMailboxes)
 
       assert [
                [
@@ -162,27 +158,23 @@ defmodule Fastmail.Jmap.SessionTest do
                "Mailbox/get",
                %{
                  "list" => [
-                   %{"id" => "Ponies"},
-                   %{"id" => "Rainbows"}
-                 ]
+                   %{"id" => "Ponies", "name" => "Ponies Mailbox"},
+                   %{"id" => "Rainbows", "name" => "Rainbows Mailbox"}
+                 ],
+                 "state" => "test-state-123"
                },
                "0"
              ]}
           ]
         )
 
-      assert [
-               [
-                 "Mailbox/get",
-                 %{
-                   "list" => [
-                     %{"id" => "Ponies"},
-                     %{"id" => "Rainbows"}
-                   ]
-                 },
-                 "0"
+      assert %GetAllMailboxes.Response{
+               state: "test-state-123",
+               mailboxes: [
+                 %Fastmail.Jmap.Mailbox{id: "Ponies", name: "Ponies Mailbox"},
+                 %Fastmail.Jmap.Mailbox{id: "Rainbows", name: "Rainbows Mailbox"}
                ]
-             ] ==
+             } ==
                session |> Session.execute(GetAllMailboxes)
 
       assert [
@@ -225,19 +217,16 @@ defmodule Fastmail.Jmap.SessionTest do
       credentials = Credentials.from_environment("TEST_FASTMAIL_API_TOKEN")
       session = Session.new(credentials)
 
-      assert [
-               [
-                 "Mailbox/get",
-                 %{
-                   "list" => [
-                     %{"name" => "Inbox"},
-                     %{"name" => "Archive"}
-                     | _
-                   ]
-                 },
-                 "mailboxes"
+      assert %GetAllMailboxes.Response{
+               state: state,
+               mailboxes: [
+                 %Fastmail.Jmap.Mailbox{name: "Inbox"},
+                 %Fastmail.Jmap.Mailbox{name: "Archive"}
+                 | _
                ]
-             ] = session |> Session.execute(GetAllMailboxes)
+             } = session |> Session.execute(GetAllMailboxes)
+
+      assert is_binary(state)
     end
   end
 
@@ -251,8 +240,9 @@ defmodule Fastmail.Jmap.SessionTest do
                "Mailbox/get",
                %{
                  "list" => [
-                   %{"id" => "Ponies"}
-                 ]
+                   %{"id" => "Ponies", "name" => "Ponies"}
+                 ],
+                 "state" => "debug-state"
                },
                "0"
              ]}

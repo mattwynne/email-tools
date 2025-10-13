@@ -16,6 +16,7 @@ defmodule FastmailAccountTest do
              [
                "Mailbox/get",
                %{
+                 "state" => "123",
                  "list" => [
                    %{"id" => "inbox-id", "name" => "Inbox"},
                    %{"id" => "sent-id", "name" => "Sent"}
@@ -110,6 +111,7 @@ defmodule FastmailAccountTest do
            [
              "Mailbox/get",
              %{
+               "state" => "123",
                "list" => [
                  %{"id" => "inbox-id", "name" => "Inbox"},
                  %{"id" => "sent-id", "name" => "Sent"}
