@@ -126,18 +126,10 @@ defmodule Fastmail.Jmap.SessionTest do
                ]
              } == session |> Session.execute(GetAllMailboxes)
 
-      assert [
-               [
-                 "Email/query",
-                 %{
-                   "filter" => %{
-                     "inMailbox" => "Ponies"
-                   },
-                   "ids" => ["email-1", "email-2"]
-                 },
-                 "0"
-               ]
-             ] == session |> Session.execute(QueryAllEmails, in_mailbox: "Ponies")
+      assert %QueryAllEmails.Response{
+               mailbox_id: "Ponies",
+               email_ids: ["email-1", "email-2"]
+             } == session |> Session.execute(QueryAllEmails, in_mailbox: "Ponies")
     end
 
     test "allows configuring multiple method call responses using a list of module/response tuples" do
@@ -177,18 +169,10 @@ defmodule Fastmail.Jmap.SessionTest do
              } ==
                session |> Session.execute(GetAllMailboxes)
 
-      assert [
-               [
-                 "Email/query",
-                 %{
-                   "filter" => %{
-                     "inMailbox" => "Ponies"
-                   },
-                   "ids" => ["email-1", "email-2"]
-                 },
-                 "0"
-               ]
-             ] == session |> Session.execute(QueryAllEmails, in_mailbox: "Ponies")
+      assert %QueryAllEmails.Response{
+               mailbox_id: "Ponies",
+               email_ids: ["email-1", "email-2"]
+             } == session |> Session.execute(QueryAllEmails, in_mailbox: "Ponies")
     end
 
     test "throws a helpful error when trying to call a method that hasn't been stubbed" do

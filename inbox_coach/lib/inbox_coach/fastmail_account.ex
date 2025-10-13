@@ -77,7 +77,7 @@ defmodule InboxCoach.FastmailAccount do
     {:noreply, state}
   end
 
-  # TODO: remove when fully replaced
+  # TODO: can we delete this now?
   @impl true
   def handle_info(["Mailbox/get", payload, _], state) do
     Enum.each(payload["list"], fn mailbox ->
@@ -100,6 +100,7 @@ defmodule InboxCoach.FastmailAccount do
   end
 
   def handle_info(%GetAllMailboxes.Response{mailboxes: mailboxes} = response, state) do
+    # TODO: swap these - do this after the state has been updated, and iterate the mailboxes in the state instead of the response
     Enum.each(
       mailboxes,
       fn mailbox -> state |> execute(QueryAllEmails, in_mailbox: mailbox.id) end
@@ -111,11 +112,29 @@ defmodule InboxCoach.FastmailAccount do
         :account_state,
         GetAllMailboxes.Response.apply_to(response, state.account_state)
       )
+      |> emit()
 
-    emit(state)
     {:noreply, state}
   end
 
+  def handle_info(%QueryAllEmails.Response{mailbox_id: mailbox_id, email_ids: email_ids}, state) do
+    # TODO: invert this, implement apply_to on the Response setting the state there.
+    state =
+      state
+      |> Map.put(
+        :account_state,
+        State.set_emails_for_mailbox(
+          state.account_state,
+          mailbox_id,
+          email_ids
+        )
+      )
+      |> emit()
+
+    {:noreply, state}
+  end
+
+  # TODO: can we delete this now?
   def handle_info(["Email/query", result, _], state) do
     state =
       state
@@ -250,6 +269,9 @@ defmodule InboxCoach.FastmailAccount do
         |> Enum.each(fn response -> send(self(), response) end)
 
       %GetAllMailboxes.Response{} = response ->
+        send(self(), response)
+
+      %QueryAllEmails.Response{} = response ->
         send(self(), response)
     end
   end
