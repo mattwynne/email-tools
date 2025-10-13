@@ -1,4 +1,4 @@
-defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
+defmodule Fastmail.Jmap.MethodCalls.GetAllMailboxesTest do
   alias Fastmail.Jmap.Mailbox
   alias Fastmail.Jmap.MethodCalls.GetAllMailboxes
   alias Fastmail.Jmap.Session

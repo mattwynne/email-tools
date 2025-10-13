@@ -48,11 +48,6 @@ defmodule Fastmail.Jmap.Session do
 
   def execute(%__MODULE__{} = session, mod), do: execute(session, mod, [])
 
-  # TODO: do we still need this?
-  def execute(%__MODULE__{execute: stub}, mod, params) when is_function(stub) do
-    stub.(mod, params) |> execute(mod)
-  end
-
   def execute(%__MODULE__{execute: stub}, mod, params) when is_list(stub) do
     (Enum.find_value(stub, fn
        {{^mod}, response} when params == [] ->
