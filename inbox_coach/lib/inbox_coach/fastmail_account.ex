@@ -1,4 +1,5 @@
 defmodule InboxCoach.FastmailAccount do
+  alias Fastmail.Jmap.MethodCalls.QueryAllEmails
   alias Fastmail.Jmap.Session
   alias Fastmail.Jmap.MethodCalls.GetAllChanged
   alias Fastmail.Jmap.MethodCalls.GetAllMailboxes
@@ -76,6 +77,7 @@ defmodule InboxCoach.FastmailAccount do
     {:noreply, state}
   end
 
+  # TODO: remove when fully replaced
   @impl true
   def handle_info(["Mailbox/get", payload, _], state) do
     Enum.each(payload["list"], fn mailbox ->
@@ -91,6 +93,23 @@ defmodule InboxCoach.FastmailAccount do
       |> Map.put(
         :account_state,
         State.with_mailboxes(state.account_state, payload)
+      )
+
+    emit(state)
+    {:noreply, state}
+  end
+
+  def handle_info(%GetAllMailboxes.Response{mailboxes: mailboxes} = response, state) do
+    Enum.each(
+      mailboxes,
+      fn mailbox -> state |> execute(QueryAllEmails, in_mailbox: mailbox.id) end
+    )
+
+    state =
+      state
+      |> Map.put(
+        :account_state,
+        GetAllMailboxes.Response.apply_to(response, state.account_state)
       )
 
     emit(state)
@@ -224,8 +243,14 @@ defmodule InboxCoach.FastmailAccount do
   defp ok(state), do: {:ok, state}
 
   def execute(%{session: session}, method_calls_mod, params \\ []) do
-    session
-    |> Session.execute(method_calls_mod, params)
-    |> Enum.each(fn response -> send(self(), response) end)
+    case session
+         |> Session.execute(method_calls_mod, params) do
+      [_] = responses ->
+        responses
+        |> Enum.each(fn response -> send(self(), response) end)
+
+      %GetAllMailboxes.Response{} = response ->
+        send(self(), response)
+    end
   end
 end

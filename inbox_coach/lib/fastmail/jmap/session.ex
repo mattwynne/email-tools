@@ -19,7 +19,7 @@ defmodule Fastmail.Jmap.Session do
 
     new(Credentials.null(),
       get_session: Keyword.get(opts, :get_session, GetSession.null()),
-      execute: Keyword.get(opts, :execute, fn _mod, _param -> MethodCalls.null() end),
+      execute: Keyword.get(opts, :execute, []),
       event_source: Keyword.get(opts, :event_source, EventSource.null())
     )
   end
@@ -46,10 +46,11 @@ defmodule Fastmail.Jmap.Session do
     end
   end
 
-  def execute(session, mod, params \\ [])
+  def execute(%__MODULE__{} = session, mod), do: execute(session, mod, [])
 
+  # TODO: do we still need this?
   def execute(%__MODULE__{execute: stub}, mod, params) when is_function(stub) do
-    stub.(mod, params) |> execute
+    stub.(mod, params) |> execute(mod)
   end
 
   def execute(%__MODULE__{execute: stub}, mod, params) when is_list(stub) do
@@ -66,14 +67,15 @@ defmodule Fastmail.Jmap.Session do
        raise("No stub configured for #{inspect({mod, params})} in #{inspect(stub)}"))
     |> MethodCalls.null()
     |> log_request(mod, params)
-    |> execute
+    |> request_and_parse(mod)
   end
 
   def execute(
         %__MODULE__{api_url: api_url, account_id: account_id, credentials: %{token: token}},
         method_name,
         params
-      ) when is_binary(method_name) do
+      )
+      when is_binary(method_name) do
     params_map =
       params
       |> Enum.into(%{})
@@ -82,14 +84,15 @@ defmodule Fastmail.Jmap.Session do
     [[method_name, params_map, "0"]]
     |> MethodCalls.new(api_url, token)
     |> log_request
-    |> execute
+    |> request_and_parse(MethodCalls)
   end
 
   def execute(
         %__MODULE__{api_url: api_url, credentials: %{token: token}} = session,
         method_calls_mod,
         params
-      ) when is_atom(method_calls_mod) do
+      )
+      when is_atom(method_calls_mod) do
     struct(
       Module.concat(method_calls_mod, Params),
       Keyword.merge(params, account_id: session.account_id)
@@ -97,17 +100,30 @@ defmodule Fastmail.Jmap.Session do
     |> method_calls_mod.new()
     |> MethodCalls.new(api_url, token)
     |> log_request
-    |> execute
+    |> request_and_parse(method_calls_mod)
   end
 
-  defp execute(%Req.Request{} = request) do
-    {:ok, body} = request |> request
+  defp request_and_parse(%Req.Request{} = request, method_calls_mod) do
+    {:ok, body} =
+      request
+      |> request
 
     Logger.debug(
       "[jmap-response] #{inspect(body, pretty: true, syntax_colors: IO.ANSI.syntax_colors())}"
     )
 
     body["methodResponses"]
+    |> handle_response(method_calls_mod)
+  end
+
+  defp handle_response(response, method_calls_mod) do
+    response_mod = Module.concat(method_calls_mod, Response)
+
+    if function_exported?(response_mod, :new, 1) do
+      response_mod.new(response)
+    else
+      response
+    end
   end
 
   defp log_request(%Req.Request{body: nil} = request, mod, params) do
