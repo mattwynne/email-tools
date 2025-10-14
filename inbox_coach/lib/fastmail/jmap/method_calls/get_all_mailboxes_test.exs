@@ -10,7 +10,8 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllMailboxesTest do
         execute: [
           {{GetAllMailboxes},
            [
-             "Mailbox/get",
+             [
+               "Mailbox/get",
              %{
                "accountId" => "u4d014069",
                "didFoldersCheck" => 1,
@@ -284,6 +285,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllMailboxesTest do
                "state" => "J7138"
              },
              "mailboxes"
+           ]
            ]}
         ]
       )

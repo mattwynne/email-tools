@@ -51,10 +51,10 @@ defmodule Fastmail.Jmap.Session do
   def execute(%__MODULE__{execute: stub}, mod, params) when is_list(stub) do
     (Enum.find_value(stub, fn
        {{^mod}, response} when params == [] ->
-         [response]
+         response
 
        {{^mod, ^params}, response} ->
-         [response]
+         response
 
        _ ->
          nil

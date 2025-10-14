@@ -24,7 +24,7 @@ defmodule Fastmail.Jmap.ReplTest do
 
       session = Fastmail.Jmap.Session.null(
         execute: [
-          {{"Mailbox/get", [ids: nil]}, ["Mailbox/get", %{"list" => []}, "0"]}
+          {{"Mailbox/get", [ids: nil]}, [["Mailbox/get", %{"list" => []}, "0"]]}
         ]
       )
       Repl.login(pid, session)
