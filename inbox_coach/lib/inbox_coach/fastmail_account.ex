@@ -96,14 +96,14 @@ defmodule InboxCoach.FastmailAccount do
         response = %QueryAllEmails.Response{},
         state
       ) do
-    # TODO: reduce duplication with GetAllMailboxes handler
-      state
-      |> Map.put(
-        :account_state,
-        QueryAllEmails.Response.apply_to(response, state.account_state)
-      )
-      |> emit()
-      |> noreply()
+    # TODO: reduce duplication with GetAllMailboxes handler - use a protocol and a generic handler?
+    state
+    |> Map.put(
+      :account_state,
+      QueryAllEmails.Response.apply_to(response, state.account_state)
+    )
+    |> emit()
+    |> noreply()
   end
 
   def handle_info(["Email/changes", result, _], state) do
