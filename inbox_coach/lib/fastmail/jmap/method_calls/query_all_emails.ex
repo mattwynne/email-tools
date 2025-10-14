@@ -4,6 +4,7 @@ defmodule Fastmail.Jmap.MethodCalls.QueryAllEmails do
   end
 
   defmodule Response do
+    alias InboxCoach.State
     defstruct [:mailbox_id, :email_ids]
 
     def new([["Email/query", body, _]]) do
@@ -11,6 +12,14 @@ defmodule Fastmail.Jmap.MethodCalls.QueryAllEmails do
         mailbox_id: body["filter"]["inMailbox"],
         email_ids: body["ids"]
       }
+    end
+
+    def apply_to(response, account_state) do
+      State.set_emails_for_mailbox(
+        account_state,
+        response.mailbox_id,
+        response.email_ids
+      )
     end
   end
 
