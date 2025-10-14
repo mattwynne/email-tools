@@ -69,36 +69,13 @@ defmodule InboxCoach.FastmailAccount do
     changes = data["changed"]
     handle_changes(changes, state.session.account_id, state)
 
-    state =
-      state
-      |> Map.put(:latest, changes)
-      |> emit()
-
-    {:noreply, state}
+    state
+    |> Map.put(:latest, changes)
+    |> emit()
+    |> noreply()
   end
 
-  # TODO: can we delete this now?
   @impl true
-  def handle_info(["Mailbox/get", payload, _], state) do
-    Enum.each(payload["list"], fn mailbox ->
-      state
-      |> execute(
-        Fastmail.Jmap.MethodCalls.QueryAllEmails,
-        in_mailbox: mailbox["id"]
-      )
-    end)
-
-    state =
-      state
-      |> Map.put(
-        :account_state,
-        State.with_mailboxes(state.account_state, payload)
-      )
-
-    emit(state)
-    {:noreply, state}
-  end
-
   def handle_info(%GetAllMailboxes.Response{mailboxes: mailboxes} = response, state) do
     # TODO: swap these - do this after the state has been updated, and iterate the mailboxes in the state instead of the response
     Enum.each(
@@ -106,49 +83,27 @@ defmodule InboxCoach.FastmailAccount do
       fn mailbox -> state |> execute(QueryAllEmails, in_mailbox: mailbox.id) end
     )
 
-    state =
-      state
-      |> Map.put(
-        :account_state,
-        GetAllMailboxes.Response.apply_to(response, state.account_state)
-      )
-      |> emit()
-
-    {:noreply, state}
+    state
+    |> Map.put(
+      :account_state,
+      GetAllMailboxes.Response.apply_to(response, state.account_state)
+    )
+    |> emit()
+    |> noreply()
   end
 
-  def handle_info(%QueryAllEmails.Response{mailbox_id: mailbox_id, email_ids: email_ids}, state) do
-    # TODO: invert this, implement apply_to on the Response setting the state there.
-    state =
+  def handle_info(
+        response = %QueryAllEmails.Response{},
+        state
+      ) do
+    # TODO: reduce duplication with GetAllMailboxes handler
       state
       |> Map.put(
         :account_state,
-        State.set_emails_for_mailbox(
-          state.account_state,
-          mailbox_id,
-          email_ids
-        )
+        QueryAllEmails.Response.apply_to(response, state.account_state)
       )
       |> emit()
-
-    {:noreply, state}
-  end
-
-  # TODO: can we delete this now?
-  def handle_info(["Email/query", result, _], state) do
-    state =
-      state
-      |> Map.put(
-        :account_state,
-        State.set_emails_for_mailbox(
-          state.account_state,
-          result["filter"]["inMailbox"],
-          result["ids"]
-        )
-      )
-
-    emit(state)
-    {:noreply, state}
+      |> noreply()
   end
 
   def handle_info(["Email/changes", result, _], state) do
@@ -260,6 +215,7 @@ defmodule InboxCoach.FastmailAccount do
   end
 
   defp ok(state), do: {:ok, state}
+  defp noreply(state), do: {:noreply, state}
 
   def execute(%{session: session}, method_calls_mod, params \\ []) do
     case session
