@@ -96,24 +96,28 @@ defmodule Fastmail.Jmap.SessionTest do
           execute: [
             {{QueryAllEmails, in_mailbox: "Ponies"},
              [
-               "Email/query",
-               %{
-                 "filter" => %{"inMailbox" => "Ponies"},
-                 "ids" => ["email-1", "email-2"]
-               },
-               "0"
+               [
+                 "Email/query",
+                 %{
+                   "filter" => %{"inMailbox" => "Ponies"},
+                   "ids" => ["email-1", "email-2"]
+                 },
+                 "0"
+               ]
              ]},
             {{GetAllMailboxes},
              [
-               "Mailbox/get",
-               %{
-                 "list" => [
-                   %{"id" => "Ponies", "name" => "Ponies Mailbox"},
-                   %{"id" => "Rainbows", "name" => "Rainbows Mailbox"}
-                 ],
-                 "state" => "test-state-123"
-               },
-               "0"
+               [
+                 "Mailbox/get",
+                 %{
+                   "list" => [
+                     %{"id" => "Ponies", "name" => "Ponies Mailbox"},
+                     %{"id" => "Rainbows", "name" => "Rainbows Mailbox"}
+                   ],
+                   "state" => "test-state-123"
+                 },
+                 "0"
+               ]
              ]}
           ]
         )
@@ -138,24 +142,28 @@ defmodule Fastmail.Jmap.SessionTest do
           execute: [
             {{QueryAllEmails, in_mailbox: "Ponies"},
              [
-               "Email/query",
-               %{
-                 "filter" => %{"inMailbox" => "Ponies"},
-                 "ids" => ["email-1", "email-2"]
-               },
-               "0"
+               [
+                 "Email/query",
+                 %{
+                   "filter" => %{"inMailbox" => "Ponies"},
+                   "ids" => ["email-1", "email-2"]
+                 },
+                 "0"
+               ]
              ]},
             {{GetAllMailboxes},
              [
-               "Mailbox/get",
-               %{
-                 "list" => [
-                   %{"id" => "Ponies", "name" => "Ponies Mailbox"},
-                   %{"id" => "Rainbows", "name" => "Rainbows Mailbox"}
-                 ],
-                 "state" => "test-state-123"
-               },
-               "0"
+               [
+                 "Mailbox/get",
+                 %{
+                   "list" => [
+                     %{"id" => "Ponies", "name" => "Ponies Mailbox"},
+                     %{"id" => "Rainbows", "name" => "Rainbows Mailbox"}
+                   ],
+                   "state" => "test-state-123"
+                 },
+                 "0"
+               ]
              ]}
           ]
         )
@@ -221,14 +229,16 @@ defmodule Fastmail.Jmap.SessionTest do
           execute: [
             {{GetAllMailboxes},
              [
-               "Mailbox/get",
-               %{
-                 "list" => [
-                   %{"id" => "Ponies", "name" => "Ponies"}
-                 ],
-                 "state" => "debug-state"
-               },
-               "0"
+               [
+                 "Mailbox/get",
+                 %{
+                   "list" => [
+                     %{"id" => "Ponies", "name" => "Ponies"}
+                   ],
+                   "state" => "debug-state"
+                 },
+                 "0"
+               ]
              ]}
           ]
         )

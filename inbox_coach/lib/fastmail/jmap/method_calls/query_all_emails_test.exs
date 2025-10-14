@@ -18,18 +18,20 @@ defmodule Fastmail.Jmap.MethodCalls.QueryAllEmailsTest do
           {
             {QueryAllEmails, in_mailbox: "P2F"},
             [
-              "Email/query",
-              %{
-                "accountId" => "u4d014069",
-                "canCalculateChanges" => true,
-                "collapseThreads" => false,
-                "filter" => %{"inMailbox" => "P2F"},
-                "ids" => ["Su4vMyni5WCk"],
-                "position" => 0,
-                "queryState" => "J7138:0",
-                "total" => 1
-              },
-              "query"
+              [
+                "Email/query",
+                %{
+                  "accountId" => "u4d014069",
+                  "canCalculateChanges" => true,
+                  "collapseThreads" => false,
+                  "filter" => %{"inMailbox" => "P2F"},
+                  "ids" => ["Su4vMyni5WCk"],
+                  "position" => 0,
+                  "queryState" => "J7138:0",
+                  "total" => 1
+                },
+                "query"
+              ]
             ]
           }
         ]

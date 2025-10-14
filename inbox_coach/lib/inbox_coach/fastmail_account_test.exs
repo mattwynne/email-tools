@@ -14,27 +14,33 @@ defmodule FastmailAccountTest do
           execute: [
             {{MethodCalls.GetAllMailboxes},
              [
-               "Mailbox/get",
-               %{
-                 "state" => "123",
-                 "list" => [
-                   %{"id" => "inbox-id", "name" => "Inbox"},
-                   %{"id" => "sent-id", "name" => "Sent"}
-                 ]
-               },
-               "0"
+               [
+                 "Mailbox/get",
+                 %{
+                   "state" => "123",
+                   "list" => [
+                     %{"id" => "inbox-id", "name" => "Inbox"},
+                     %{"id" => "sent-id", "name" => "Sent"}
+                   ]
+                 },
+                 "0"
+               ]
              ]},
             {{MethodCalls.QueryAllEmails, in_mailbox: "inbox-id"},
              [
-               "Email/query",
-               %{},
-               "0"
+               [
+                 "Email/query",
+                 %{},
+                 "0"
+               ]
              ]},
             {{MethodCalls.QueryAllEmails, in_mailbox: "sent-id"},
              [
-               "Email/query",
-               %{},
-               "0"
+               [
+                 "Email/query",
+                 %{},
+                 "0"
+               ]
              ]}
           ]
         )
@@ -109,63 +115,77 @@ defmodule FastmailAccountTest do
         execute: [
           {{MethodCalls.GetAllMailboxes},
            [
-             "Mailbox/get",
-             %{
-               "state" => "123",
-               "list" => [
-                 %{"id" => "inbox-id", "name" => "Inbox"},
-                 %{"id" => "sent-id", "name" => "Sent"}
-               ]
-             },
-             "0"
+             [
+               "Mailbox/get",
+               %{
+                 "state" => "123",
+                 "list" => [
+                   %{"id" => "inbox-id", "name" => "Inbox"},
+                   %{"id" => "sent-id", "name" => "Sent"}
+                 ]
+               },
+               "0"
+             ]
            ]},
           {{MethodCalls.QueryAllEmails, in_mailbox: "inbox-id"},
            [
-             "Email/query",
-             %{
-               "filter" => %{"inMailbox" => "inbox-id"},
-               "ids" => ["email-1"]
-             },
-             "0"
+             [
+               "Email/query",
+               %{
+                 "filter" => %{"inMailbox" => "inbox-id"},
+                 "ids" => ["email-1"]
+               },
+               "0"
+             ]
            ]},
           {{MethodCalls.QueryAllEmails, in_mailbox: "sent-id"},
            [
-             "Email/query",
-             %{
-               "filter" => %{"inMailbox" => "sent-id"},
-               "ids" => ["email-2"]
-             },
-             "0"
+             [
+               "Email/query",
+               %{
+                 "filter" => %{"inMailbox" => "sent-id"},
+                 "ids" => ["email-2"]
+               },
+               "0"
+             ]
            ]},
           {{MethodCalls.GetAllChanged, type: "Email", since_state: "state-1"},
            [
-             "Email/changes",
-             %{
-               "updated" => ["email-1"]
-             },
-             "0"
+             [
+               "Email/changes",
+               %{
+                 "updated" => ["email-1"]
+               },
+               "0"
+             ]
            ]},
           {{MethodCalls.GetAllChanged, type: "Mailbox", since_state: "state-1"},
            [
-             "Mailbox/changes",
-             %{},
-             "0"
+             [
+               "Mailbox/changes",
+               %{},
+               "0"
+             ]
            ]},
           {{MethodCalls.GetAllChanged, type: "Thread", since_state: "state-1"},
            [
-             "Thread/changes",
-             %{},
-             "0"
+             [
+               "Thread/changes",
+               %{},
+               "0"
+             ]
            ]},
           {{MethodCalls.GetEmailsByIds, ids: ["email-1"]},
            [
-             "Email/get",
-             %{
-               "list" => [
-                 %{"id" => "email-1", "mailboxIds" => %{"sent-id" => true}}
-               ]
-             },
-             "0"
+             [
+               "Email/get",
+               %{
+                 "list" => [
+                   %{"id" => "email-1", "mailboxIds" => %{"sent-id" => true}}
+                 ]
+               },
+               "0"
+             ]
            ]}
         ]
       )
