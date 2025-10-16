@@ -6,21 +6,22 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllMailboxes do
   end
 
   defmodule Response do
-    defstruct [:state, :mailboxes]
+    alias Fastmail.Jmap.Mailboxes
+    alias Fastmail.Jmap.Mailbox
+    defstruct [:mailboxes]
 
     def new([["Mailbox/get", body, _]]) do
       mailboxes =
         body["list"]
-        |> Enum.map(fn mailbox_data ->
-          %Fastmail.Jmap.Mailbox{
-            name: mailbox_data["name"],
-            id: mailbox_data["id"]
+        |> Enum.map(fn mailbox ->
+          %Mailbox{
+            name: mailbox["name"],
+            id: mailbox["id"]
           }
         end)
 
       %__MODULE__{
-        state: body["state"],
-        mailboxes: mailboxes
+        mailboxes: Mailboxes.new(body["state"], mailboxes)
       }
     end
 

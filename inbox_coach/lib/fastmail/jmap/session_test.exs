@@ -6,6 +6,8 @@ defmodule Fastmail.Jmap.SessionTest do
   alias Fastmail.Jmap.Requests.GetSession
   alias Fastmail.Jmap.MethodCalls.GetAllMailboxes
   alias Fastmail.Jmap.Session
+  alias Fastmail.Jmap.Mailboxes
+  alias Fastmail.Jmap.Mailbox
 
   describe "connecting" do
     @tag :online
@@ -123,11 +125,13 @@ defmodule Fastmail.Jmap.SessionTest do
         )
 
       assert %GetAllMailboxes.Response{
-               state: "test-state-123",
-               mailboxes: [
-                 %Fastmail.Jmap.Mailbox{id: "Ponies", name: "Ponies Mailbox"},
-                 %Fastmail.Jmap.Mailbox{id: "Rainbows", name: "Rainbows Mailbox"}
-               ]
+               mailboxes: %Mailboxes{
+                 state: "test-state-123",
+                 list: [
+                   %Mailbox{id: "Ponies", name: "Ponies Mailbox"},
+                   %Mailbox{id: "Rainbows", name: "Rainbows Mailbox"}
+                 ]
+               }
              } == session |> Session.execute(GetAllMailboxes)
 
       assert %QueryAllEmails.Response{
@@ -169,11 +173,13 @@ defmodule Fastmail.Jmap.SessionTest do
         )
 
       assert %GetAllMailboxes.Response{
-               state: "test-state-123",
-               mailboxes: [
-                 %Fastmail.Jmap.Mailbox{id: "Ponies", name: "Ponies Mailbox"},
-                 %Fastmail.Jmap.Mailbox{id: "Rainbows", name: "Rainbows Mailbox"}
-               ]
+               mailboxes: %Mailboxes{
+                 state: "test-state-123",
+                 list: [
+                   %Mailbox{id: "Ponies", name: "Ponies Mailbox"},
+                   %Mailbox{id: "Rainbows", name: "Rainbows Mailbox"}
+                 ]
+               }
              } ==
                session |> Session.execute(GetAllMailboxes)
 
@@ -210,12 +216,14 @@ defmodule Fastmail.Jmap.SessionTest do
       session = Session.new(credentials)
 
       assert %GetAllMailboxes.Response{
-               state: state,
-               mailboxes: [
-                 %Fastmail.Jmap.Mailbox{name: "Inbox"},
-                 %Fastmail.Jmap.Mailbox{name: "Archive"}
-                 | _
-               ]
+               mailboxes: %Mailboxes{
+                 state: state,
+                 list: [
+                   %Mailbox{name: "Inbox"},
+                   %Mailbox{name: "Archive"}
+                   | _
+                 ]
+               }
              } = session |> Session.execute(GetAllMailboxes)
 
       assert is_binary(state)

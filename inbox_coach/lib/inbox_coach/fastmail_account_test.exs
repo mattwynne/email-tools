@@ -62,7 +62,6 @@ defmodule FastmailAccountTest do
     events_stub = fn ->
       send(test, {:ready, self()})
 
-      # TODO: loop for more than one event
       receive do
         {:event, event} -> event
       end
