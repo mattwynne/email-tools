@@ -83,6 +83,43 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
         updated: Threads.new(state, updated)
       }
     end
+
+    def apply_to(%__MODULE__{type: :email, updated: emails}, account_state) do
+      Enum.reduce(emails, account_state, fn email, acc_state ->
+        old_mailbox_ids = InboxCoach.State.mailbox_ids_for(acc_state, email.id)
+        new_mailbox_ids = email.mailbox_ids
+
+        removed = MapSet.difference(MapSet.new(old_mailbox_ids), MapSet.new(new_mailbox_ids)) |> MapSet.to_list()
+        added = MapSet.difference(MapSet.new(new_mailbox_ids), MapSet.new(old_mailbox_ids)) |> MapSet.to_list()
+
+        # Remove email from old mailboxes
+        acc_state =
+          Enum.reduce(removed, acc_state, fn mailbox_id, state ->
+            InboxCoach.State.remove_from_mailbox(state, mailbox_id, email.id)
+          end)
+
+        # Add email to new mailboxes
+        Enum.reduce(added, acc_state, fn mailbox_id, state ->
+          InboxCoach.State.add_to_mailbox(state, mailbox_id, email.id)
+        end)
+      end)
+    end
+
+    def apply_to(%__MODULE__{type: :mailbox, updated: mailboxes}, account_state) do
+      # Update mailboxes state
+      Map.put(account_state, :mailboxes, %{
+        "state" => mailboxes.state,
+        "list" =>
+          Enum.map(mailboxes, fn mailbox ->
+            %{"id" => mailbox.id, "name" => mailbox.name}
+          end)
+      })
+    end
+
+    def apply_to(%__MODULE__{type: :thread}, account_state) do
+      # Thread changes don't affect the account state for now
+      account_state
+    end
   end
 
   def new(%Params{} = %{account_id: account_id, type: type, since_state: since_state}) do

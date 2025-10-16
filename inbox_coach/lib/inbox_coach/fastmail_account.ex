@@ -3,7 +3,6 @@ defmodule InboxCoach.FastmailAccount do
   alias Fastmail.Jmap.Session
   alias Fastmail.Jmap.MethodCalls.GetAllChanged
   alias Fastmail.Jmap.MethodCalls.GetAllMailboxes
-  alias InboxCoach.Email
   alias InboxCoach.State
   alias InboxCoach.FastmailEvents
   use GenServer
@@ -106,69 +105,14 @@ defmodule InboxCoach.FastmailAccount do
     |> noreply()
   end
 
-  def handle_info(["Email/changes", result, _], state) do
-    ids = result["updated"]
-
-    execute(
-      state,
-      Fastmail.Jmap.MethodCalls.GetEmailsByIds,
-      ids: ids
+  def handle_info(response = %GetAllChanged.Response{}, state) do
+    state
+    |> Map.put(
+      :account_state,
+      GetAllChanged.Response.apply_to(response, state.account_state)
     )
-
-    {:noreply, state}
-  end
-
-  def handle_info(["Email/get", result, _], state) do
-    emails = result["list"]
-
-    state =
-      Enum.reduce(emails, state, fn email, state ->
-        {added, removed} = state.account_state |> State.changes(email)
-
-        Enum.each(added, fn mailbox_id ->
-          [
-            :email_added,
-            System.os_time(:millisecond),
-            Email.subject(email),
-            State.mailbox(state.account_state, mailbox_id).name
-          ]
-        end)
-
-        Enum.each(removed, fn _mailbox_id ->
-          # TODO: how do we broadcast this?
-          nil
-          # dbg([
-          #   :email_removed,
-          #   System.os_time(:millisecond),
-          #   Email.subject(email),
-          #   Mailbox.name(State.mailbox(state, mailbox_id))
-          # ])
-        end)
-
-        account_state =
-          Enum.reduce(
-            removed,
-            state.account_state,
-            fn mailbox_id, account_state ->
-              account_state |> State.remove_from_mailbox(mailbox_id, email |> Email.id())
-            end
-          )
-
-        account_state =
-          Enum.reduce(
-            added,
-            account_state,
-            fn mailbox_id, account_state ->
-              account_state |> State.add_to_mailbox(mailbox_id, email |> Email.id())
-            end
-          )
-
-        Map.put(state, :account_state, account_state)
-      end)
-
-    emit(state)
-
-    {:noreply, state}
+    |> emit()
+    |> noreply()
   end
 
   def handle_info(msg, state) do
@@ -220,10 +164,6 @@ defmodule InboxCoach.FastmailAccount do
   def execute(%{session: session}, method_calls_mod, params \\ []) do
     case session
          |> Session.execute(method_calls_mod, params) do
-      [_] = responses ->
-        responses
-        |> Enum.each(fn response -> send(self(), response) end)
-
       %GetAllMailboxes.Response{} = response ->
         send(self(), response)
 
