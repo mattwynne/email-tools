@@ -229,6 +229,12 @@ defmodule InboxCoach.FastmailAccount do
 
       %QueryAllEmails.Response{} = response ->
         send(self(), response)
+
+      %GetAllChanged.Response{} = response ->
+        send(self(), response)
+
+      response ->
+        raise "Unable to handle response #{inspect(response)} from #{method_calls_mod} with #{inspect(params)}"
     end
   end
 end

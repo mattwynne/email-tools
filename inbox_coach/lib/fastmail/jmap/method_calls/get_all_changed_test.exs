@@ -1,106 +1,507 @@
 defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
+  alias Fastmail.Jmap.Threads
+  alias Fastmail.Jmap.Thread
+  alias Fastmail.Jmap.Mailboxes
+  alias Fastmail.Jmap.Mailbox
+  alias Fastmail.Jmap.MethodCalls.GetAllChanged.Contact
+  alias Fastmail.Jmap.MethodCalls.GetAllChanged.Email
   alias Fastmail.Jmap.MethodCalls.GetAllChanged
   alias Fastmail.Jmap.Credentials
   alias Fastmail.Jmap.Session
   use ExUnit.Case, async: false
 
   @tag :online
-  test "fetches latest email changes (with no since_state)" do
+  test "fetches latest email changes" do
     Credentials.from_environment("TEST_FASTMAIL_API_TOKEN")
     |> Session.new()
     |> Session.execute(GetAllChanged, type: "Email", since_state: "J7100")
     |> dbg()
   end
 
+  @tag :online
+  test "fetches latest mailbox changes" do
+    Credentials.from_environment("TEST_FASTMAIL_API_TOKEN")
+    |> Session.new()
+    |> Session.execute(GetAllChanged, type: "Mailbox", since_state: "J7100")
+    |> dbg()
+  end
+
+  @tag :online
+  test "fetches latest thread changes" do
+    Credentials.from_environment("TEST_FASTMAIL_API_TOKEN")
+    |> Session.new()
+    |> Session.execute(GetAllChanged, type: "Thread", since_state: "J7100")
+    |> dbg()
+  end
+
   test "models the response when an email was updated" do
-    Session.null(
-      execute: [
-        {{GetAllChanged, type: "Email", since_state: "J7100"},
-         [
+    response =
+      Session.null(
+        execute: [
+          {{GetAllChanged, type: "Email", since_state: "J7100"},
            [
-             "Email/changes",
-             %{
-               "accountId" => "u4d014069",
-               "created" => [],
-               "destroyed" => [],
-               "hasMoreChanges" => false,
-               "newState" => "J7138",
-               "oldState" => "J7100",
-               "updated" => ["Su4vMyni5WCk"]
-             },
-             "changes"
-           ],
-           [
-             "Email/get",
-             %{
-               "accountId" => "u4d014069",
-               "list" => [
-                 %{
-                   "attachments" => [],
-                   "bcc" => nil,
-                   "blobId" => "G1ba9881e530e3410968a1a9be7332ff7092b02b3",
-                   "bodyValues" => %{},
-                   "cc" => nil,
-                   "from" => [%{"email" => "someone@example.com", "name" => nil}],
-                   "hasAttachment" => false,
-                   "htmlBody" => [
-                     %{
-                       "blobId" => "Gda39a3ee5e6b4b0d3255bfef95601890afd80709",
-                       "charset" => "us-ascii",
-                       "cid" => nil,
-                       "disposition" => nil,
-                       "language" => nil,
-                       "location" => nil,
-                       "name" => nil,
-                       "partId" => "1",
-                       "size" => 0,
-                       "type" => "text/plain"
+             [
+               "Email/changes",
+               %{
+                 "accountId" => "u4d014069",
+                 "created" => [],
+                 "destroyed" => [],
+                 "hasMoreChanges" => false,
+                 "newState" => "J7138",
+                 "oldState" => "J7100",
+                 "updated" => ["Su4vMyni5WCk"]
+               },
+               "changes"
+             ],
+             [
+               "Email/get",
+               %{
+                 "accountId" => "u4d014069",
+                 "list" => [
+                   %{
+                     "attachments" => [],
+                     "bcc" => nil,
+                     "blobId" => "G1ba9881e530e3410968a1a9be7332ff7092b02b3",
+                     "bodyValues" => %{},
+                     "cc" => nil,
+                     "from" => [%{"email" => "someone@example.com", "name" => nil}],
+                     "hasAttachment" => false,
+                     "htmlBody" => [
+                       %{
+                         "blobId" => "Gda39a3ee5e6b4b0d3255bfef95601890afd80709",
+                         "charset" => "us-ascii",
+                         "cid" => nil,
+                         "disposition" => nil,
+                         "language" => nil,
+                         "location" => nil,
+                         "name" => nil,
+                         "partId" => "1",
+                         "size" => 0,
+                         "type" => "text/plain"
+                       }
+                     ],
+                     "id" => "Su4vMyni5WCk",
+                     "inReplyTo" => nil,
+                     "keywords" => %{"$seen" => true, "$x-me-annot-2" => true},
+                     "mailboxIds" => %{"P2F" => true},
+                     "messageId" => ["99b181e7-9ee6-1a24-5cc8-4b4bf5e4d6a0@example.com"],
+                     "preview" => "",
+                     "receivedAt" => "2023-12-16T00:22:15Z",
+                     "references" => nil,
+                     "replyTo" => nil,
+                     "sender" => nil,
+                     "sentAt" => "2023-12-16T00:22:13Z",
+                     "size" => 9075,
+                     "subject" => "A subject",
+                     "textBody" => [
+                       %{
+                         "blobId" => "Gda39a3ee5e6b4b0d3255bfef95601890afd80709",
+                         "charset" => "us-ascii",
+                         "cid" => nil,
+                         "disposition" => nil,
+                         "language" => nil,
+                         "location" => nil,
+                         "name" => nil,
+                         "partId" => "1",
+                         "size" => 0,
+                         "type" => "text/plain"
+                       }
+                     ],
+                     "threadId" => "AX_dGzpWbEk7",
+                     "to" => [%{"email" => "test@levain.codes", "name" => nil}]
+                   }
+                 ],
+                 "notFound" => [],
+                 "state" => "J7138"
+               },
+               "updated"
+             ]
+           ]}
+        ]
+      )
+      |> Session.execute(GetAllChanged, type: "Email", since_state: "J7100")
+
+    assert response ==
+             %GetAllChanged.Response{
+               type: :email,
+               updated: [
+                 %Email{
+                   id: "Su4vMyni5WCk",
+                   thread_id: "AX_dGzpWbEk7",
+                   from: [
+                     %Contact{
+                       email: "someone@example.com"
                      }
                    ],
-                   "id" => "Su4vMyni5WCk",
-                   "inReplyTo" => nil,
-                   "keywords" => %{"$seen" => true, "$x-me-annot-2" => true},
-                   "mailboxIds" => %{"P2F" => true},
-                   "messageId" => ["99b181e7-9ee6-1a24-5cc8-4b4bf5e4d6a0@example.com"],
-                   "preview" => "",
-                   "receivedAt" => "2023-12-16T00:22:15Z",
-                   "references" => nil,
-                   "replyTo" => nil,
-                   "sender" => nil,
-                   "sentAt" => "2023-12-16T00:22:13Z",
-                   "size" => 9075,
-                   "subject" => "A subject",
-                   "textBody" => [
-                     %{
-                       "blobId" => "Gda39a3ee5e6b4b0d3255bfef95601890afd80709",
-                       "charset" => "us-ascii",
-                       "cid" => nil,
-                       "disposition" => nil,
-                       "language" => nil,
-                       "location" => nil,
-                       "name" => nil,
-                       "partId" => "1",
-                       "size" => 0,
-                       "type" => "text/plain"
-                     }
-                   ],
-                   "threadId" => "AX_dGzpWbEk7",
-                   "to" => [%{"email" => "test@levain.codes", "name" => nil}]
+                   mailbox_ids: ["P2F"]
                  }
-               ],
-               "notFound" => [],
-               "state" => "J7138"
-             },
-             "get"
-           ]
-         ]}
-      ]
-    )
-    |> Session.execute(GetAllChanged, type: "Email", since_state: "J7100")
+               ]
+             }
+  end
 
-    # TODO: make this method call composable - break out each of the others into their own method call, and test them independently, with their own responses.
-    # then, this one can have properties for each response and simply include it.
+  test "handles the response when a mailbox is updated" do
+    response =
+      Session.null(
+        execute: [
+          {{GetAllChanged, type: "Mailbox", since_state: "J7100"},
+           [
+             [
+               "Mailbox/changes",
+               %{
+                 "accountId" => "u4d014069",
+                 "created" => [],
+                 "destroyed" => [],
+                 "didFoldersSync" => 1,
+                 "hasMoreChanges" => false,
+                 "newState" => "J7138",
+                 "oldState" => "J7100",
+                 "updated" => ["P1k", "P2-", "P2V", "P2k", "P3-", "P3F", "P2F", "P-F"],
+                 "updatedProperties" => nil
+               },
+               "changes"
+             ],
+             [
+               "Mailbox/get",
+               %{
+                 "accountId" => "u4d014069",
+                 "list" => [
+                   %{
+                     "autoLearn" => false,
+                     "autoPurge" => false,
+                     "hidden" => 0,
+                     "id" => "P-F",
+                     "identityRef" => nil,
+                     "isCollapsed" => false,
+                     "isSubscribed" => true,
+                     "learnAsSpam" => false,
+                     "myRights" => %{
+                       "mayAddItems" => true,
+                       "mayAdmin" => true,
+                       "mayCreateChild" => true,
+                       "mayDelete" => false,
+                       "mayReadItems" => true,
+                       "mayRemoveItems" => true,
+                       "mayRename" => false,
+                       "maySetKeywords" => true,
+                       "maySetSeen" => true,
+                       "maySubmit" => true
+                     },
+                     "name" => "Inbox",
+                     "parentId" => nil,
+                     "purgeOlderThanDays" => 31,
+                     "role" => "inbox",
+                     "sort" => [%{"isAscending" => false, "property" => "receivedAt"}],
+                     "sortOrder" => 1,
+                     "suppressDuplicates" => true,
+                     "totalEmails" => 0,
+                     "totalThreads" => 0,
+                     "unreadEmails" => 0,
+                     "unreadThreads" => 0
+                   },
+                   %{
+                     "autoLearn" => false,
+                     "autoPurge" => false,
+                     "hidden" => 0,
+                     "id" => "P1k",
+                     "identityRef" => nil,
+                     "isCollapsed" => false,
+                     "isSubscribed" => true,
+                     "learnAsSpam" => false,
+                     "myRights" => %{
+                       "mayAddItems" => true,
+                       "mayAdmin" => true,
+                       "mayCreateChild" => true,
+                       "mayDelete" => true,
+                       "mayReadItems" => true,
+                       "mayRemoveItems" => true,
+                       "mayRename" => true,
+                       "maySetKeywords" => true,
+                       "maySetSeen" => true,
+                       "maySubmit" => true
+                     },
+                     "name" => "Archive",
+                     "parentId" => nil,
+                     "purgeOlderThanDays" => 31,
+                     "role" => "archive",
+                     "sort" => [%{"isAscending" => false, "property" => "receivedAt"}],
+                     "sortOrder" => 3,
+                     "suppressDuplicates" => true,
+                     "totalEmails" => 0,
+                     "totalThreads" => 0,
+                     "unreadEmails" => 0,
+                     "unreadThreads" => 0
+                   },
+                   %{
+                     "autoLearn" => false,
+                     "autoPurge" => false,
+                     "hidden" => 0,
+                     "id" => "P2-",
+                     "identityRef" => nil,
+                     "isCollapsed" => false,
+                     "isSubscribed" => true,
+                     "learnAsSpam" => false,
+                     "myRights" => %{
+                       "mayAddItems" => true,
+                       "mayAdmin" => true,
+                       "mayCreateChild" => true,
+                       "mayDelete" => true,
+                       "mayReadItems" => true,
+                       "mayRemoveItems" => true,
+                       "mayRename" => true,
+                       "maySetKeywords" => true,
+                       "maySetSeen" => true,
+                       "maySubmit" => true
+                     },
+                     "name" => "Drafts",
+                     "parentId" => nil,
+                     "purgeOlderThanDays" => 31,
+                     "role" => "drafts",
+                     "sort" => [%{"isAscending" => false, "property" => "receivedAt"}],
+                     "sortOrder" => 4,
+                     "suppressDuplicates" => true,
+                     "totalEmails" => 0,
+                     "totalThreads" => 0,
+                     "unreadEmails" => 0,
+                     "unreadThreads" => 0
+                   },
+                   %{
+                     "autoLearn" => false,
+                     "autoPurge" => false,
+                     "hidden" => 0,
+                     "id" => "P2F",
+                     "identityRef" => nil,
+                     "isCollapsed" => false,
+                     "isSubscribed" => true,
+                     "learnAsSpam" => false,
+                     "myRights" => %{
+                       "mayAddItems" => true,
+                       "mayAdmin" => true,
+                       "mayCreateChild" => true,
+                       "mayDelete" => true,
+                       "mayReadItems" => true,
+                       "mayRemoveItems" => true,
+                       "mayRename" => true,
+                       "maySetKeywords" => true,
+                       "maySetSeen" => true,
+                       "maySubmit" => true
+                     },
+                     "name" => "TestFolder",
+                     "parentId" => "P-F",
+                     "purgeOlderThanDays" => 31,
+                     "role" => nil,
+                     "sort" => [%{"isAscending" => false, "property" => "receivedAt"}],
+                     "sortOrder" => 10,
+                     "suppressDuplicates" => true,
+                     "totalEmails" => 1,
+                     "totalThreads" => 1,
+                     "unreadEmails" => 0,
+                     "unreadThreads" => 0
+                   },
+                   %{
+                     "autoLearn" => false,
+                     "autoPurge" => false,
+                     "hidden" => 0,
+                     "id" => "P2V",
+                     "identityRef" => nil,
+                     "isCollapsed" => false,
+                     "isSubscribed" => true,
+                     "learnAsSpam" => false,
+                     "myRights" => %{
+                       "mayAddItems" => true,
+                       "mayAdmin" => true,
+                       "mayCreateChild" => true,
+                       "mayDelete" => true,
+                       "mayReadItems" => true,
+                       "mayRemoveItems" => true,
+                       "mayRename" => true,
+                       "maySetKeywords" => true,
+                       "maySetSeen" => true,
+                       "maySubmit" => true
+                     },
+                     "name" => "TestFolderTwo",
+                     "parentId" => "P-F",
+                     "purgeOlderThanDays" => 31,
+                     "role" => nil,
+                     "sort" => [%{"isAscending" => false, "property" => "receivedAt"}],
+                     "sortOrder" => 10,
+                     "suppressDuplicates" => true,
+                     "totalEmails" => 0,
+                     "totalThreads" => 0,
+                     "unreadEmails" => 0,
+                     "unreadThreads" => 0
+                   },
+                   %{
+                     "autoLearn" => false,
+                     "autoPurge" => false,
+                     "hidden" => 0,
+                     "id" => "P2k",
+                     "identityRef" => nil,
+                     "isCollapsed" => false,
+                     "isSubscribed" => true,
+                     "learnAsSpam" => false,
+                     "myRights" => %{
+                       "mayAddItems" => true,
+                       "mayAdmin" => true,
+                       "mayCreateChild" => true,
+                       "mayDelete" => true,
+                       "mayReadItems" => true,
+                       "mayRemoveItems" => true,
+                       "mayRename" => true,
+                       "maySetKeywords" => true,
+                       "maySetSeen" => true,
+                       "maySubmit" => true
+                     },
+                     "name" => "Sent",
+                     "parentId" => nil,
+                     "purgeOlderThanDays" => 31,
+                     "role" => "sent",
+                     "sort" => [%{"isAscending" => false, "property" => "receivedAt"}],
+                     "sortOrder" => 5,
+                     "suppressDuplicates" => true,
+                     "totalEmails" => 0,
+                     "totalThreads" => 0,
+                     "unreadEmails" => 0,
+                     "unreadThreads" => 0
+                   },
+                   %{
+                     "autoLearn" => false,
+                     "autoPurge" => true,
+                     "hidden" => 0,
+                     "id" => "P3-",
+                     "identityRef" => nil,
+                     "isCollapsed" => false,
+                     "isSubscribed" => true,
+                     "learnAsSpam" => false,
+                     "myRights" => %{
+                       "mayAddItems" => true,
+                       "mayAdmin" => true,
+                       "mayCreateChild" => true,
+                       "mayDelete" => true,
+                       "mayReadItems" => true,
+                       "mayRemoveItems" => true,
+                       "mayRename" => true,
+                       "maySetKeywords" => true,
+                       "maySetSeen" => true,
+                       "maySubmit" => true
+                     },
+                     "name" => "Spam",
+                     "parentId" => nil,
+                     "purgeOlderThanDays" => 31,
+                     "role" => "junk",
+                     "sort" => [%{"isAscending" => false, "property" => "receivedAt"}],
+                     "sortOrder" => 6,
+                     "suppressDuplicates" => true,
+                     "totalEmails" => 0,
+                     "totalThreads" => 0,
+                     "unreadEmails" => 0,
+                     "unreadThreads" => 0
+                   },
+                   %{
+                     "autoLearn" => false,
+                     "autoPurge" => true,
+                     "hidden" => 0,
+                     "id" => "P3F",
+                     "identityRef" => nil,
+                     "isCollapsed" => false,
+                     "isSubscribed" => true,
+                     "learnAsSpam" => false,
+                     "myRights" => %{
+                       "mayAddItems" => true,
+                       "mayAdmin" => true,
+                       "mayCreateChild" => true,
+                       "mayDelete" => true,
+                       "mayReadItems" => true,
+                       "mayRemoveItems" => true,
+                       "mayRename" => true,
+                       "maySetKeywords" => true,
+                       "maySetSeen" => true,
+                       "maySubmit" => true
+                     },
+                     "name" => "Trash",
+                     "parentId" => nil,
+                     "purgeOlderThanDays" => 31,
+                     "role" => "trash",
+                     "sort" => [%{"isAscending" => false, "property" => "receivedAt"}],
+                     "sortOrder" => 7,
+                     "suppressDuplicates" => true,
+                     "totalEmails" => 0,
+                     "totalThreads" => 0,
+                     "unreadEmails" => 0,
+                     "unreadThreads" => 0
+                   }
+                 ],
+                 "notFound" => [],
+                 "state" => "J7138"
+               },
+               "updated"
+             ]
+           ]}
+        ]
+      )
+      |> Session.execute(GetAllChanged, type: "Mailbox", since_state: "J7100")
 
-    # TODO: assertion goes here
+    assert response ==
+             %GetAllChanged.Response{
+               type: :mailbox,
+               updated: %Mailboxes{
+                 state: "J7138",
+                 list: [
+                   %Mailbox{name: "Inbox", id: "P-F"},
+                   %Mailbox{name: "Archive", id: "P1k"},
+                   %Mailbox{name: "Drafts", id: "P2-"},
+                   %Mailbox{name: "TestFolder", id: "P2F"},
+                   %Mailbox{name: "TestFolderTwo", id: "P2V"},
+                   %Mailbox{name: "Sent", id: "P2k"},
+                   %Mailbox{name: "Spam", id: "P3-"},
+                   %Mailbox{name: "Trash", id: "P3F"}
+                 ]
+               }
+             }
+  end
+
+  test "handles the response when threads are updated" do
+    response =
+      Session.null(
+        execute: [
+          {{GetAllChanged, type: "Thread", since_state: "J7100"},
+           [
+             [
+               "Thread/changes",
+               %{
+                 "accountId" => "u4d014069",
+                 "created" => [],
+                 "destroyed" => [],
+                 "hasMoreChanges" => false,
+                 "newState" => "J7138",
+                 "oldState" => "J7100",
+                 "updated" => ["AX_dGzpWbEk7"]
+               },
+               "changes"
+             ],
+             [
+               "Thread/get",
+               %{
+                 "accountId" => "u4d014069",
+                 "list" => [%{"emailIds" => ["Su4vMyni5WCk"], "id" => "AX_dGzpWbEk7"}],
+                 "notFound" => [],
+                 "state" => "J7138"
+               },
+               "updated"
+             ]
+           ]}
+        ]
+      )
+      |> Session.execute(GetAllChanged, type: "Thread", since_state: "J7100")
+
+    assert response ==
+             %GetAllChanged.Response{
+               type: :thread,
+               updated: %Threads{
+                 state: "J7138",
+                 list: [
+                   %Thread{id: "AX_dGzpWbEk7", email_ids: ["Su4vMyni5WCk"]}
+                 ]
+               }
+             }
   end
 end

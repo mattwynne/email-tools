@@ -157,6 +157,19 @@ defmodule FastmailAccountTest do
                  "updated" => ["email-1"]
                },
                "0"
+             ],
+             [
+               "Email/get",
+               %{
+                 "list" => [
+                   %{
+                     "id" => "email-1",
+                     "from" => [%{"email" => "me@example.com"}],
+                     "mailboxIds" => %{"sent-id" => true}
+                   }
+                 ]
+               },
+               "updated"
              ]
            ]},
           {{MethodCalls.GetAllChanged, type: "Mailbox", since_state: "state-1"},
@@ -165,6 +178,14 @@ defmodule FastmailAccountTest do
                "Mailbox/changes",
                %{},
                "0"
+             ],
+             [
+               "Mailbox/get",
+               %{
+                 "state" => "123",
+                 "list" => []
+               },
+               "updated"
              ]
            ]},
           {{MethodCalls.GetAllChanged, type: "Thread", since_state: "state-1"},
@@ -173,6 +194,14 @@ defmodule FastmailAccountTest do
                "Thread/changes",
                %{},
                "0"
+             ],
+             [
+               "Thread/get",
+               %{
+                 "state" => "state-1",
+                 "list" => []
+               },
+               "updated"
              ]
            ]},
           {{MethodCalls.GetEmailsByIds, ids: ["email-1"]},
