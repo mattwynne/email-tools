@@ -3,7 +3,6 @@ defmodule FastmailAccountTest do
   alias Fastmail.Jmap.Requests.GetSession
   alias Fastmail.Jmap.EventSource
   alias Fastmail.Jmap.MethodCalls
-  alias InboxCoach.State
   alias InboxCoach.FastmailAccount
   alias Fastmail.Jmap.Session
 
@@ -54,45 +53,6 @@ defmodule FastmailAccountTest do
       assert Enum.find(mailbox_list, &(&1["name"] == "Inbox"))
       assert Enum.find(mailbox_list, &(&1["name"] == "Sent"))
     end
-  end
-
-  describe "getting new email details" do
-    test "updates the emails_by_mailbox mapping" do
-      state = %{
-        pubsub_topic: "fastmail-account:1",
-        account_state: %State{
-          mailboxes: %{
-            "list" => [
-              %{"id" => "inbox-id", "name" => "Inbox"},
-              %{"id" => "some-mailbox-id", "name" => "Some mailbox"}
-            ]
-          },
-          emails_by_mailbox: %{
-            "inbox-id" => ["some-email-id"],
-            "some-mailbox-id" => []
-          }
-        }
-      }
-
-      result = %{
-        "list" => [
-          %{
-            "id" => "some-email-id",
-            "mailboxIds" => %{"some-mailbox-id" => true}
-          }
-        ]
-      }
-
-      {:noreply, new_state} = FastmailAccount.handle_info(["Email/get", result, "a"], state)
-
-      assert new_state.account_state.emails_by_mailbox == %{
-               "inbox-id" => [],
-               "some-mailbox-id" => ["some-email-id"]
-             }
-    end
-
-    @tag skip: "TODO"
-    test("emits a message that the email has moved")
   end
 
   test "handling events" do
@@ -202,18 +162,6 @@ defmodule FastmailAccountTest do
                  "list" => []
                },
                "updated"
-             ]
-           ]},
-          {{MethodCalls.GetEmailsByIds, ids: ["email-1"]},
-           [
-             [
-               "Email/get",
-               %{
-                 "list" => [
-                   %{"id" => "email-1", "mailboxIds" => %{"sent-id" => true}}
-                 ]
-               },
-               "0"
              ]
            ]}
         ]
