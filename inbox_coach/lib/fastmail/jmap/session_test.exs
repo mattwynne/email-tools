@@ -6,7 +6,7 @@ defmodule Fastmail.Jmap.SessionTest do
   alias Fastmail.Jmap.Requests.GetSession
   alias Fastmail.Jmap.MethodCalls.GetAllMailboxes
   alias Fastmail.Jmap.Session
-  alias Fastmail.Jmap.Mailboxes
+  alias Fastmail.Jmap.Collection
   alias Fastmail.Jmap.Mailbox
 
   describe "connecting" do
@@ -125,7 +125,7 @@ defmodule Fastmail.Jmap.SessionTest do
         )
 
       assert %GetAllMailboxes.Response{
-               mailboxes: %Mailboxes{
+               mailboxes: %Collection{
                  state: "test-state-123",
                  list: [
                    %Mailbox{id: "Ponies", name: "Ponies Mailbox"},
@@ -173,7 +173,7 @@ defmodule Fastmail.Jmap.SessionTest do
         )
 
       assert %GetAllMailboxes.Response{
-               mailboxes: %Mailboxes{
+               mailboxes: %Collection{
                  state: "test-state-123",
                  list: [
                    %Mailbox{id: "Ponies", name: "Ponies Mailbox"},
@@ -216,7 +216,7 @@ defmodule Fastmail.Jmap.SessionTest do
       session = Session.new(credentials)
 
       assert %GetAllMailboxes.Response{
-               mailboxes: %Mailboxes{
+               mailboxes: %Collection{
                  state: state,
                  list: [
                    %Mailbox{name: "Inbox"},

@@ -1,5 +1,5 @@
 defmodule Fastmail.Jmap.MethodCalls.GetAllMailboxesTest do
-  alias Fastmail.Jmap.Mailboxes
+  alias Fastmail.Jmap.Collection
   alias Fastmail.Jmap.Mailbox
   alias Fastmail.Jmap.MethodCalls.GetAllMailboxes
   alias Fastmail.Jmap.Session
@@ -294,7 +294,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllMailboxesTest do
     response = Session.execute(session, GetAllMailboxes)
 
     assert ^response = %GetAllMailboxes.Response{
-             mailboxes: %Mailboxes{
+             mailboxes: %Collection{
                state: "J7138",
                list: [
                  %Mailbox{name: "Inbox", id: "P-F"},

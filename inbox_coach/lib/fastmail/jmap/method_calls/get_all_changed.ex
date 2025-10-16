@@ -12,9 +12,8 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
   end
 
   defmodule Response do
-    alias Fastmail.Jmap.Mailboxes
+    alias Fastmail.Jmap.Collection
     alias Fastmail.Jmap.Mailbox
-    alias Fastmail.Jmap.Threads
     alias Fastmail.Jmap.Thread
     defstruct [:type, :updated]
 
@@ -62,7 +61,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
 
       %__MODULE__{
         type: :mailbox,
-        updated: Mailboxes.new(state, updated)
+        updated: Collection.new(state, updated)
       }
     end
 
@@ -80,7 +79,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
 
       %__MODULE__{
         type: :thread,
-        updated: Threads.new(state, updated)
+        updated: Collection.new(state, updated)
       }
     end
 

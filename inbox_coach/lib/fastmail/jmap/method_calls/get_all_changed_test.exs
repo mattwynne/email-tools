@@ -1,7 +1,6 @@
 defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
-  alias Fastmail.Jmap.Threads
+  alias Fastmail.Jmap.Collection
   alias Fastmail.Jmap.Thread
-  alias Fastmail.Jmap.Mailboxes
   alias Fastmail.Jmap.Mailbox
   alias Fastmail.Jmap.MethodCalls.GetAllChanged.Contact
   alias Fastmail.Jmap.MethodCalls.GetAllChanged.Email
@@ -443,7 +442,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
     assert response ==
              %GetAllChanged.Response{
                type: :mailbox,
-               updated: %Mailboxes{
+               updated: %Collection{
                  state: "J7138",
                  list: [
                    %Mailbox{name: "Inbox", id: "P-F"},
@@ -496,7 +495,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
     assert response ==
              %GetAllChanged.Response{
                type: :thread,
-               updated: %Threads{
+               updated: %Collection{
                  state: "J7138",
                  list: [
                    %Thread{id: "AX_dGzpWbEk7", email_ids: ["Su4vMyni5WCk"]}
