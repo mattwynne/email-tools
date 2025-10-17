@@ -1,12 +1,13 @@
 defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
+  alias Fastmail.Jmap.Email
+  alias Fastmail.Jmap.Contact
   alias Fastmail.Jmap.Collection
   alias Fastmail.Jmap.Thread
   alias Fastmail.Jmap.Mailbox
-  alias Fastmail.Jmap.MethodCalls.GetAllChanged.Contact
-  alias Fastmail.Jmap.MethodCalls.GetAllChanged.Email
   alias Fastmail.Jmap.MethodCalls.GetAllChanged
   alias Fastmail.Jmap.Credentials
   alias Fastmail.Jmap.Session
+
   use ExUnit.Case, async: false
 
   @tag :online

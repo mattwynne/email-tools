@@ -3,18 +3,13 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
     defstruct [:account_id, :type, :since_state]
   end
 
-  defmodule Email do
-    defstruct [:id, :from, :mailbox_ids, :thread_id]
-  end
-
-  defmodule Contact do
-    defstruct [:email, :name]
-  end
-
   defmodule Response do
+    alias Fastmail.Jmap.Email
+    alias Fastmail.Jmap.Contact
     alias Fastmail.Jmap.Collection
     alias Fastmail.Jmap.Mailbox
     alias Fastmail.Jmap.Thread
+
     defstruct [:type, :old_state, :updated]
 
     def new([
