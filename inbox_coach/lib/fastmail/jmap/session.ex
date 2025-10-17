@@ -113,6 +113,7 @@ defmodule Fastmail.Jmap.Session do
 
   defp handle_response(response, method_calls_mod) do
     response_mod = Module.concat(method_calls_mod, Response)
+    Code.ensure_loaded(response_mod)
 
     if function_exported?(response_mod, :new, 1) do
       response_mod.new(response)
