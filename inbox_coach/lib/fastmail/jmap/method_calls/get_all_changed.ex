@@ -15,40 +15,41 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
     alias Fastmail.Jmap.Collection
     alias Fastmail.Jmap.Mailbox
     alias Fastmail.Jmap.Thread
-    defstruct [:type, :updated]
+    defstruct [:type, :old_state, :updated]
 
     def new([
-          ["Email/changes", _, _],
-          ["Email/get", %{"list" => emails}, "updated"]
+          ["Email/changes", %{"oldState" => old_state}, _],
+          ["Email/get", %{"state" => state, "list" => emails}, "updated"]
         ]) do
+      updated =
+        Enum.map(emails, fn email ->
+          %Email{
+            id: email["id"],
+            thread_id: email["threadId"],
+            mailbox_ids:
+              email["mailboxIds"]
+              |> Enum.filter(fn {_, yeah?} -> yeah? end)
+              |> Enum.map(fn {id, _} -> id end),
+            from:
+              email["from"]
+              |> Enum.map(fn sender ->
+                %Contact{
+                  email: sender["email"],
+                  name: sender["name"]
+                }
+              end)
+          }
+        end)
+
       %__MODULE__{
         type: :email,
-        updated:
-          Enum.map(emails, fn email ->
-            %Email{
-              id: email["id"],
-              thread_id: email["threadId"],
-              mailbox_ids:
-                email["mailboxIds"]
-                |> Enum.filter(fn {_, yeah?} -> yeah? end)
-                |> Enum.map(fn {id, _} -> id end),
-              from:
-                email["from"]
-                |> Enum.map(fn sender ->
-                  %Contact{
-                    email: sender["email"],
-                    name: sender["name"]
-                  }
-                end)
-            }
-          end)
+        old_state: old_state,
+        updated: Collection.new(state, updated)
       }
     end
 
-    # [["Mailbox/changes", %{}, "0"],
-    # ["Mailbox/get", %{"list" => []}, "updated"]]
     def new([
-          ["Mailbox/changes", _, _],
+          ["Mailbox/changes", %{"oldState" => old_state, "newState" => _new_state}, _],
           ["Mailbox/get", %{"state" => state, "list" => updated}, "updated"]
         ]) do
       updated =
@@ -61,12 +62,13 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
 
       %__MODULE__{
         type: :mailbox,
+        old_state: old_state,
         updated: Collection.new(state, updated)
       }
     end
 
     def new([
-          ["Thread/changes", _, _],
+          ["Thread/changes", %{"oldState" => old_state}, _],
           ["Thread/get", %{"state" => state, "list" => updated}, "updated"]
         ]) do
       updated =
@@ -79,6 +81,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
 
       %__MODULE__{
         type: :thread,
+        old_state: old_state,
         updated: Collection.new(state, updated)
       }
     end
@@ -88,8 +91,13 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
         old_mailbox_ids = InboxCoach.State.mailbox_ids_for(acc_state, email.id)
         new_mailbox_ids = email.mailbox_ids
 
-        removed = MapSet.difference(MapSet.new(old_mailbox_ids), MapSet.new(new_mailbox_ids)) |> MapSet.to_list()
-        added = MapSet.difference(MapSet.new(new_mailbox_ids), MapSet.new(old_mailbox_ids)) |> MapSet.to_list()
+        removed =
+          MapSet.difference(MapSet.new(old_mailbox_ids), MapSet.new(new_mailbox_ids))
+          |> MapSet.to_list()
+
+        added =
+          MapSet.difference(MapSet.new(new_mailbox_ids), MapSet.new(old_mailbox_ids))
+          |> MapSet.to_list()
 
         # Remove email from old mailboxes
         acc_state =

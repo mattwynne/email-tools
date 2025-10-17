@@ -113,6 +113,8 @@ defmodule FastmailAccountTest do
              [
                "Email/changes",
                %{
+                 "newState" => "123",
+                 "oldState" => "122",
                  "updated" => ["email-1"]
                },
                "0"
@@ -120,6 +122,7 @@ defmodule FastmailAccountTest do
              [
                "Email/get",
                %{
+                 "state" => "123",
                  "list" => [
                    %{
                      "id" => "email-1",
@@ -135,7 +138,10 @@ defmodule FastmailAccountTest do
            [
              [
                "Mailbox/changes",
-               %{},
+               %{
+                 "oldState" => "122",
+                 "newState" => "123"
+               },
                "0"
              ],
              [
@@ -151,7 +157,10 @@ defmodule FastmailAccountTest do
            [
              [
                "Thread/changes",
-               %{},
+               %{
+                 "oldState" => "state-0",
+                 "newState" => "state-1"
+               },
                "0"
              ],
              [
