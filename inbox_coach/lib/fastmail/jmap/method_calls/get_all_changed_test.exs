@@ -532,6 +532,12 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
                 mailbox_ids: ["inbox"],
                 from: [%Contact{email: "a@b.com"}],
                 thread_id: "a-thread"
+              },
+              %Email{
+                id: "email-2",
+                mailbox_ids: ["inbox"],
+                from: [%Contact{email: "x@y.com"}],
+                thread_id: "a-thread"
               }
             ])
         }
@@ -556,7 +562,13 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
                emails: %Collection{
                  state: "456",
                  list: [
-                   %Email{mailbox_ids: ["inbox", "action"]}
+                   %Email{mailbox_ids: ["inbox", "action"]},
+                   %Email{
+                     id: "email-2",
+                     mailbox_ids: ["inbox"],
+                     from: [%Contact{email: "x@y.com"}],
+                     thread_id: "a-thread"
+                   }
                  ]
                }
              } = new_state
