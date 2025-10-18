@@ -90,9 +90,12 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
         Collection.new(
           updated.state,
           for email <- account_state.emails,
-              updated_email <- updated,
-              email.id == updated_email.id do
-            Map.merge(email, updated_email)
+              updated_email <- updated do
+            if email.id == updated_email.id do
+              Map.merge(email, updated_email)
+            else
+              email
+            end
           end
         )
 
