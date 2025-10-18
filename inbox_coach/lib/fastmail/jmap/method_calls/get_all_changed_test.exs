@@ -538,6 +538,12 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
                 mailbox_ids: ["inbox"],
                 from: [%Contact{email: "x@y.com"}],
                 thread_id: "a-thread"
+              },
+              %Email{
+                id: "email-3",
+                mailbox_ids: ["action"],
+                from: [%Contact{email: "1@2.com"}],
+                thread_id: "a-thread"
               }
             ])
         }
@@ -551,6 +557,12 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
               id: "email-1",
               mailbox_ids: ["inbox", "action"],
               from: [%Contact{email: "a@b.com"}],
+              thread_id: "a-thread"
+            },
+            %Email{
+              id: "email-3",
+              mailbox_ids: ["inbox"],
+              from: [%Contact{email: "1@2.com"}],
               thread_id: "a-thread"
             }
           ])
@@ -568,10 +580,16 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
                      mailbox_ids: ["inbox"],
                      from: [%Contact{email: "x@y.com"}],
                      thread_id: "a-thread"
+                   },
+                   %Email{
+                     id: "email-3",
+                     mailbox_ids: ["inbox"]
                    }
                  ]
                }
              } = new_state
+
+      assert Enum.count(new_state.emails) == 3
     end
   end
 end
