@@ -1,4 +1,8 @@
 defmodule Fastmail.Jmap do
+  defmodule AccountState do
+    defstruct [:emails, :mailboxes, :threads]
+  end
+
   defmodule Mailbox do
     defstruct [:id, :name]
   end

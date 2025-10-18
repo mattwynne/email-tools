@@ -1,4 +1,5 @@
 defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
+  alias Fastmail.Jmap.AccountState
   alias Fastmail.Jmap.Email
   alias Fastmail.Jmap.Contact
   alias Fastmail.Jmap.Collection
@@ -509,5 +510,56 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
                  ]
                }
              }
+  end
+
+  describe "apply_to/2" do
+    test "updating emails" do
+      state =
+        %AccountState{
+          mailboxes:
+            Collection.new("123", [
+              %Mailbox{id: "inbox", name: "Inbox"},
+              %Mailbox{id: "action", name: "Action"}
+            ]),
+          threads:
+            Collection.new("123", [
+              %Thread{id: "a-thread", email_ids: ["email-1"]}
+            ]),
+          emails:
+            Collection.new("123", [
+              %Email{
+                id: "email-1",
+                mailbox_ids: ["inbox"],
+                from: [%Contact{email: "a@b.com"}],
+                thread_id: "a-thread"
+              }
+            ])
+        }
+
+      response = %GetAllChanged.Response{
+        type: :email,
+        old_state: "123",
+        updated:
+          Collection.new("456", [
+            %Email{
+              id: "email-1",
+              mailbox_ids: ["inbox", "action"],
+              from: [%Contact{email: "a@b.com"}],
+              thread_id: "a-thread"
+            }
+          ])
+      }
+
+      new_state = GetAllChanged.Response.apply_to(response, state)
+
+      assert %AccountState{
+               emails: %Collection{
+                 state: "456",
+                 list: [
+                   %Email{mailbox_ids: ["inbox", "action"]}
+                 ]
+               }
+             } = new_state
+    end
   end
 end

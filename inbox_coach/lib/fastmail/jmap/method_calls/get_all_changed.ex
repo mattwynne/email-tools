@@ -4,6 +4,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
   end
 
   defmodule Response do
+    alias Fastmail.Jmap.AccountState
     alias Fastmail.Jmap.Email
     alias Fastmail.Jmap.Contact
     alias Fastmail.Jmap.Collection
@@ -79,6 +80,23 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
         old_state: old_state,
         updated: Collection.new(state, updated)
       }
+    end
+
+    def apply_to(
+          %__MODULE__{old_state: old_state, type: :email, updated: updated},
+          %AccountState{emails: %{state: old_state}} = account_state
+        ) do
+      emails =
+        Collection.new(
+          updated.state,
+          for email <- account_state.emails,
+              updated_email <- updated,
+              email.id == updated_email.id do
+            Map.merge(email, updated_email)
+          end
+        )
+
+      %{account_state | emails: emails}
     end
 
     def apply_to(%__MODULE__{type: :email, updated: emails}, account_state) do
