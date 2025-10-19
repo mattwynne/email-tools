@@ -6,28 +6,29 @@ defmodule Fastmail.Jmap.Requests.GetEventSourceTest do
     test "returns a request that streams events from a function" do
       test = self()
 
-      listener =
-        Task.async(fn ->
-          events = fn ->
-            receive do
-              {:send, event} -> event
-            end
-          end
+      Task.async(fn ->
+        {:ok, response} =
+          Req.request(
+            GetEventSource.null(fn ->
+              receive do
+                {:emit, event} -> event
+              end
+            end)
+          )
 
-          request = GetEventSource.null(events)
+        send(test, {:ready, self()})
 
-          {:ok, response} = Req.request(request)
-
-          Enum.each(response.body, fn event ->
-            send(test, {:event, event})
-          end)
+        Enum.each(response.body, fn event ->
+          send(test, {:event, event})
         end)
+      end)
 
-      task_pid = listener.pid
-      send(task_pid, {:send, "first message"})
+      assert_receive {:ready, stub}
+
+      send(stub, {:emit, "first message"})
       assert_receive {:event, "first message"}
 
-      send(task_pid, {:send, "second message"})
+      send(stub, {:emit, "second message"})
       assert_receive {:event, "second message"}
     end
   end
