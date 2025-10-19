@@ -9,6 +9,25 @@ defmodule Fastmail.Jmap.Collection do
     %__MODULE__{state: state, list: list}
   end
 
+  def update(%__MODULE__{} = existing, %__MODULE__{state: new_state} = updated) do
+    updated_map = Map.new(updated, &{&1.id, &1})
+
+    new(
+      new_state,
+      for item <- existing, reduce: [] do
+        items ->
+          next =
+            case Map.get(updated_map, item.id) do
+              nil -> item
+              %module{} = updated_item -> module.merge(item, updated_item)
+            end
+
+          [next | items]
+      end
+      |> Enum.reverse()
+    )
+  end
+
   defimpl Enumerable do
     def reduce(_collection, {:halt, acc}, _fun), do: {:halted, acc}
 
