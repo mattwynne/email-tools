@@ -90,7 +90,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
       %{account_state | emails: emails}
     end
 
-    def apply_to(%__MODULE__{type: :email, updated: emails}, account_state) do
+    def apply_to(%__MODULE__{type: :email, updated: emails}, %InboxCoach.State{} = account_state) do
       Enum.reduce(emails, account_state, fn email, acc_state ->
         old_mailbox_ids = InboxCoach.State.mailbox_ids_for(acc_state, email.id)
         new_mailbox_ids = email.mailbox_ids
