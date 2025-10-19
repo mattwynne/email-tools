@@ -162,19 +162,8 @@ defmodule InboxCoach.FastmailAccount do
   defp noreply(state), do: {:noreply, state}
 
   def execute(%{session: session}, method_calls_mod, params \\ []) do
-    case session
-         |> Session.execute(method_calls_mod, params) do
-      %GetAllMailboxes.Response{} = response ->
-        send(self(), response)
+    response = session |> Session.execute(method_calls_mod, params)
 
-      %QueryAllEmails.Response{} = response ->
-        send(self(), response)
-
-      %GetAllChanged.Response{} = response ->
-        send(self(), response)
-
-      response ->
-        raise "Unable to handle response #{inspect(response)} from #{method_calls_mod} with #{inspect(params)}"
-    end
+    send(self(), response)
   end
 end
