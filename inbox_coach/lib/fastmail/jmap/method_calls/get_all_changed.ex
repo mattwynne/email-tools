@@ -86,22 +86,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
           %__MODULE__{old_state: old_state, type: :email, updated: updated},
           %AccountState{emails: %{state: old_state}} = account_state
         ) do
-      # TODO: we can push some or all of this down into Collection. It could build a map of keys by :id, and/or even own this whole merge behaviour
-      updated_map = Map.new(updated.list, &{&1.id, &1})
-
-      emails =
-        Collection.new(
-          updated.state,
-          for email <- account_state.emails, reduce: [] do
-            emails ->
-              case Map.get(updated_map, email.id) do
-                nil -> [email | emails]
-                updated_email -> [Map.merge(email, updated_email) | emails]
-              end
-          end
-          |> Enum.reverse()
-        )
-
+      emails = Collection.update(account_state.emails, updated)
       %{account_state | emails: emails}
     end
 

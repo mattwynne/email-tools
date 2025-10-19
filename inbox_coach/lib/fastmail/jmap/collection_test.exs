@@ -3,6 +3,121 @@ defmodule Fastmail.Jmap.CollectionTest do
   alias Fastmail.Jmap.Collection
   alias Fastmail.Jmap.Mailbox
 
+  describe "merging in another collection" do
+    test "returns a collection with the new collections's state" do
+      alias Fastmail.Jmap.Email
+      alias Fastmail.Jmap.Contact
+
+      existing =
+        Collection.new("123", [
+          %Email{
+            id: "email-1",
+            mailbox_ids: ["inbox"],
+            from: [%Contact{email: "a@b.com"}],
+            thread_id: "a-thread"
+          }
+        ])
+
+      updated =
+        Collection.new("456", [
+          %Email{
+            id: "email-1",
+            mailbox_ids: ["inbox", "action"],
+            from: [%Contact{email: "a@b.com"}],
+            thread_id: "a-thread"
+          }
+        ])
+
+      result = Collection.update(existing, updated)
+
+      assert result.state == "456"
+    end
+
+    test "updates any existing emails with properties from the updated collection" do
+      alias Fastmail.Jmap.Email
+      alias Fastmail.Jmap.Contact
+
+      existing =
+        Collection.new("123", [
+          %Email{
+            id: "email-1",
+            mailbox_ids: ["inbox"],
+            from: [%Contact{email: "a@b.com"}],
+            thread_id: "a-thread"
+          }
+        ])
+
+      updated =
+        Collection.new("456", [
+          %Email{
+            id: "email-1",
+            mailbox_ids: ["inbox", "action"],
+            from: [%Contact{email: "a@b.com"}],
+            thread_id: "a-thread"
+          }
+        ])
+
+      result = Collection.update(existing, updated)
+
+      assert result.list == [
+               %Email{
+                 id: "email-1",
+                 mailbox_ids: ["inbox", "action"],
+                 from: [%Contact{email: "a@b.com"}],
+                 thread_id: "a-thread"
+               }
+             ]
+    end
+
+    test "leaves existing emails alone" do
+      alias Fastmail.Jmap.Email
+      alias Fastmail.Jmap.Contact
+
+      existing =
+        Collection.new("123", [
+          %Email{
+            id: "email-1",
+            mailbox_ids: ["inbox"],
+            from: [%Contact{email: "a@b.com"}],
+            thread_id: "a-thread"
+          },
+          %Email{
+            id: "email-2",
+            mailbox_ids: ["inbox"],
+            from: [%Contact{email: "x@y.com"}],
+            thread_id: "a-thread"
+          }
+        ])
+
+      updated =
+        Collection.new("456", [
+          %Email{
+            id: "email-1",
+            mailbox_ids: ["inbox", "action"],
+            from: [%Contact{email: "a@b.com"}],
+            thread_id: "a-thread"
+          }
+        ])
+
+      result = Collection.update(existing, updated)
+
+      assert result.list == [
+               %Email{
+                 id: "email-1",
+                 mailbox_ids: ["inbox", "action"],
+                 from: [%Contact{email: "a@b.com"}],
+                 thread_id: "a-thread"
+               },
+               %Email{
+                 id: "email-2",
+                 mailbox_ids: ["inbox"],
+                 from: [%Contact{email: "x@y.com"}],
+                 thread_id: "a-thread"
+               }
+             ]
+    end
+  end
+
   describe "Enumerable protocol" do
     setup do
       collection =
