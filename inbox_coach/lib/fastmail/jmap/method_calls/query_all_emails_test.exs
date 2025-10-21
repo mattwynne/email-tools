@@ -1,4 +1,5 @@
 defmodule Fastmail.Jmap.MethodCalls.QueryAllEmailsTest do
+  alias Fastmail.Jmap.AccountState
   alias Fastmail.Jmap.Credentials
   alias Fastmail.Jmap.MethodCalls.QueryAllEmails
   alias Fastmail.Jmap.Session
@@ -43,5 +44,29 @@ defmodule Fastmail.Jmap.MethodCalls.QueryAllEmailsTest do
              mailbox_id: "P2F",
              email_ids: ["Su4vMyni5WCk"]
            }
+  end
+
+  describe "apply_to/2" do
+    test "updates mailbox_emails in AccountState" do
+      state = %AccountState{
+        mailbox_emails: %{
+          "inbox" => ["email-1", "email-2"]
+        }
+      }
+
+      response = %QueryAllEmails.Response{
+        mailbox_id: "archive",
+        email_ids: ["email-3", "email-4", "email-5"]
+      }
+
+      new_state = QueryAllEmails.Response.apply_to(response, state)
+
+      assert %AccountState{
+        mailbox_emails: %{
+          "inbox" => ["email-1", "email-2"],
+          "archive" => ["email-3", "email-4", "email-5"]
+        }
+      } = new_state
+    end
   end
 end
