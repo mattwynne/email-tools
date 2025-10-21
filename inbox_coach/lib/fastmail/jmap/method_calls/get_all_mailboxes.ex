@@ -6,6 +6,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllMailboxes do
   end
 
   defmodule Response do
+    alias Fastmail.Jmap.AccountState
     alias Fastmail.Jmap.Collection
     alias Fastmail.Jmap.Mailbox
     defstruct [:mailboxes]
@@ -23,6 +24,10 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllMailboxes do
       %__MODULE__{
         mailboxes: Collection.new(body["state"], mailboxes)
       }
+    end
+
+    def apply_to(%__MODULE__{mailboxes: mailboxes}, %AccountState{} = account_state) do
+      %{account_state | mailboxes: mailboxes}
     end
 
     # TODO: the state needs to be something closer to us here, we shouldn't know about InboxCoach, maybe a Jmap.Collection? and be a struct
