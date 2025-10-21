@@ -591,5 +591,73 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
 
       assert Enum.count(new_state.emails) == 3
     end
+
+    test "updating mailboxes" do
+      state =
+        %AccountState{
+          mailboxes:
+            Collection.new("123", [
+              %Mailbox{id: "inbox", name: "Inbox"},
+              %Mailbox{id: "action", name: "Action"}
+            ])
+        }
+
+      response = %GetAllChanged.Response{
+        type: :mailbox,
+        old_state: "123",
+        updated:
+          Collection.new("456", [
+            %Mailbox{id: "inbox", name: "Inbox Updated"}
+          ])
+      }
+
+      new_state = GetAllChanged.Response.apply_to(response, state)
+
+      assert %AccountState{
+               mailboxes: %Collection{
+                 state: "456",
+                 list: [
+                   %Mailbox{id: "inbox", name: "Inbox Updated"},
+                   %Mailbox{id: "action", name: "Action"}
+                 ]
+               }
+             } = new_state
+
+      assert Enum.count(new_state.mailboxes) == 2
+    end
+
+    test "updating threads" do
+      state =
+        %AccountState{
+          threads:
+            Collection.new("123", [
+              %Thread{id: "thread-1", email_ids: ["email-1"]},
+              %Thread{id: "thread-2", email_ids: ["email-2"]}
+            ])
+        }
+
+      response = %GetAllChanged.Response{
+        type: :thread,
+        old_state: "123",
+        updated:
+          Collection.new("456", [
+            %Thread{id: "thread-1", email_ids: ["email-1", "email-3"]}
+          ])
+      }
+
+      new_state = GetAllChanged.Response.apply_to(response, state)
+
+      assert %AccountState{
+               threads: %Collection{
+                 state: "456",
+                 list: [
+                   %Thread{id: "thread-1", email_ids: ["email-1", "email-3"]},
+                   %Thread{id: "thread-2", email_ids: ["email-2"]}
+                 ]
+               }
+             } = new_state
+
+      assert Enum.count(new_state.threads) == 2
+    end
   end
 end
