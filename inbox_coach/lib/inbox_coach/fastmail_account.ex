@@ -3,7 +3,7 @@ defmodule InboxCoach.FastmailAccount do
   alias Fastmail.Jmap.Session
   alias Fastmail.Jmap.MethodCalls.GetAllChanged
   alias Fastmail.Jmap.MethodCalls.GetAllMailboxes
-  alias InboxCoach.State
+  alias Fastmail.Jmap.AccountState
   alias InboxCoach.FastmailEvents
   use GenServer
 
@@ -46,7 +46,7 @@ defmodule InboxCoach.FastmailAccount do
         %{
           pubsub_topic: pubsub_topic,
           session: session,
-          account_state: State.new()
+          account_state: %AccountState{}
         }
         |> emit()
         |> stream_events()
@@ -152,7 +152,7 @@ defmodule InboxCoach.FastmailAccount do
     Phoenix.PubSub.broadcast(
       InboxCoach.PubSub,
       state.pubsub_topic,
-      State.to_event(state.account_state)
+      {:state, state.account_state}
     )
 
     state

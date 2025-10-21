@@ -21,8 +21,8 @@ defmodule InboxCoachWeb.RootLive do
       :ok,
       socket
       |> assign(:state, initial_account_state)
-      |> assign(:mailboxes, initial_account_state.mailboxes || %{"list" => []})
-      |> assign(:emails_by_mailbox, initial_account_state.emails_by_mailbox)
+      |> assign(:mailboxes, initial_account_state.mailboxes)
+      |> assign(:emails_by_mailbox, initial_account_state.mailbox_emails)
     }
   end
 
@@ -30,11 +30,11 @@ defmodule InboxCoachWeb.RootLive do
   def render(assigns) do
     ~H"""
     <ul :if={@mailboxes}>
-      <%= for mailbox <- @mailboxes["list"] do %>
+      <%= for mailbox <- @mailboxes do %>
         <li>
-          <%= mailbox["name"] %>
-          <span :if={@emails_by_mailbox[mailbox["id"]]}>
-            (<%= Enum.count(@emails_by_mailbox[mailbox["id"]]) %>)
+          <%= mailbox.name %>
+          <span :if={@emails_by_mailbox && @emails_by_mailbox[mailbox.id]}>
+            (<%= Enum.count(@emails_by_mailbox[mailbox.id]) %>)
           </span>
         </li>
       <% end %>
@@ -43,7 +43,7 @@ defmodule InboxCoachWeb.RootLive do
     <h1 class="text-2xl">State:</h1>
     <pre>
     <code>
-    <%= inspect(Map.take(@state, [:mailboxes]), pretty: true) %>
+    <%= inspect(Map.take(@state, [:mailboxes, :mailbox_emails, :emails]), pretty: true) %>
     </code>
     </pre>
     """
@@ -56,7 +56,7 @@ defmodule InboxCoachWeb.RootLive do
       socket
       |> assign(state: state)
       |> assign(mailboxes: state.mailboxes)
-      |> assign(emails_by_mailbox: state.emails_by_mailbox)
+      |> assign(emails_by_mailbox: state.mailbox_emails)
     }
   end
 end

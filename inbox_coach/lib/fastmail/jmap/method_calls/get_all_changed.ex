@@ -90,46 +90,20 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
       %{account_state | emails: emails}
     end
 
-    def apply_to(%__MODULE__{type: :email, updated: emails}, %InboxCoach.State{} = account_state) do
-      Enum.reduce(emails, account_state, fn email, acc_state ->
-        old_mailbox_ids = InboxCoach.State.mailbox_ids_for(acc_state, email.id)
-        new_mailbox_ids = email.mailbox_ids
-
-        removed =
-          MapSet.difference(MapSet.new(old_mailbox_ids), MapSet.new(new_mailbox_ids))
-          |> MapSet.to_list()
-
-        added =
-          MapSet.difference(MapSet.new(new_mailbox_ids), MapSet.new(old_mailbox_ids))
-          |> MapSet.to_list()
-
-        # Remove email from old mailboxes
-        acc_state =
-          Enum.reduce(removed, acc_state, fn mailbox_id, state ->
-            InboxCoach.State.remove_from_mailbox(state, mailbox_id, email.id)
-          end)
-
-        # Add email to new mailboxes
-        Enum.reduce(added, acc_state, fn mailbox_id, state ->
-          InboxCoach.State.add_to_mailbox(state, mailbox_id, email.id)
-        end)
-      end)
+    def apply_to(
+          %__MODULE__{old_state: old_state, type: :mailbox, updated: updated},
+          %AccountState{mailboxes: %{state: old_state}} = account_state
+        ) do
+      mailboxes = Collection.update(account_state.mailboxes, updated)
+      %{account_state | mailboxes: mailboxes}
     end
 
-    def apply_to(%__MODULE__{type: :mailbox, updated: mailboxes}, account_state) do
-      # Update mailboxes state
-      Map.put(account_state, :mailboxes, %{
-        "state" => mailboxes.state,
-        "list" =>
-          Enum.map(mailboxes, fn mailbox ->
-            %{"id" => mailbox.id, "name" => mailbox.name}
-          end)
-      })
-    end
-
-    def apply_to(%__MODULE__{type: :thread}, account_state) do
-      # Thread changes don't affect the account state for now
-      account_state
+    def apply_to(
+          %__MODULE__{old_state: old_state, type: :thread, updated: updated},
+          %AccountState{threads: %{state: old_state}} = account_state
+        ) do
+      threads = Collection.update(account_state.threads, updated)
+      %{account_state | threads: threads}
     end
   end
 
