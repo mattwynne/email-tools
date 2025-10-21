@@ -1,4 +1,5 @@
 defmodule Fastmail.Jmap.MethodCalls.GetAllMailboxesTest do
+  alias Fastmail.Jmap.AccountState
   alias Fastmail.Jmap.Collection
   alias Fastmail.Jmap.Mailbox
   alias Fastmail.Jmap.MethodCalls.GetAllMailboxes
@@ -308,5 +309,37 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllMailboxesTest do
                ]
              }
            }
+  end
+
+  describe "apply_to/2" do
+    test "updating mailboxes in AccountState" do
+      state = %AccountState{
+        mailboxes: Collection.new("123", [
+          %Mailbox{id: "inbox", name: "Inbox"},
+          %Mailbox{id: "archive", name: "Archive"}
+        ])
+      }
+
+      response = %GetAllMailboxes.Response{
+        mailboxes: Collection.new("456", [
+          %Mailbox{id: "inbox", name: "Inbox Updated"},
+          %Mailbox{id: "archive", name: "Archive"},
+          %Mailbox{id: "drafts", name: "Drafts"}
+        ])
+      }
+
+      new_state = GetAllMailboxes.Response.apply_to(response, state)
+
+      assert %AccountState{
+        mailboxes: %Collection{
+          state: "456",
+          list: [
+            %Mailbox{id: "inbox", name: "Inbox Updated"},
+            %Mailbox{id: "archive", name: "Archive"},
+            %Mailbox{id: "drafts", name: "Drafts"}
+          ]
+        }
+      } = new_state
+    end
   end
 end
