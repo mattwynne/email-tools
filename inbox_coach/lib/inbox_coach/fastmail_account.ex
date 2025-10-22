@@ -107,13 +107,21 @@ defmodule InboxCoach.FastmailAccount do
   end
 
   def handle_info(response = %GetAllChanged.Response{}, state) do
-    state
-    |> Map.put(
-      :account_state,
-      GetAllChanged.Response.apply_to(response, state.account_state)
-    )
-    |> emit()
-    |> noreply()
+    state =
+      state
+      |> Map.put(
+        :account_state,
+        GetAllChanged.Response.apply_to(response, state.account_state)
+      )
+      |> emit()
+
+    if response.type == :mailboxes do
+      for mailbox <- response.updated do
+        state |> execute(QueryAllEmails, in_mailbox: mailbox.id)
+      end
+    end
+
+    state |> noreply()
   end
 
   def handle_info(msg, state) do

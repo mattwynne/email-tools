@@ -146,7 +146,8 @@ defmodule FastmailAccountTest do
                "Mailbox/changes",
                %{
                  "oldState" => "122",
-                 "newState" => "123"
+                 "newState" => "123",
+                 "updated" => ["archive-id"]
                },
                "0"
              ],
@@ -154,9 +155,22 @@ defmodule FastmailAccountTest do
                "Mailbox/get",
                %{
                  "state" => "123",
-                 "list" => []
+                 "list" => [
+                   %{"id" => "archive-id", "name" => "Archive"}
+                 ]
                },
                "updated"
+             ]
+           ]},
+          {{MethodCalls.QueryAllEmails, in_mailbox: "archive-id"},
+           [
+             [
+               "Email/query",
+               %{
+                 "filter" => %{"inMailbox" => "archive-id"},
+                 "ids" => ["email-3", "email-4"]
+               },
+               "0"
              ]
            ]},
           {{MethodCalls.GetAllChanged, type: "Thread", since_state: "state-1"},
@@ -246,10 +260,14 @@ defmodule FastmailAccountTest do
       }
     )
 
-    # TODO: Assert the correct state after email moves
-    # The old InboxCoach.State tracked emails_by_mailbox and would update it when emails moved
-    # The new AccountState tracks emails in a Collection and mailbox_emails separately
-    # Need to determine what the expected behavior should be here
-    assert_receive({:state, %AccountState{}})
+    # After mailbox changes, QueryAllEmails should be called for updated mailboxes
+    assert_receive(
+      {:state,
+       %AccountState{
+         mailbox_emails: %{
+           "archive-id" => ["email-3", "email-4"]
+         }
+       }}
+    )
   end
 end
