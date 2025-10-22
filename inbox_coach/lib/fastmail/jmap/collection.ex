@@ -14,17 +14,14 @@ defmodule Fastmail.Jmap.Collection do
 
     new(
       new_state,
-      for item <- existing, reduce: [] do
-        items ->
-          next =
-            case Map.get(updated_map, item.id) do
-              nil -> item
-              %module{} = updated_item -> module.merge(item, updated_item)
-            end
-
-          [next | items]
-      end
-      |> Enum.reverse()
+      Enum.map(existing, fn existing_item ->
+        if updated_item = Map.get(updated_map, existing_item.id) do
+          %type{} = updated_item
+          type.merge(existing_item, updated_item)
+        else
+          existing_item
+        end
+      end)
     )
   end
 
