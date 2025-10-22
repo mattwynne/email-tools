@@ -132,7 +132,7 @@ defmodule InboxCoach.FastmailAccount do
     new = changes[account_id]
     old = old_changes[account_id]
 
-    ["Email", "Mailbox", "Thread"]
+    ["Email", "Mailbox", "Threads"]
     |> Enum.each(fn type ->
       if old[type] != new[type] do
         state |> execute(GetAllChanged, type: type, since_state: old[type])

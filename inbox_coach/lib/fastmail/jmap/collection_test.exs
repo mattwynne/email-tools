@@ -1,5 +1,7 @@
 defmodule Fastmail.Jmap.CollectionTest do
   use ExUnit.Case, async: true
+  alias Fastmail.Jmap.Email
+  alias Fastmail.Jmap.Contact
   alias Fastmail.Jmap.Collection
   alias Fastmail.Jmap.Mailbox
 
@@ -112,6 +114,32 @@ defmodule Fastmail.Jmap.CollectionTest do
                  id: "email-2",
                  mailbox_ids: ["inbox"],
                  from: [%Contact{email: "x@y.com"}],
+                 thread_id: "a-thread"
+               }
+             ]
+    end
+
+    test "works on an empty existing collection" do
+      # TODO: consider using a null object for Collection
+      existing = nil
+
+      updated =
+        Collection.new("456", [
+          %Email{
+            id: "email-1",
+            mailbox_ids: ["inbox", "action"],
+            from: [%Contact{email: "a@b.com"}],
+            thread_id: "a-thread"
+          }
+        ])
+
+      result = Collection.update(existing, updated)
+
+      assert result.list == [
+               %Email{
+                 id: "email-1",
+                 mailbox_ids: ["inbox", "action"],
+                 from: [%Contact{email: "a@b.com"}],
                  thread_id: "a-thread"
                }
              ]

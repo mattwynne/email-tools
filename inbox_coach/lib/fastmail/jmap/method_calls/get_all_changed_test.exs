@@ -124,7 +124,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
 
     assert response ==
              %GetAllChanged.Response{
-               type: :email,
+               type: :emails,
                old_state: "J7100",
                updated: %Collection{
                  state: "J7138",
@@ -447,7 +447,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
 
     assert response ==
              %GetAllChanged.Response{
-               type: :mailbox,
+               type: :mailboxes,
                old_state: "J7100",
                updated: %Collection{
                  state: "J7138",
@@ -501,7 +501,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
 
     assert response ==
              %GetAllChanged.Response{
-               type: :thread,
+               type: :threads,
                old_state: "J7100",
                updated: %Collection{
                  state: "J7138",
@@ -549,7 +549,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
         }
 
       response = %GetAllChanged.Response{
-        type: :email,
+        type: :emails,
         old_state: "123",
         updated:
           Collection.new("456", [
@@ -603,7 +603,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
         }
 
       response = %GetAllChanged.Response{
-        type: :mailbox,
+        type: :mailboxes,
         old_state: "123",
         updated:
           Collection.new("456", [
@@ -637,7 +637,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
         }
 
       response = %GetAllChanged.Response{
-        type: :thread,
+        type: :threads,
         old_state: "123",
         updated:
           Collection.new("456", [

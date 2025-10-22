@@ -28,6 +28,10 @@ defmodule Fastmail.Jmap.Collection do
     )
   end
 
+  def update(nil, %__MODULE__{} = updated) do
+    updated
+  end
+
   defimpl Enumerable do
     def reduce(_collection, {:halt, acc}, _fun), do: {:halted, acc}
 
