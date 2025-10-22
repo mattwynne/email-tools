@@ -84,7 +84,10 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
     end
 
     def new(["error", details, _], _) do
-      Logger.error("bad response: #{inspect(details, pretty: true)}")
+      Logger.error(
+        "bad response: #{inspect(details, pretty: true, syntax_colors: IO.ANSI.syntax_colors())}"
+      )
+
       :bad_response
     end
 
@@ -101,7 +104,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
 
     def apply_to(request, state) do
       Logger.error(
-        "unable to apply request #{inspect(request, pretty: true)} to state #{inspect(state, pretty: true)}"
+        "[#{__MODULE__}] unable to apply request #{inspect(request, pretty: true, syntax_colors: IO.ANSI.syntax_colors())} to state #{inspect(state, pretty: true)}"
       )
 
       state

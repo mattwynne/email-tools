@@ -6,6 +6,7 @@ defmodule InboxCoach.FastmailAccount do
   alias Fastmail.Jmap.AccountState
   alias InboxCoach.FastmailEvents
   use GenServer
+  require Logger
 
   def start_link(opts \\ []) do
     pubsub_topic = Keyword.fetch!(opts, :pubsub_topic)
@@ -149,6 +150,8 @@ defmodule InboxCoach.FastmailAccount do
   end
 
   defp emit(state) do
+    Logger.debug("[emit] #{inspect(state, pretty: true, syntax_colors: IO.ANSI.syntax_colors())}")
+
     Phoenix.PubSub.broadcast(
       InboxCoach.PubSub,
       state.pubsub_topic,
