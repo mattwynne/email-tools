@@ -88,6 +88,8 @@ defmodule Fastmail.Jmap.Session do
         params
       )
       when is_atom(method_calls_mod) do
+    :ok = Code.ensure_all_loaded([method_calls_mod])
+
     struct(
       Module.concat(method_calls_mod, Params),
       Keyword.merge(params, account_id: session.account_id)

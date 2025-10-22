@@ -4,6 +4,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
   end
 
   defmodule Response do
+    require Logger
     alias Fastmail.Jmap.AccountState
     alias Fastmail.Jmap.Email
     alias Fastmail.Jmap.Contact
@@ -38,7 +39,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
         end)
 
       %__MODULE__{
-        type: :email,
+        type: :emails,
         old_state: old_state,
         updated: Collection.new(state, updated)
       }
@@ -57,7 +58,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
         end)
 
       %__MODULE__{
-        type: :mailbox,
+        type: :mailboxes,
         old_state: old_state,
         updated: Collection.new(state, updated)
       }
@@ -76,34 +77,34 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
         end)
 
       %__MODULE__{
-        type: :thread,
+        type: :threads,
         old_state: old_state,
         updated: Collection.new(state, updated)
       }
     end
 
-    def apply_to(
-          %__MODULE__{old_state: old_state, type: :email, updated: updated},
-          %AccountState{emails: %{state: old_state}} = account_state
-        ) do
-      emails = Collection.update(account_state.emails, updated)
-      %{account_state | emails: emails}
+    def new(["error", details, _], _) do
+      Logger.error("bad response: #{inspect(details, pretty: true)}")
+      :bad_response
     end
 
-    def apply_to(
-          %__MODULE__{old_state: old_state, type: :mailbox, updated: updated},
-          %AccountState{mailboxes: %{state: old_state}} = account_state
-        ) do
-      mailboxes = Collection.update(account_state.mailboxes, updated)
-      %{account_state | mailboxes: mailboxes}
+    def apply_to(%__MODULE__{type: type, updated: updated}, %AccountState{} = account_state) do
+      Map.put(
+        account_state,
+        type,
+        Collection.update(
+          Map.get(account_state, type),
+          updated
+        )
+      )
     end
 
-    def apply_to(
-          %__MODULE__{old_state: old_state, type: :thread, updated: updated},
-          %AccountState{threads: %{state: old_state}} = account_state
-        ) do
-      threads = Collection.update(account_state.threads, updated)
-      %{account_state | threads: threads}
+    def apply_to(request, state) do
+      Logger.error(
+        "unable to apply request #{inspect(request, pretty: true)} to state #{inspect(state, pretty: true)}"
+      )
+
+      state
     end
   end
 
