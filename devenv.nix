@@ -15,8 +15,14 @@
   services.postgres = {
     enable = true;
     package = pkgs.postgresql_15;
-    initialDatabases = [{ name = "inbox_coach_dev"; }];
-    initialScript = "CREATE USER postgres SUPERUSER;";
+    initialScript = ''
+      CREATE USER postgres WITH SUPERUSER PASSWORD 'postgres';
+    '';
+    initialDatabases = [
+      { name = "inbox_coach_dev"; }
+      { name = "inbox_coach_test"; }
+    ];
+    listen_addresses = "*";
   };
 
   scripts.setup.exec = ''
@@ -50,12 +56,12 @@
   '';
 
   enterTest = ''
-    echo "Running setup..."
+    echo "Waiting for postres to start"
+    wait_for_port 5432 30
+
+    echo "Postgres started. Getting deps and running tests..."
     cd inbox_coach
     mix deps.get
-    mix ecto.setup
-    echo "Setup complete"
-    echo "Running mix test..."
     mix test.all
   '';
 }
