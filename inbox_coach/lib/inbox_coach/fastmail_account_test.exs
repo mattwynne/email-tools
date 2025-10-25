@@ -46,18 +46,23 @@ defmodule FastmailAccountTest do
           ]
         )
 
-      {:ok, account} = FastmailAccount.start_link(session: session, pubsub_topic: "test")
+      Phoenix.PubSub.subscribe(InboxCoach.PubSub, "test")
 
-      state = FastmailAccount.get_state(account)
+      {:ok, _account} = FastmailAccount.start_link(session: session, pubsub_topic: "test")
 
-      assert %AccountState{
-               mailboxes: %{
-                 list: [
-                   %Mailbox{id: "inbox-id", name: "Inbox"},
-                   %Mailbox{id: "sent-id", name: "Sent"}
-                 ]
-               }
-             } = state
+      assert_receive({:state, %AccountState{mailboxes: nil}})
+
+      assert_receive(
+        {:state,
+         %AccountState{
+           mailboxes: %{
+             list: [
+               %Mailbox{id: "inbox-id", name: "Inbox"},
+               %Mailbox{id: "sent-id", name: "Sent"}
+             ]
+           }
+         }}
+      )
     end
   end
 
