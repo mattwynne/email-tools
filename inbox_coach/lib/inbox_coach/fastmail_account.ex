@@ -65,9 +65,9 @@ defmodule InboxCoach.FastmailAccount do
   end
 
   @impl true
-  def handle_cast({:event, data}, state) do
+  def handle_cast({:event, data}, state = %{session: session}) do
     changes = data["changed"]
-    handle_changes(changes, state.session.account_id, state)
+    handle_changes(changes, session.account_id, state)
 
     state
     |> Map.put(:latest, changes)
@@ -107,6 +107,27 @@ defmodule InboxCoach.FastmailAccount do
   end
 
   def after_response_applied(state, msg) do
+    dbg([:client, :unhandled, msg])
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info({_task, response}, state = %{account_state: account_state}) do
+    %response_mod{} = response
+
+    state
+    |> Map.put(
+      :account_state,
+      response_mod.apply_to(response, account_state)
+    )
+    |> emit()
+    |> after_response_applied(response)
+    |> noreply()
+  end
+
+  def handle_info({:DOWN, _, _, _, _}, state), do: state |> noreply()
+
+  def handle_info(msg, state) do
     dbg([:client, :unhandled, msg])
     {:noreply, state}
   end
@@ -154,15 +175,21 @@ defmodule InboxCoach.FastmailAccount do
   defp ok(state), do: {:ok, state}
   defp noreply(state), do: {:noreply, state}
 
-  def execute(%{session: session} = state, method_calls_mod, params \\ []) do
-    %response_mod{} = response = session |> Session.execute(method_calls_mod, params)
+  def execute(state = %{session: session}, method_calls_mod, params \\ []) do
+    Task.async(fn ->
+      session |> Session.execute(method_calls_mod, params)
+    end)
 
     state
-    |> Map.put(
-      :account_state,
-      response_mod.apply_to(response, state.account_state)
-    )
-    |> emit()
-    |> after_response_applied(response)
+
+    # %response_mod{} = response = session |> Session.execute(method_calls_mod, params)
+
+    # state
+    # |> Map.put(
+    #   :account_state,
+    #   response_mod.apply_to(response, state.account_state)
+    # )
+    # |> emit()
+    # |> after_response_applied(response)
   end
 end
