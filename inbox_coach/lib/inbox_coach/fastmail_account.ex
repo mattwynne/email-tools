@@ -75,56 +75,38 @@ defmodule InboxCoach.FastmailAccount do
     |> noreply()
   end
 
-  @impl true
-  def handle_info(%GetAllMailboxes.Response{mailboxes: mailboxes} = response, state) do
-    # TODO: swap these - do this after the state has been updated, and iterate the mailboxes in the state instead of the response
-    Enum.each(
-      mailboxes,
-      fn mailbox -> state |> execute(QueryAllEmails, in_mailbox: mailbox.id) end
-    )
-
-    state
-    |> Map.put(
-      :account_state,
-      GetAllMailboxes.Response.apply_to(response, state.account_state)
-    )
-    |> emit()
-    |> noreply()
-  end
-
-  def handle_info(
-        response = %QueryAllEmails.Response{},
-        state
-      ) do
-    # TODO: reduce duplication with GetAllMailboxes handler - use a protocol and a generic handler?
-    state
-    |> Map.put(
-      :account_state,
-      QueryAllEmails.Response.apply_to(response, state.account_state)
-    )
-    |> emit()
-    |> noreply()
-  end
-
-  def handle_info(response = %GetAllChanged.Response{}, state) do
-    state =
-      state
-      |> Map.put(
-        :account_state,
-        GetAllChanged.Response.apply_to(response, state.account_state)
-      )
-      |> emit()
-
-    if response.type == :mailboxes do
-      for mailbox <- response.updated do
+  def after_response_applied(state, %GetAllMailboxes.Response{} = _e) do
+    Enum.reduce(
+      state.account_state.mailboxes,
+      state,
+      fn mailbox, state ->
         state |> execute(QueryAllEmails, in_mailbox: mailbox.id)
       end
-    end
-
-    state |> noreply()
+    )
   end
 
-  def handle_info(msg, state) do
+  def after_response_applied(
+        state,
+        %GetAllChanged.Response{type: :mailboxes, updated: changed_mailboxes}
+      ) do
+    Enum.reduce(
+      changed_mailboxes,
+      state,
+      fn changed_mailbox, state ->
+        state |> execute(QueryAllEmails, in_mailbox: changed_mailbox.id)
+      end
+    )
+  end
+
+  def after_response_applied(state, %GetAllChanged.Response{}) do
+    state
+  end
+
+  def after_response_applied(state, %QueryAllEmails.Response{}) do
+    state
+  end
+
+  def after_response_applied(state, msg) do
     dbg([:client, :unhandled, msg])
     {:noreply, state}
   end
@@ -142,19 +124,19 @@ defmodule InboxCoach.FastmailAccount do
     old = old_changes[account_id]
 
     ["Email", "Mailbox", "Threads"]
-    |> Enum.each(fn type ->
+    |> Enum.reduce(state, fn type, state ->
       if old[type] != new[type] do
         state |> execute(GetAllChanged, type: type, since_state: old[type])
+      else
+        state
       end
     end)
-
-    state
   end
 
   defp handle_changes(_, _, _), do: nil
 
   defp fetch_initial_state(state) do
-    state |> tap(&execute(&1, GetAllMailboxes))
+    state |> execute(GetAllMailboxes)
   end
 
   defp emit(state) do
@@ -172,9 +154,15 @@ defmodule InboxCoach.FastmailAccount do
   defp ok(state), do: {:ok, state}
   defp noreply(state), do: {:noreply, state}
 
-  def execute(%{session: session}, method_calls_mod, params \\ []) do
-    response = session |> Session.execute(method_calls_mod, params)
+  def execute(%{session: session} = state, method_calls_mod, params \\ []) do
+    %response_mod{} = response = session |> Session.execute(method_calls_mod, params)
 
-    send(self(), response)
+    state
+    |> Map.put(
+      :account_state,
+      response_mod.apply_to(response, state.account_state)
+    )
+    |> emit()
+    |> after_response_applied(response)
   end
 end
