@@ -23,23 +23,29 @@ defmodule Fastmail.Jmap.EventSourceTest do
     test "it can receive events sent at will during the test" do
       test = self()
 
-      listener =
-        Task.async(fn ->
-          events = fn ->
-            receive do
-              {:send, event} -> event
-            end
+      Task.async(fn ->
+        listener = self()
+
+        events = fn ->
+          # Signal that we're ready to receive before blocking
+          send(test, {:ready, listener})
+
+          receive do
+            {:send, event} -> event
           end
+        end
 
-          event_source = EventSource.null(events: events)
-          {:ok, response} = event_source |> EventSource.stream()
+        event_source = EventSource.null(events: events)
+        {:ok, response} = event_source |> EventSource.stream()
 
-          Enum.each(response.body, fn event ->
-            send(test, {:event, event})
-          end)
+        Enum.each(response.body, fn event ->
+          send(test, {:event, event})
         end)
+      end)
 
-      send(listener.pid, {:send, "first message"})
+      # Wait for the task to be ready before sending
+      assert_receive {:ready, listener}
+      send(listener, {:send, "first message"})
       assert_receive {:event, "first message"}
     end
   end

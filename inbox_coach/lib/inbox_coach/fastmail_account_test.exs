@@ -8,23 +8,23 @@ defmodule FastmailAccountTest do
   alias InboxCoach.FastmailAccount
   alias Fastmail.Jmap.Session
 
-  # Helper to collect state messages until we receive the expected one
-  defp collect_states_until_match(expected_state, timeout \\ 1000) do
-    collect_states_until_match(expected_state, [], timeout)
+  # Helper to collect state messages until we receive one matching the pattern
+  defp collect_states_until_match(expected_mailbox_emails, timeout \\ 1000) do
+    collect_states_until_match(expected_mailbox_emails, [], timeout)
   end
 
-  defp collect_states_until_match(expected_state, collected, timeout) do
+  defp collect_states_until_match(expected_mailbox_emails, collected, timeout) do
     receive do
-      {:state, state} when state == expected_state ->
+      {:state, %AccountState{mailbox_emails: ^expected_mailbox_emails} = state} ->
         # Found the state we want, return all collected states including this one
         [state | collected]
 
       {:state, state} ->
         # Not the state we want yet, keep collecting
-        collect_states_until_match(expected_state, [state | collected], timeout)
+        collect_states_until_match(expected_mailbox_emails, [state | collected], timeout)
     after
       timeout ->
-        flunk("Did not receive expected state #{inspect(expected_state)}. Received: #{inspect(collected)}")
+        flunk("Did not receive expected mailbox_emails #{inspect(expected_mailbox_emails)}. Received: #{inspect(collected)}")
     end
   end
 
@@ -250,11 +250,9 @@ defmodule FastmailAccountTest do
 
     # QueryAllEmails tasks run in parallel, so we collect states until both mailboxes are populated
     # The order they complete in is non-deterministic
-    collect_states_until_match(%AccountState{
-      mailbox_emails: %{
-        "inbox-id" => ["email-1"],
-        "sent-id" => ["email-2"]
-      }
+    collect_states_until_match(%{
+      "inbox-id" => ["email-1"],
+      "sent-id" => ["email-2"]
     })
 
     send(
