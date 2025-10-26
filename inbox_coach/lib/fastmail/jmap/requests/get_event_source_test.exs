@@ -7,6 +7,8 @@ defmodule Fastmail.Jmap.Requests.GetEventSourceTest do
       test = self()
 
       Task.async(fn ->
+        stub = self()
+
         {:ok, response} =
           Req.request(
             GetEventSource.null(fn ->
@@ -16,7 +18,7 @@ defmodule Fastmail.Jmap.Requests.GetEventSourceTest do
             end)
           )
 
-        send(test, {:ready, self()})
+        send(test, {:ready, stub})
 
         Enum.each(response.body, fn event ->
           send(test, {:event, event})
