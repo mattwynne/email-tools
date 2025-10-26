@@ -181,15 +181,5 @@ defmodule InboxCoach.FastmailAccount do
     end)
 
     state
-
-    # %response_mod{} = response = session |> Session.execute(method_calls_mod, params)
-
-    # state
-    # |> Map.put(
-    #   :account_state,
-    #   response_mod.apply_to(response, state.account_state)
-    # )
-    # |> emit()
-    # |> after_response_applied(response)
   end
 end
