@@ -545,7 +545,11 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
                 from: [%Contact{email: "1@2.com"}],
                 thread_id: "a-thread"
               }
-            ])
+            ]),
+          mailbox_emails: %{
+            "inbox" => ["email-1", "email-2"],
+            "action" => ["email-3"]
+          }
         }
 
       response = %GetAllChanged.Response{
@@ -570,11 +574,19 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
 
       new_state = GetAllChanged.Response.apply_to(response, state)
 
+      assert %{
+               "inbox" => ["email-1", "email-2", "email-3"],
+               "action" => ["email-1"]
+             } = new_state.mailbox_emails
+
       assert %AccountState{
                emails: %Collection{
                  state: "456",
                  list: [
-                   %Email{mailbox_ids: ["inbox", "action"]},
+                   %Email{
+                     id: "email-1",
+                     mailbox_ids: ["inbox", "action"]
+                   },
                    %Email{
                      id: "email-2",
                      mailbox_ids: ["inbox"],

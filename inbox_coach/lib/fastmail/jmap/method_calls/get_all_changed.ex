@@ -91,6 +91,34 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
       :bad_response
     end
 
+    def apply_to(%__MODULE__{type: :emails, updated: updated}, %AccountState{} = account_state) do
+      mailbox_emails =
+        Enum.reduce(updated, account_state.mailbox_emails, fn email, mailbox_emails ->
+          Enum.reduce(mailbox_emails, mailbox_emails, fn {mailbox_id, email_ids},
+                                                         mailbox_emails ->
+            should_be_in_mailbox? = mailbox_id in email.mailbox_ids
+            currently_in_mailbox? = email.id in email_ids
+
+            cond do
+              should_be_in_mailbox? and not currently_in_mailbox? ->
+                Map.update!(mailbox_emails, mailbox_id, &(&1 ++ [email.id]))
+
+              not should_be_in_mailbox? and currently_in_mailbox? ->
+                Map.update!(mailbox_emails, mailbox_id, &List.delete(&1, email.id))
+
+              true ->
+                mailbox_emails
+            end
+          end)
+        end)
+
+      emails = Collection.update(account_state.emails, updated)
+
+      account_state
+      |> Map.put(:emails, emails)
+      |> Map.put(:mailbox_emails, mailbox_emails)
+    end
+
     def apply_to(%__MODULE__{type: type, updated: updated}, %AccountState{} = account_state) do
       Map.put(
         account_state,
