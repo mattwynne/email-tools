@@ -283,4 +283,190 @@ defmodule FastmailAccountTest do
        }}
     )
   end
+
+  test "broadcasts events when emails are added/removed from mailboxes" do
+    test = self()
+
+    # fake event source request body - function that returns events
+    events_stub = fn ->
+      send(test, {:ready, self()})
+
+      receive do
+        {:event, event} -> event
+      end
+    end
+
+    session =
+      Session.null(
+        get_session: GetSession.null(account_id: "account-id"),
+        event_source: EventSource.null(events: events_stub),
+        execute: [
+          {{MethodCalls.GetAllMailboxes},
+           [
+             [
+               "Mailbox/get",
+               %{
+                 "state" => "123",
+                 "list" => [
+                   %{"id" => "inbox-id", "name" => "Inbox"},
+                   %{"id" => "action-id", "name" => "Action"}
+                 ]
+               },
+               "0"
+             ]
+           ]},
+          {{MethodCalls.QueryAllEmails, in_mailbox: "inbox-id"},
+           [
+             [
+               "Email/query",
+               %{
+                 "filter" => %{"inMailbox" => "inbox-id"},
+                 "ids" => ["email-1"]
+               },
+               "0"
+             ]
+           ]},
+          {{MethodCalls.QueryAllEmails, in_mailbox: "action-id"},
+           [
+             [
+               "Email/query",
+               %{
+                 "filter" => %{"inMailbox" => "action-id"},
+                 "ids" => ["email-2"]
+               },
+               "0"
+             ]
+           ]},
+          {{MethodCalls.GetAllChanged, type: "Email", since_state: "state-1"},
+           [
+             [
+               "Email/changes",
+               %{
+                 "newState" => "123",
+                 "oldState" => "122",
+                 "updated" => ["email-1", "email-2"]
+               },
+               "0"
+             ],
+             [
+               "Email/get",
+               %{
+                 "state" => "123",
+                 "list" => [
+                   %{
+                     "id" => "email-1",
+                     "from" => [%{"email" => "test@example.com"}],
+                     "mailboxIds" => %{"inbox-id" => true, "action-id" => true}
+                   },
+                   %{
+                     "id" => "email-2",
+                     "from" => [%{"email" => "test2@example.com"}],
+                     "mailboxIds" => %{"inbox-id" => true}
+                   }
+                 ]
+               },
+               "updated"
+             ]
+           ]},
+          {{MethodCalls.GetAllChanged, type: "Mailbox", since_state: "state-1"},
+           [
+             [
+               "Mailbox/changes",
+               %{
+                 "oldState" => "122",
+                 "newState" => "123",
+                 "updated" => []
+               },
+               "0"
+             ],
+             [
+               "Mailbox/get",
+               %{
+                 "state" => "123",
+                 "list" => []
+               },
+               "updated"
+             ]
+           ]},
+          {{MethodCalls.GetAllChanged, type: "Thread", since_state: "state-1"},
+           [
+             [
+               "Thread/changes",
+               %{
+                 "oldState" => "state-0",
+                 "newState" => "state-1"
+               },
+               "0"
+             ],
+             [
+               "Thread/get",
+               %{
+                 "state" => "state-1",
+                 "list" => []
+               },
+               "updated"
+             ]
+           ]}
+        ]
+      )
+
+    Phoenix.PubSub.subscribe(
+      InboxCoach.PubSub,
+      "test"
+    )
+
+    {:ok, _account} = FastmailAccount.start_link(session: session, pubsub_topic: "test")
+
+    assert_receive({:ready, events})
+    assert_receive({:state, %AccountState{mailboxes: nil}})
+
+    send(
+      events,
+      {
+        :event,
+        %{
+          "changed" => %{
+            "account-id" => %{
+              "Email" => "state-1",
+              "EmailDelivery" => "state-1",
+              "Mailbox" => "state-1",
+              "Thread" => "state-1"
+            }
+          },
+          "type" => "connect"
+        }
+      }
+    )
+
+    # Wait for initial state to be established
+    collect_states_until_match(%{
+      "inbox-id" => ["email-1"],
+      "action-id" => ["email-2"]
+    })
+
+    # Send event that will trigger email changes
+    send(
+      events,
+      {
+        :event,
+        %{
+          "changed" => %{
+            "account-id" => %{
+              "Email" => "state-2",
+              "EmailDelivery" => "state-1",
+              "Mailbox" => "state-1",
+              "Thread" => "state-1"
+            }
+          },
+          "type" => "client"
+        }
+      }
+    )
+
+    # Should receive events about email-1 being added to action-id
+    # and email-2 being removed from action-id and added to inbox-id
+    assert_receive {:email_added_to_mailbox, %{email_id: "email-1", mailbox_id: "action-id"}}
+    assert_receive {:email_removed_from_mailbox, %{email_id: "email-2", mailbox_id: "action-id"}}
+    assert_receive {:email_added_to_mailbox, %{email_id: "email-2", mailbox_id: "inbox-id"}}
+  end
 end

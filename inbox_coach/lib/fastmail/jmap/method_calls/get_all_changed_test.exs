@@ -671,5 +671,68 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
 
       assert Enum.count(new_state.threads) == 2
     end
+
+    test "calls on_changed callback when emails are added to or removed from mailboxes" do
+      state =
+        %AccountState{
+          mailboxes:
+            Collection.new("123", [
+              %Mailbox{id: "inbox", name: "Inbox"},
+              %Mailbox{id: "action", name: "Action"}
+            ]),
+          threads:
+            Collection.new("123", [
+              %Thread{id: "a-thread", email_ids: ["email-1"]}
+            ]),
+          emails:
+            Collection.new("123", [
+              %Email{
+                id: "email-1",
+                mailbox_ids: ["inbox"],
+                from: [%Contact{email: "a@b.com"}],
+                thread_id: "a-thread"
+              },
+              %Email{
+                id: "email-3",
+                mailbox_ids: ["action"],
+                from: [%Contact{email: "1@2.com"}],
+                thread_id: "a-thread"
+              }
+            ]),
+          mailbox_emails: %{
+            "inbox" => ["email-1"],
+            "action" => ["email-3"]
+          }
+        }
+
+      response = %GetAllChanged.Response{
+        type: :emails,
+        old_state: "123",
+        updated:
+          Collection.new("456", [
+            %Email{
+              id: "email-1",
+              mailbox_ids: ["inbox", "action"],
+              from: [%Contact{email: "a@b.com"}],
+              thread_id: "a-thread"
+            },
+            %Email{
+              id: "email-3",
+              mailbox_ids: ["inbox"],
+              from: [%Contact{email: "1@2.com"}],
+              thread_id: "a-thread"
+            }
+          ])
+      }
+
+      test_pid = self()
+      on_changed = fn event -> send(test_pid, {:event, event}) end
+
+      GetAllChanged.Response.apply_to(response, state, on_changed)
+
+      assert_receive {:event, %{type: :email_added_to_mailbox, email_id: "email-1", mailbox_id: "action"}}
+      assert_receive {:event, %{type: :email_removed_from_mailbox, email_id: "email-3", mailbox_id: "action"}}
+      assert_receive {:event, %{type: :email_added_to_mailbox, email_id: "email-3", mailbox_id: "inbox"}}
+    end
   end
 end

@@ -71,4 +71,79 @@ defmodule InboxCoachWeb.RootLiveTest do
       assert {:ok, _view, _html} = live(conn, "/")
     end
   end
+
+  describe "stream tab" do
+    test "displays email movement events in a feed", %{conn: conn} do
+      user = user_fixture()
+
+      # Update user with API key
+      {:ok, user} =
+        InboxCoach.Accounts.update_user_fastmail_api_key(user, %{
+          "current_password" => "hello world!",
+          "fastmail_api_key" => "test-api-key"
+        })
+
+      # Create a null session with stubbed responses
+      session =
+        Session.null(
+          execute: [
+            {{MethodCalls.GetAllMailboxes},
+             [
+               [
+                 "Mailbox/get",
+                 %{
+                   "state" => "123",
+                   "list" => [
+                     %{"id" => "inbox-id", "name" => "Inbox"},
+                     %{"id" => "action-id", "name" => "Action"}
+                   ]
+                 },
+                 "0"
+               ]
+             ]},
+            {{MethodCalls.QueryAllEmails, in_mailbox: "inbox-id"},
+             [
+               [
+                 "Email/query",
+                 %{
+                   "filter" => %{"inMailbox" => "inbox-id"},
+                   "ids" => ["email-1"]
+                 },
+                 "0"
+               ]
+             ]},
+            {{MethodCalls.QueryAllEmails, in_mailbox: "action-id"},
+             [
+               [
+                 "Email/query",
+                 %{
+                   "filter" => %{"inMailbox" => "action-id"},
+                   "ids" => []
+                 },
+                 "0"
+               ]
+             ]}
+          ]
+        )
+
+      # Start a FastmailAccount with the null session and register it
+      pubsub_topic = FastmailAccount.pubsub_topic_for(user)
+      via_tuple = {:via, Registry, {InboxCoach.FastmailAccountRegistry, user.id}}
+      {:ok, _account} = FastmailAccount.start_link(session: session, pubsub_topic: pubsub_topic, name: via_tuple)
+
+      conn = log_in_user(conn, user)
+
+      {:ok, view, _html} = live(conn, "/")
+
+      # Simulate email being added to action mailbox
+      Phoenix.PubSub.broadcast(
+        InboxCoach.PubSub,
+        pubsub_topic,
+        {:email_added_to_mailbox, %{email_id: "email-1", mailbox_id: "action-id"}}
+      )
+
+      # Should display the event with mailbox name instead of ID
+      assert render(view) =~ "email-1 added to Action"
+    end
+  end
 end
