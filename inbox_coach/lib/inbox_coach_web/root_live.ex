@@ -23,6 +23,7 @@ defmodule InboxCoachWeb.RootLive do
       |> assign(:state, initial_account_state)
       |> assign(:mailboxes, initial_account_state.mailboxes)
       |> assign(:emails_by_mailbox, initial_account_state.mailbox_emails)
+      |> assign(:event_stream, [])
     }
   end
 
@@ -40,6 +41,13 @@ defmodule InboxCoachWeb.RootLive do
       <% end %>
     </ul>
     <hr />
+    <h1 class="text-2xl">Stream:</h1>
+    <ul>
+      <%= for event <- @event_stream do %>
+        <li><%= format_event(event, @mailboxes) %></li>
+      <% end %>
+    </ul>
+    <hr />
     <h1 class="text-2xl">State:</h1>
     <pre>
     <code>
@@ -47,6 +55,24 @@ defmodule InboxCoachWeb.RootLive do
     </code>
     </pre>
     """
+  end
+
+  defp format_event(%{type: :email_added_to_mailbox, email_id: email_id, mailbox_id: mailbox_id}, mailboxes) do
+    mailbox_name = get_mailbox_name(mailboxes, mailbox_id)
+    "#{email_id} added to #{mailbox_name}"
+  end
+
+  defp format_event(%{type: :email_removed_from_mailbox, email_id: email_id, mailbox_id: mailbox_id}, mailboxes) do
+    mailbox_name = get_mailbox_name(mailboxes, mailbox_id)
+    "#{email_id} removed from #{mailbox_name}"
+  end
+
+  defp get_mailbox_name(nil, mailbox_id), do: mailbox_id
+  defp get_mailbox_name(mailboxes, mailbox_id) do
+    case Enum.find(mailboxes, fn mailbox -> mailbox.id == mailbox_id end) do
+      nil -> mailbox_id
+      mailbox -> mailbox.name
+    end
   end
 
   def handle_info({:state, state}, socket) do
@@ -57,6 +83,24 @@ defmodule InboxCoachWeb.RootLive do
       |> assign(state: state)
       |> assign(mailboxes: state.mailboxes)
       |> assign(emails_by_mailbox: state.mailbox_emails)
+    }
+  end
+
+  def handle_info({:email_added_to_mailbox, event}, socket) do
+    event_with_type = Map.put(event, :type, :email_added_to_mailbox)
+    {
+      :noreply,
+      socket
+      |> assign(:event_stream, [event_with_type | socket.assigns.event_stream])
+    }
+  end
+
+  def handle_info({:email_removed_from_mailbox, event}, socket) do
+    event_with_type = Map.put(event, :type, :email_removed_from_mailbox)
+    {
+      :noreply,
+      socket
+      |> assign(:event_stream, [event_with_type | socket.assigns.event_stream])
     }
   end
 end
