@@ -57,17 +57,36 @@ defmodule InboxCoachWeb.RootLive do
     """
   end
 
-  defp format_event(%{type: :email_added_to_mailbox, email_id: email_id, mailbox_id: mailbox_id}, mailboxes) do
+  defp format_event(
+         %{
+           type: :email_added_to_mailbox,
+           email_id: email_id,
+           mailbox_id: mailbox_id,
+           old_state: old_state,
+           new_state: new_state
+         },
+         mailboxes
+       ) do
     mailbox_name = get_mailbox_name(mailboxes, mailbox_id)
-    "#{email_id} added to #{mailbox_name}"
+    "#{email_id} added to #{mailbox_name} from #{old_state} to #{new_state}"
   end
 
-  defp format_event(%{type: :email_removed_from_mailbox, email_id: email_id, mailbox_id: mailbox_id}, mailboxes) do
+  defp format_event(
+         %{
+           type: :email_removed_from_mailbox,
+           email_id: email_id,
+           mailbox_id: mailbox_id,
+           old_state: old_state,
+           new_state: new_state
+         },
+         mailboxes
+       ) do
     mailbox_name = get_mailbox_name(mailboxes, mailbox_id)
-    "#{email_id} removed from #{mailbox_name}"
+    "#{email_id} removed from #{mailbox_name} from #{old_state} to #{new_state}"
   end
 
   defp get_mailbox_name(nil, mailbox_id), do: mailbox_id
+
   defp get_mailbox_name(mailboxes, mailbox_id) do
     case Enum.find(mailboxes, fn mailbox -> mailbox.id == mailbox_id end) do
       nil -> mailbox_id
@@ -88,6 +107,7 @@ defmodule InboxCoachWeb.RootLive do
 
   def handle_info({:email_added_to_mailbox, event}, socket) do
     event_with_type = Map.put(event, :type, :email_added_to_mailbox)
+
     {
       :noreply,
       socket
@@ -97,6 +117,7 @@ defmodule InboxCoachWeb.RootLive do
 
   def handle_info({:email_removed_from_mailbox, event}, socket) do
     event_with_type = Map.put(event, :type, :email_removed_from_mailbox)
+
     {
       :noreply,
       socket
