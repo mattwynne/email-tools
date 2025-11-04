@@ -132,6 +132,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
                    %Email{
                      id: "Su4vMyni5WCk",
                      thread_id: "AX_dGzpWbEk7",
+                     subject: "A subject",
                      from: [
                        %Contact{
                          email: "someone@example.com"

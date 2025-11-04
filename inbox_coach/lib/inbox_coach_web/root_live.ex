@@ -44,7 +44,7 @@ defmodule InboxCoachWeb.RootLive do
     <h1 class="text-2xl">Stream:</h1>
     <ul>
       <%= for event <- @event_stream do %>
-        <li><%= format_event(event, @mailboxes) %></li>
+        <li><%= format_event(event, @state) %></li>
       <% end %>
     </ul>
     <hr />
@@ -65,10 +65,11 @@ defmodule InboxCoachWeb.RootLive do
            old_state: old_state,
            new_state: new_state
          },
-         mailboxes
+         state
        ) do
-    mailbox_name = get_mailbox_name(mailboxes, mailbox_id)
-    "#{email_id} added to #{mailbox_name} from #{old_state} to #{new_state}"
+    mailbox_name = get_mailbox_name(state.mailboxes, mailbox_id)
+    email_subject = get_email_subject(state.emails, email_id)
+    "#{email_subject} added to #{mailbox_name} from #{old_state} to #{new_state}"
   end
 
   defp format_event(
@@ -77,10 +78,11 @@ defmodule InboxCoachWeb.RootLive do
            email_id: email_id,
            mailbox_id: mailbox_id
          },
-         mailboxes
+         state
        ) do
-    mailbox_name = get_mailbox_name(mailboxes, mailbox_id)
-    "#{email_id} added to #{mailbox_name}"
+    mailbox_name = get_mailbox_name(state.mailboxes, mailbox_id)
+    email_subject = get_email_subject(state.emails, email_id)
+    "#{email_subject} added to #{mailbox_name}"
   end
 
   defp format_event(
@@ -91,10 +93,11 @@ defmodule InboxCoachWeb.RootLive do
            old_state: old_state,
            new_state: new_state
          },
-         mailboxes
+         state
        ) do
-    mailbox_name = get_mailbox_name(mailboxes, mailbox_id)
-    "#{email_id} removed from #{mailbox_name} from #{old_state} to #{new_state}"
+    mailbox_name = get_mailbox_name(state.mailboxes, mailbox_id)
+    email_subject = get_email_subject(state.emails, email_id)
+    "#{email_subject} removed from #{mailbox_name} from #{old_state} to #{new_state}"
   end
 
   defp get_mailbox_name(nil, mailbox_id), do: mailbox_id
@@ -103,6 +106,15 @@ defmodule InboxCoachWeb.RootLive do
     case Enum.find(mailboxes, fn mailbox -> mailbox.id == mailbox_id end) do
       nil -> mailbox_id
       mailbox -> mailbox.name
+    end
+  end
+
+  defp get_email_subject(nil, email_id), do: email_id
+
+  defp get_email_subject(emails, email_id) do
+    case Enum.find(emails.list, fn email -> email.id == email_id end) do
+      nil -> email_id
+      email -> email.subject || email.id
     end
   end
 

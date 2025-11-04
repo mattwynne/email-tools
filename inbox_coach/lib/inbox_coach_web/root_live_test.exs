@@ -3,6 +3,8 @@ defmodule InboxCoachWeb.RootLiveTest do
   import Phoenix.LiveViewTest
   alias Fastmail.Jmap.MethodCalls
   alias Fastmail.Jmap.Session
+  alias Fastmail.Jmap.EventSource
+  alias Fastmail.Jmap.AccountState
   alias InboxCoach.FastmailAccount
   import InboxCoach.AccountsFixtures
 
@@ -83,9 +85,21 @@ defmodule InboxCoachWeb.RootLiveTest do
           "fastmail_api_key" => "test-api-key"
         })
 
+      test_pid = self()
+
+      # Set up events stub that waits for eventsource events
+      events_stub = fn ->
+        send(test_pid, {:ready, self()})
+
+        receive do
+          {:event, event} -> event
+        end
+      end
+
       # Create a null session with stubbed responses
       session =
         Session.null(
+          event_source: EventSource.null(events: events_stub),
           execute: [
             {{MethodCalls.GetAllMailboxes},
              [
@@ -122,6 +136,34 @@ defmodule InboxCoachWeb.RootLiveTest do
                  },
                  "0"
                ]
+             ]},
+            {{MethodCalls.GetAllChanged, type: "Email", since_state: "123"},
+             [
+               [
+                 "Email/changes",
+                 %{
+                   "oldState" => "123",
+                   "newState" => "456",
+                   "updated" => ["email-1"]
+                 },
+                 "0"
+               ],
+               [
+                 "Email/get",
+                 %{
+                   "state" => "456",
+                   "list" => [
+                     %{
+                       "id" => "email-1",
+                       "subject" => "Important task",
+                       "threadId" => "thread-1",
+                       "from" => [%{"email" => "test@example.com", "name" => nil}],
+                       "mailboxIds" => %{"inbox-id" => true, "action-id" => true}
+                     }
+                   ]
+                 },
+                 "updated"
+               ]
              ]}
           ]
         )
@@ -131,19 +173,60 @@ defmodule InboxCoachWeb.RootLiveTest do
       via_tuple = {:via, Registry, {InboxCoach.FastmailAccountRegistry, user.id}}
       {:ok, _account} = FastmailAccount.start_link(session: session, pubsub_topic: pubsub_topic, name: via_tuple)
 
+      # Wait for event source to be ready
+      assert_receive({:ready, events})
+
       conn = log_in_user(conn, user)
 
       {:ok, view, _html} = live(conn, "/")
 
-      # Simulate email being added to action mailbox
-      Phoenix.PubSub.broadcast(
-        InboxCoach.PubSub,
-        pubsub_topic,
-        {:email_added_to_mailbox, %{email_id: "email-1", mailbox_id: "action-id"}}
+      # Subscribe to PubSub to track events
+      Phoenix.PubSub.subscribe(InboxCoach.PubSub, pubsub_topic)
+
+      # Send initial connect event to establish baseline state
+      send(
+        events,
+        {
+          :event,
+          %{
+            "changed" => %{
+              "some-account-id" => %{
+                "Email" => "123",
+                "Mailbox" => "123",
+                "Thread" => "123"
+              }
+            },
+            "type" => "connect"
+          }
+        }
       )
 
-      # Should display the event with mailbox name instead of ID
-      assert render(view) =~ "email-1 added to Action"
+      # Wait for initial state to be processed
+      assert_receive({:state, %AccountState{}}, 1000)
+
+      # Now send state change event to trigger Email update
+      send(
+        events,
+        {
+          :event,
+          %{
+            "changed" => %{
+              "some-account-id" => %{
+                "Email" => "456",
+                "Mailbox" => "123",
+                "Thread" => "123"
+              }
+            },
+            "type" => "StateChange"
+          }
+        }
+      )
+
+      # Wait for the email_added_to_mailbox event to be broadcast
+      assert_receive({:email_added_to_mailbox, %{email_id: "email-1", mailbox_id: "action-id"}}, 1000)
+
+      # Should display the event with the email subject
+      assert render(view) =~ ~r/Important task.*added to Action/
     end
   end
 end
