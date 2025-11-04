@@ -23,6 +23,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
           %Email{
             id: email["id"],
             thread_id: email["threadId"],
+            subject: email["subject"],
             mailbox_ids:
               email["mailboxIds"]
               |> Enum.filter(fn {_, yeah?} -> yeah? end)

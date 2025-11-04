@@ -20,9 +20,8 @@ defmodule Fastmail.Jmap do
   end
 
   defmodule Email do
-    defstruct [:id, :from, :mailbox_ids, :thread_id]
+    defstruct [:id, :from, :mailbox_ids, :thread_id, :subject]
 
-    # TODO: this can be where we emit pubsub events about specific changes e.g. EmailAddedToMailbox
     def merge(email, updated_email) do
       Map.merge(email, updated_email)
     end
