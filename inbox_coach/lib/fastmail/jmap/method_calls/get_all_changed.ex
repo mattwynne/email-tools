@@ -96,6 +96,25 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
       apply_to(response, account_state, fn _ -> :ok end)
     end
 
+    def apply_to(%__MODULE__{type: type, updated: updated}, %AccountState{} = account_state) do
+      Map.put(
+        account_state,
+        type,
+        Collection.update(
+          Map.get(account_state, type),
+          updated
+        )
+      )
+    end
+
+    def apply_to(request, state) do
+      Logger.error(
+        "[#{__MODULE__}] unable to apply request #{inspect(request, pretty: true, syntax_colors: IO.ANSI.syntax_colors())} to state #{inspect(state, pretty: true)}"
+      )
+
+      state
+    end
+
     def apply_to(
           %__MODULE__{type: :emails, updated: updated, old_state: old_state},
           %AccountState{mailbox_emails: mailbox_emails} = account_state,
@@ -142,25 +161,6 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
       account_state
       |> Map.put(:emails, emails)
       |> Map.put(:mailbox_emails, mailbox_emails)
-    end
-
-    def apply_to(%__MODULE__{type: type, updated: updated}, %AccountState{} = account_state) do
-      Map.put(
-        account_state,
-        type,
-        Collection.update(
-          Map.get(account_state, type),
-          updated
-        )
-      )
-    end
-
-    def apply_to(request, state) do
-      Logger.error(
-        "[#{__MODULE__}] unable to apply request #{inspect(request, pretty: true, syntax_colors: IO.ANSI.syntax_colors())} to state #{inspect(state, pretty: true)}"
-      )
-
-      state
     end
   end
 
