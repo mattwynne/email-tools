@@ -146,6 +146,39 @@ defmodule Fastmail.Jmap.CollectionTest do
     end
   end
 
+  describe "get/2" do
+    test "returns the item with the matching ID" do
+      collection =
+        Collection.new("test-state", [
+          %Mailbox{id: "inbox-id", name: "Inbox"},
+          %Mailbox{id: "sent-id", name: "Sent"}
+        ])
+
+      result = Collection.get(collection, "sent-id")
+
+      assert result == %Mailbox{id: "sent-id", name: "Sent"}
+    end
+
+    test "returns nil when ID not found" do
+      collection =
+        Collection.new("test-state", [
+          %Mailbox{id: "inbox-id", name: "Inbox"}
+        ])
+
+      result = Collection.get(collection, "nonexistent-id")
+
+      assert result == nil
+    end
+
+    test "returns nil for empty collection" do
+      collection = Collection.new("test-state", [])
+
+      result = Collection.get(collection, "any-id")
+
+      assert result == nil
+    end
+  end
+
   describe "Enumerable protocol" do
     setup do
       collection =

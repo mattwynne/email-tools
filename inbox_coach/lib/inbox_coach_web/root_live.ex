@@ -103,7 +103,7 @@ defmodule InboxCoachWeb.RootLive do
   defp get_mailbox_name(nil, mailbox_id), do: mailbox_id
 
   defp get_mailbox_name(mailboxes, mailbox_id) do
-    case Enum.find(mailboxes, fn mailbox -> mailbox.id == mailbox_id end) do
+    case Fastmail.Jmap.Collection.get(mailboxes, mailbox_id) do
       nil -> mailbox_id
       mailbox -> mailbox.name
     end
@@ -112,14 +112,13 @@ defmodule InboxCoachWeb.RootLive do
   defp get_email_subject(nil, email_id), do: email_id
 
   defp get_email_subject(emails, email_id) do
-    case Enum.find(emails.list, fn email -> email.id == email_id end) do
+    case Fastmail.Jmap.Collection.get(emails, email_id) do
       nil -> email_id
       email -> email.subject || email.id
     end
   end
 
   def handle_info({:state, state}, socket) do
-    # TODO: consider creating a separate ViewState model that the fastmail client emits. Need to keep the token more secret.
     {
       :noreply,
       socket

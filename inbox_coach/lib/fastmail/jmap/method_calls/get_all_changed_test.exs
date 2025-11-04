@@ -126,9 +126,8 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
              %GetAllChanged.Response{
                type: :emails,
                old_state: "J7100",
-               updated: %Collection{
-                 state: "J7138",
-                 list: [
+               updated:
+                 Collection.new("J7138", [
                    %Email{
                      id: "Su4vMyni5WCk",
                      thread_id: "AX_dGzpWbEk7",
@@ -140,8 +139,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
                      ],
                      mailbox_ids: ["P2F"]
                    }
-                 ]
-               }
+                 ])
              }
   end
 
@@ -450,9 +448,8 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
              %GetAllChanged.Response{
                type: :mailboxes,
                old_state: "J7100",
-               updated: %Collection{
-                 state: "J7138",
-                 list: [
+               updated:
+                 Collection.new("J7138", [
                    %Mailbox{name: "Inbox", id: "P-F"},
                    %Mailbox{name: "Archive", id: "P1k"},
                    %Mailbox{name: "Drafts", id: "P2-"},
@@ -461,8 +458,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
                    %Mailbox{name: "Sent", id: "P2k"},
                    %Mailbox{name: "Spam", id: "P3-"},
                    %Mailbox{name: "Trash", id: "P3F"}
-                 ]
-               }
+                 ])
              }
   end
 
@@ -504,12 +500,10 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
              %GetAllChanged.Response{
                type: :threads,
                old_state: "J7100",
-               updated: %Collection{
-                 state: "J7138",
-                 list: [
+               updated:
+                 Collection.new("J7138", [
                    %Thread{id: "AX_dGzpWbEk7", email_ids: ["Su4vMyni5WCk"]}
-                 ]
-               }
+                 ])
              }
   end
 

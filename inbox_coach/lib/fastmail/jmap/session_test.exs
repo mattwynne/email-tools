@@ -125,13 +125,11 @@ defmodule Fastmail.Jmap.SessionTest do
         )
 
       assert %GetAllMailboxes.Response{
-               mailboxes: %Collection{
-                 state: "test-state-123",
-                 list: [
+               mailboxes:
+                 Collection.new("test-state-123", [
                    %Mailbox{id: "Ponies", name: "Ponies Mailbox"},
                    %Mailbox{id: "Rainbows", name: "Rainbows Mailbox"}
-                 ]
-               }
+                 ])
              } == session |> Session.execute(GetAllMailboxes)
 
       assert %QueryAllEmails.Response{
@@ -173,13 +171,11 @@ defmodule Fastmail.Jmap.SessionTest do
         )
 
       assert %GetAllMailboxes.Response{
-               mailboxes: %Collection{
-                 state: "test-state-123",
-                 list: [
+               mailboxes:
+                 Collection.new("test-state-123", [
                    %Mailbox{id: "Ponies", name: "Ponies Mailbox"},
                    %Mailbox{id: "Rainbows", name: "Rainbows Mailbox"}
-                 ]
-               }
+                 ])
              } ==
                session |> Session.execute(GetAllMailboxes)
 
