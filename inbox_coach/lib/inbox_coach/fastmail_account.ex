@@ -112,14 +112,12 @@ defmodule InboxCoach.FastmailAccount do
   end
 
   @impl true
-  def handle_info({_task, %GetAllChanged.Response{type: :emails} = response}, state = %{account_state: account_state, pubsub_topic: pubsub_topic}) do
+  def handle_info(
+        {_task, %GetAllChanged.Response{type: :emails} = response},
+        state = %{account_state: account_state}
+      ) do
     on_changed = fn event ->
-      event_type = event.type
-      Phoenix.PubSub.broadcast(
-        InboxCoach.PubSub,
-        pubsub_topic,
-        {event_type, event}
-      )
+      send(self(), {:pending_broadcast, event})
     end
 
     state
@@ -128,6 +126,7 @@ defmodule InboxCoach.FastmailAccount do
       GetAllChanged.Response.apply_to(response, account_state, on_changed)
     )
     |> emit()
+    |> flush_pending_events()
     |> after_response_applied(response)
     |> noreply()
   end
@@ -191,6 +190,23 @@ defmodule InboxCoach.FastmailAccount do
     )
 
     state
+  end
+
+  defp flush_pending_events(state = %{pubsub_topic: pubsub_topic}) do
+    receive do
+      {:pending_broadcast, event} ->
+        event_type = event.type
+
+        Phoenix.PubSub.broadcast(
+          InboxCoach.PubSub,
+          pubsub_topic,
+          {event_type, event}
+        )
+
+        flush_pending_events(state)
+    after
+      0 -> state
+    end
   end
 
   defp ok(state), do: {:ok, state}
