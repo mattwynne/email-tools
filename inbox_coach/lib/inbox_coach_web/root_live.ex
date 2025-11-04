@@ -73,6 +73,18 @@ defmodule InboxCoachWeb.RootLive do
 
   defp format_event(
          %{
+           type: :email_added_to_mailbox,
+           email_id: email_id,
+           mailbox_id: mailbox_id
+         },
+         mailboxes
+       ) do
+    mailbox_name = get_mailbox_name(mailboxes, mailbox_id)
+    "#{email_id} added to #{mailbox_name}"
+  end
+
+  defp format_event(
+         %{
            type: :email_removed_from_mailbox,
            email_id: email_id,
            mailbox_id: mailbox_id,
