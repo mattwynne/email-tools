@@ -6,6 +6,7 @@ const fs = require("fs")
 const path = require("path")
 
 module.exports = {
+  darkMode: 'media',
   content: [
     "./js/**/*.js",
     "../lib/inbox_coach_web.ex",
