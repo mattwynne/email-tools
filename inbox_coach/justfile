@@ -1,2 +1,2 @@
 logo:
-  svgbob --font-family Monaco < logo > inbox_coach/logo.svg 
+  svgbob --font-family Monaco < logo > priv/static/images/logo.svg
