@@ -8,6 +8,8 @@
     flyctl
     gh
     lolcat
+    svgbob
+    just
   ];
 
   languages.elixir.enable = true;
@@ -47,7 +49,7 @@
     };
 
   enterShell = ''
-    cat ../logo | lolcat -p .5
+    cat logo | lolcat -p .5
     echo
     echo "Run 'devenv up -d' to start services"
     echo "Run 'setup' for one-time project setup"
