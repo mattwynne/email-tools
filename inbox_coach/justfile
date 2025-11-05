@@ -1,0 +1,2 @@
+logo:
+  svgbob --font-family Monaco < logo > inbox_coach/logo.svg 
