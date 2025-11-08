@@ -1,4 +1,5 @@
 defmodule Fastmail.Jmap.MethodCalls.GetAllMailboxesTest do
+  import ExUnit.CaptureLog
   alias Fastmail.Jmap.AccountState
   alias Fastmail.Jmap.Collection
   alias Fastmail.Jmap.Mailbox
@@ -297,32 +298,64 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllMailboxesTest do
     assert ^response = %GetAllMailboxes.Response{
              mailboxes:
                Collection.new("J7138", [
-                 %Mailbox{name: "Inbox", id: "P-F"},
-                 %Mailbox{name: "Archive", id: "P1k"},
-                 %Mailbox{name: "Drafts", id: "P2-"},
-                 %Mailbox{name: "TestFolder", id: "P2F"},
-                 %Mailbox{name: "TestFolderTwo", id: "P2V"},
-                 %Mailbox{name: "Sent", id: "P2k"},
-                 %Mailbox{name: "Spam", id: "P3-"},
-                 %Mailbox{name: "Trash", id: "P3F"}
+                 %Mailbox{name: "Inbox", id: "P-F", role: :inbox},
+                 %Mailbox{name: "Archive", id: "P1k", role: :archive},
+                 %Mailbox{name: "Drafts", id: "P2-", role: :drafts},
+                 %Mailbox{name: "TestFolder", id: "P2F", role: :none},
+                 %Mailbox{name: "TestFolderTwo", id: "P2V", role: :none},
+                 %Mailbox{name: "Sent", id: "P2k", role: :sent},
+                 %Mailbox{name: "Spam", id: "P3-", role: :junk},
+                 %Mailbox{name: "Trash", id: "P3F", role: :trash}
                ])
            }
+  end
+
+  test "logs warning for unknown mailbox role" do
+    session =
+      Session.null(
+        execute: [
+          {{GetAllMailboxes},
+           [
+             [
+               "Mailbox/get",
+               %{
+                 "list" => [
+                   %{
+                     "id" => "custom-1",
+                     "name" => "Custom Folder",
+                     "role" => "unknown_custom_role"
+                   }
+                 ],
+                 "state" => "test-state"
+               },
+               "mailboxes"
+             ]
+           ]}
+        ]
+      )
+
+    log =
+      capture_log(fn ->
+        Session.execute(session, GetAllMailboxes)
+      end)
+
+    assert log =~ "Unknown mailbox role encountered: \"unknown_custom_role\""
   end
 
   describe "apply_to/2" do
     test "updating mailboxes in AccountState" do
       state = %AccountState{
         mailboxes: Collection.new("123", [
-          %Mailbox{id: "inbox", name: "Inbox"},
-          %Mailbox{id: "archive", name: "Archive"}
+          %Mailbox{id: "inbox", name: "Inbox", role: :inbox},
+          %Mailbox{id: "archive", name: "Archive", role: :archive}
         ])
       }
 
       response = %GetAllMailboxes.Response{
         mailboxes: Collection.new("456", [
-          %Mailbox{id: "inbox", name: "Inbox Updated"},
-          %Mailbox{id: "archive", name: "Archive"},
-          %Mailbox{id: "drafts", name: "Drafts"}
+          %Mailbox{id: "inbox", name: "Inbox Updated", role: :inbox},
+          %Mailbox{id: "archive", name: "Archive", role: :archive},
+          %Mailbox{id: "drafts", name: "Drafts", role: :drafts}
         ])
       }
 
@@ -332,9 +365,9 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllMailboxesTest do
         mailboxes: %Collection{
           state: "456",
           list: [
-            %Mailbox{id: "inbox", name: "Inbox Updated"},
-            %Mailbox{id: "archive", name: "Archive"},
-            %Mailbox{id: "drafts", name: "Drafts"}
+            %Mailbox{id: "inbox", name: "Inbox Updated", role: :inbox},
+            %Mailbox{id: "archive", name: "Archive", role: :archive},
+            %Mailbox{id: "drafts", name: "Drafts", role: :drafts}
           ]
         }
       } = new_state

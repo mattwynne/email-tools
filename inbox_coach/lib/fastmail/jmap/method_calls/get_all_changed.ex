@@ -50,13 +50,7 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
           ["Mailbox/changes", %{"oldState" => old_state, "newState" => _new_state}, _],
           ["Mailbox/get", %{"state" => state, "list" => updated}, "updated"]
         ]) do
-      updated =
-        Enum.map(updated, fn mailbox ->
-          %Mailbox{
-            id: mailbox["id"],
-            name: mailbox["name"]
-          }
-        end)
+      updated = Enum.map(updated, &Mailbox.from_jmap/1)
 
       %__MODULE__{
         type: :mailboxes,

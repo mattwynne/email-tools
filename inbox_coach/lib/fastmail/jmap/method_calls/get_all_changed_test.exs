@@ -450,14 +450,14 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
                old_state: "J7100",
                updated:
                  Collection.new("J7138", [
-                   %Mailbox{name: "Inbox", id: "P-F"},
-                   %Mailbox{name: "Archive", id: "P1k"},
-                   %Mailbox{name: "Drafts", id: "P2-"},
-                   %Mailbox{name: "TestFolder", id: "P2F"},
-                   %Mailbox{name: "TestFolderTwo", id: "P2V"},
-                   %Mailbox{name: "Sent", id: "P2k"},
-                   %Mailbox{name: "Spam", id: "P3-"},
-                   %Mailbox{name: "Trash", id: "P3F"}
+                   %Mailbox{name: "Inbox", id: "P-F", role: :inbox},
+                   %Mailbox{name: "Archive", id: "P1k", role: :archive},
+                   %Mailbox{name: "Drafts", id: "P2-", role: :drafts},
+                   %Mailbox{name: "TestFolder", id: "P2F", role: :none},
+                   %Mailbox{name: "TestFolderTwo", id: "P2V", role: :none},
+                   %Mailbox{name: "Sent", id: "P2k", role: :sent},
+                   %Mailbox{name: "Spam", id: "P3-", role: :junk},
+                   %Mailbox{name: "Trash", id: "P3F", role: :trash}
                  ])
              }
   end
