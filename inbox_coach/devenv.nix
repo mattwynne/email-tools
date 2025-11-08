@@ -1,4 +1,4 @@
-{ pkgs, lib, config, ... }:
+{ pkgs, lib, config, inputs, ... }:
 {
   packages = with pkgs; [
     elixir
@@ -10,6 +10,7 @@
     lolcat
     svgbob
     just
+    inputs.beads.packages.${pkgs.system}.default
   ];
 
   languages.elixir.enable = true;
