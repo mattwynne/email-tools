@@ -127,8 +127,8 @@ defmodule Fastmail.Jmap.SessionTest do
       assert %GetAllMailboxes.Response{
                mailboxes:
                  Collection.new("test-state-123", [
-                   %Mailbox{id: "Ponies", name: "Ponies Mailbox"},
-                   %Mailbox{id: "Rainbows", name: "Rainbows Mailbox"}
+                   %Mailbox{id: "Ponies", name: "Ponies Mailbox", role: :none},
+                   %Mailbox{id: "Rainbows", name: "Rainbows Mailbox", role: :none}
                  ])
              } == session |> Session.execute(GetAllMailboxes)
 
@@ -173,8 +173,8 @@ defmodule Fastmail.Jmap.SessionTest do
       assert %GetAllMailboxes.Response{
                mailboxes:
                  Collection.new("test-state-123", [
-                   %Mailbox{id: "Ponies", name: "Ponies Mailbox"},
-                   %Mailbox{id: "Rainbows", name: "Rainbows Mailbox"}
+                   %Mailbox{id: "Ponies", name: "Ponies Mailbox", role: :none},
+                   %Mailbox{id: "Rainbows", name: "Rainbows Mailbox", role: :none}
                  ])
              } ==
                session |> Session.execute(GetAllMailboxes)

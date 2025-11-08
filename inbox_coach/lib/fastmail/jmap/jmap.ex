@@ -4,10 +4,30 @@ defmodule Fastmail.Jmap do
   end
 
   defmodule Mailbox do
-    defstruct [:id, :name]
+    require Logger
+    defstruct [:id, :name, :role]
+
+    def from_jmap(%{} = data) do
+      %__MODULE__{
+        id: data["id"],
+        name: data["name"],
+        role: role(data["role"])
+      }
+    end
 
     def merge(mailbox, updated_mailbox) do
       Map.merge(mailbox, updated_mailbox)
+    end
+
+    defp role(role) when role in ["inbox", "archive", "drafts", "sent", "junk", "trash"] do
+      String.to_atom(role)
+    end
+
+    defp role(nil), do: :none
+
+    defp role(role) do
+      Logger.warning("Unknown mailbox role encountered: #{inspect(role)}")
+      :none
     end
   end
 
