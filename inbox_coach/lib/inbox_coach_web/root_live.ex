@@ -1,6 +1,6 @@
 defmodule InboxCoachWeb.RootLive do
   use InboxCoachWeb, :live_view
-  alias InboxCoach.{FastmailAccounts, FastmailAccount}
+  alias InboxCoach.{FastmailAccounts, FastmailAccount, Stats}
 
   on_mount {InboxCoachWeb.UserAuth, :ensure_authenticated}
   on_mount {InboxCoachWeb.UserAuth, :ensure_fastmail_api_key}
@@ -30,6 +30,9 @@ defmodule InboxCoachWeb.RootLive do
   @spec render(any()) :: Phoenix.LiveView.Rendered.t()
   def render(assigns) do
     ~H"""
+    <div id="live-email-count" :if={@state.mailboxes && @state.mailbox_emails}>
+      Live emails: <%= Stats.count_emails_not_in_archive(@state) %>
+    </div>
     <ul :if={@mailboxes}>
       <%= for mailbox <- @mailboxes do %>
         <li>

@@ -74,6 +74,98 @@ defmodule InboxCoachWeb.RootLiveTest do
     end
   end
 
+  describe "live email count" do
+    test "displays total count of emails excluding archive and junk mailboxes", %{conn: conn} do
+      user = user_fixture()
+
+      # Update user with API key
+      {:ok, user} =
+        InboxCoach.Accounts.update_user_fastmail_api_key(user, %{
+          "current_password" => "hello world!",
+          "fastmail_api_key" => "test-api-key"
+        })
+
+      # Create a null session with mailboxes having different roles
+      session =
+        Session.null(
+          execute: [
+            {{MethodCalls.GetAllMailboxes},
+             [
+               [
+                 "Mailbox/get",
+                 %{
+                   "state" => "123",
+                   "list" => [
+                     %{"id" => "inbox-id", "name" => "Inbox", "role" => "inbox"},
+                     %{"id" => "archive-id", "name" => "Archive", "role" => "archive"},
+                     %{"id" => "junk-id", "name" => "Junk", "role" => "junk"},
+                     %{"id" => "custom-id", "name" => "Projects", "role" => nil}
+                   ]
+                 },
+                 "0"
+               ]
+             ]},
+            {{MethodCalls.QueryAllEmails, in_mailbox: "inbox-id"},
+             [
+               [
+                 "Email/query",
+                 %{
+                   "filter" => %{"inMailbox" => "inbox-id"},
+                   "ids" => ["email-1", "email-2", "email-3"]
+                 },
+                 "0"
+               ]
+             ]},
+            {{MethodCalls.QueryAllEmails, in_mailbox: "archive-id"},
+             [
+               [
+                 "Email/query",
+                 %{
+                   "filter" => %{"inMailbox" => "archive-id"},
+                   "ids" => ["email-4", "email-5"]
+                 },
+                 "0"
+               ]
+             ]},
+            {{MethodCalls.QueryAllEmails, in_mailbox: "junk-id"},
+             [
+               [
+                 "Email/query",
+                 %{
+                   "filter" => %{"inMailbox" => "junk-id"},
+                   "ids" => ["email-6"]
+                 },
+                 "0"
+               ]
+             ]},
+            {{MethodCalls.QueryAllEmails, in_mailbox: "custom-id"},
+             [
+               [
+                 "Email/query",
+                 %{
+                   "filter" => %{"inMailbox" => "custom-id"},
+                   "ids" => ["email-7", "email-8"]
+                 },
+                 "0"
+               ]
+             ]}
+          ]
+        )
+
+      # Start a FastmailAccount with the null session and register it
+      pubsub_topic = FastmailAccount.pubsub_topic_for(user)
+      via_tuple = {:via, Registry, {InboxCoach.FastmailAccountRegistry, user.id}}
+      {:ok, _account} = FastmailAccount.start_link(session: session, pubsub_topic: pubsub_topic, name: via_tuple)
+
+      conn = log_in_user(conn, user)
+
+      {:ok, view, _html} = live(conn, "/")
+
+      # Should display total count of 5 (3 from Inbox + 2 from Projects, excluding 2 from Archive and 1 from Junk)
+      assert view |> element("#live-email-count") |> render() =~ "5"
+    end
+  end
+
   describe "stream tab" do
     test "displays email movement events in a feed", %{conn: conn} do
       user = user_fixture()
