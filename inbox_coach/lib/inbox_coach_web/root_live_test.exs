@@ -1,6 +1,7 @@
 defmodule InboxCoachWeb.RootLiveTest do
   use InboxCoachWeb.ConnCase
   import Phoenix.LiveViewTest
+  import PhoenixTest
   alias Fastmail.Jmap.MethodCalls
   alias Fastmail.Jmap.Session
   alias Fastmail.Jmap.EventSource
@@ -163,6 +164,95 @@ defmodule InboxCoachWeb.RootLiveTest do
 
       # Should display total count of 5 (3 from Inbox + 2 from Projects, excluding 2 from Archive and 1 from Junk)
       assert view |> element("#live-email-count") |> render() =~ "5"
+    end
+  end
+
+  describe "mailbox selection" do
+    test "allows selecting mailboxes and displays their email_ids with count", %{conn: conn} do
+      user = user_fixture()
+
+      # Update user with API key
+      {:ok, user} =
+        InboxCoach.Accounts.update_user_fastmail_api_key(user, %{
+          "current_password" => "hello world!",
+          "fastmail_api_key" => "test-api-key"
+        })
+
+      # Create a null session with mailboxes containing emails
+      session =
+        Session.null(
+          execute: [
+            {{MethodCalls.GetAllMailboxes},
+             [
+               [
+                 "Mailbox/get",
+                 %{
+                   "state" => "123",
+                   "list" => [
+                     %{"id" => "inbox-id", "name" => "Inbox"},
+                     %{"id" => "action-id", "name" => "Action"},
+                     %{"id" => "waiting-id", "name" => "Waiting"}
+                   ]
+                 },
+                 "0"
+               ]
+             ]},
+            {{MethodCalls.QueryAllEmails, in_mailbox: "inbox-id"},
+             [
+               [
+                 "Email/query",
+                 %{
+                   "filter" => %{"inMailbox" => "inbox-id"},
+                   "ids" => ["email-1", "email-2", "email-3"]
+                 },
+                 "0"
+               ]
+             ]},
+            {{MethodCalls.QueryAllEmails, in_mailbox: "action-id"},
+             [
+               [
+                 "Email/query",
+                 %{
+                   "filter" => %{"inMailbox" => "action-id"},
+                   "ids" => ["email-4", "email-5"]
+                 },
+                 "0"
+               ]
+             ]},
+            {{MethodCalls.QueryAllEmails, in_mailbox: "waiting-id"},
+             [
+               [
+                 "Email/query",
+                 %{
+                   "filter" => %{"inMailbox" => "waiting-id"},
+                   "ids" => ["email-6"]
+                 },
+                 "0"
+               ]
+             ]}
+          ]
+        )
+
+      # Start a FastmailAccount with the null session and register it
+      pubsub_topic = FastmailAccount.pubsub_topic_for(user)
+      via_tuple = {:via, Registry, {InboxCoach.FastmailAccountRegistry, user.id}}
+      {:ok, _account} = FastmailAccount.start_link(session: session, pubsub_topic: pubsub_topic, name: via_tuple)
+
+      conn = log_in_user(conn, user)
+
+      # Visit the page and select mailboxes using phoenix_test
+      conn
+      |> visit("/")
+      |> refute_has("#selected-email-count")
+      |> check("Inbox")
+      |> check("Action")
+      |> assert_has("#selected-email-count", text: "Total emails: 5")
+      |> assert_has("#selected-email-list", text: "email-1")
+      |> assert_has("#selected-email-list", text: "email-2")
+      |> assert_has("#selected-email-list", text: "email-3")
+      |> assert_has("#selected-email-list", text: "email-4")
+      |> assert_has("#selected-email-list", text: "email-5")
+      |> refute_has("#selected-email-list", text: "email-6")
     end
   end
 
