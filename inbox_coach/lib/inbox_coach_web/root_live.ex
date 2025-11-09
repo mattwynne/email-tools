@@ -24,6 +24,7 @@ defmodule InboxCoachWeb.RootLive do
       |> assign(:mailboxes, initial_account_state.mailboxes)
       |> assign(:emails_by_mailbox, initial_account_state.mailbox_emails)
       |> assign(:event_stream, [])
+      |> assign(:selected_mailbox_ids, MapSet.new())
     }
   end
 
@@ -36,13 +37,35 @@ defmodule InboxCoachWeb.RootLive do
     <ul :if={@mailboxes}>
       <%= for mailbox <- @mailboxes do %>
         <li>
-          <%= mailbox.name %>
+          <label for={"mailbox-#{mailbox.id}"}>
+            <input
+              type="checkbox"
+              id={"mailbox-#{mailbox.id}"}
+              phx-click="toggle_mailbox"
+              phx-value-mailbox-id={mailbox.id}
+              checked={MapSet.member?(@selected_mailbox_ids, mailbox.id)}
+            />
+            <%= mailbox.name %>
+          </label>
           <span :if={@emails_by_mailbox && @emails_by_mailbox[mailbox.id]}>
             (<%= Enum.count(@emails_by_mailbox[mailbox.id]) %>)
           </span>
         </li>
       <% end %>
     </ul>
+    <hr />
+    <div :if={not Enum.empty?(@selected_mailbox_ids)}>
+      <h2 class="text-xl">Selected Mailboxes</h2>
+      <% selected_emails = get_selected_emails(@selected_mailbox_ids, @emails_by_mailbox) %>
+      <div id="selected-email-count">
+        Total emails: <%= Enum.count(selected_emails) %>
+      </div>
+      <ul id="selected-email-list">
+        <%= for email_id <- selected_emails do %>
+          <li><%= email_id %></li>
+        <% end %>
+      </ul>
+    </div>
     <hr />
     <h1 class="text-2xl">Stream:</h1>
     <ul>
@@ -103,6 +126,14 @@ defmodule InboxCoachWeb.RootLive do
     "#{email_subject} removed from #{mailbox_name} from #{old_state} to #{new_state}"
   end
 
+  defp get_selected_emails(selected_mailbox_ids, emails_by_mailbox) do
+    selected_mailbox_ids
+    |> Enum.flat_map(fn mailbox_id ->
+      Map.get(emails_by_mailbox, mailbox_id, [])
+    end)
+    |> Enum.uniq()
+  end
+
   defp get_mailbox_name(nil, mailbox_id), do: mailbox_id
 
   defp get_mailbox_name(mailboxes, mailbox_id) do
@@ -119,6 +150,19 @@ defmodule InboxCoachWeb.RootLive do
       nil -> email_id
       email -> email.subject || email.id
     end
+  end
+
+  def handle_event("toggle_mailbox", %{"mailbox-id" => mailbox_id}, socket) do
+    selected_mailbox_ids = socket.assigns.selected_mailbox_ids
+
+    updated_selection =
+      if MapSet.member?(selected_mailbox_ids, mailbox_id) do
+        MapSet.delete(selected_mailbox_ids, mailbox_id)
+      else
+        MapSet.put(selected_mailbox_ids, mailbox_id)
+      end
+
+    {:noreply, assign(socket, :selected_mailbox_ids, updated_selection)}
   end
 
   def handle_info({:state, state}, socket) do
