@@ -23,7 +23,7 @@ defmodule InboxCoach.MixProject do
       extra_applications: [:logger, :runtime_tools]
     ]
   end
- 
+
   def cli do
     [preferred_envs: ["test.all": :test]]
   end
@@ -48,6 +48,7 @@ defmodule InboxCoach.MixProject do
       {:finch, "~> 0.17"},
       {:floki, ">= 0.30.0", only: :test},
       {:gettext, "~> 0.20"},
+      {:ex_heroicons, "~> 3.1.0"},
       {:heroicons,
        github: "tailwindlabs/heroicons",
        tag: "v2.1.1",
