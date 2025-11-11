@@ -4,7 +4,7 @@
 #
 
 app = 'email-tools'
-primary_region = 'sea'
+primary_region = 'sjc'
 kill_signal = 'SIGTERM'
 
 [build]
