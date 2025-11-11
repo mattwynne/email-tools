@@ -159,9 +159,11 @@ defmodule InboxCoachWeb.RootLive do
       phx-value-mailbox-id={@mailbox.id}
       class={"flex items-center justify-between gap-2 dark:hover:bg-zinc-800 p-1 m-0 border rounded #{@state_class}"}
     >
-      <Heroicons.icon name="tag" type="outline" class="h-4 w-4" />
+      <Heroicons.icon name={mailbox_icon(@mailbox.role)} type="outline" class="h-4 w-4" />
       <div class="flex items-center gap-2 cursor-pointer flex-1">
-        <span class="text-sm text-zinc-900 dark:text-zinc-100"><%= @mailbox.name %></span>
+        <span class="text-sm text-zinc-900 dark:text-zinc-100">
+          <%= @mailbox.name %>
+        </span>
       </div>
       <span :if={@email_count} class="text-xs text-zinc-500 dark:text-zinc-100">
         <%= @email_count %>
@@ -178,6 +180,14 @@ defmodule InboxCoachWeb.RootLive do
     </li>
     """
   end
+
+  defp mailbox_icon(:none), do: "tag"
+  defp mailbox_icon(:sent), do: "paper-airplane"
+  defp mailbox_icon(:trash), do: "trash"
+  defp mailbox_icon(:drafts), do: "pencil-square"
+  defp mailbox_icon(:inbox), do: "inbox"
+  defp mailbox_icon(:junk), do: "x-circle"
+  defp mailbox_icon(_), do: "archive-box"
 
   defp format_event(
          %{
