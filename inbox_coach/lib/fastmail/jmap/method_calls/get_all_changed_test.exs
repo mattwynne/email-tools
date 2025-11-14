@@ -725,9 +725,18 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
 
       GetAllChanged.Response.apply_to(response, state, on_changed)
 
-      assert_receive {:event, %{type: :email_added_to_mailbox, email_id: "email-1", mailbox_id: "action"}}
-      assert_receive {:event, %{type: :email_removed_from_mailbox, email_id: "email-3", mailbox_id: "action"}}
-      assert_receive {:event, %{type: :email_added_to_mailbox, email_id: "email-3", mailbox_id: "inbox"}}
+      assert_receive {:event,
+                      %{type: :email_added_to_mailbox, email_id: "email-1", mailbox_id: "action"}}
+
+      assert_receive {:event,
+                      %{
+                        type: :email_removed_from_mailbox,
+                        email_id: "email-3",
+                        mailbox_id: "action"
+                      }}
+
+      assert_receive {:event,
+                      %{type: :email_added_to_mailbox, email_id: "email-3", mailbox_id: "inbox"}}
     end
   end
 end

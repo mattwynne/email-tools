@@ -87,7 +87,13 @@ defmodule InboxCoach.AccountsTest do
     test "registers users with a hashed password and valid invite code" do
       Accounts.set_invite_code("secret123")
       email = unique_user_email()
-      attrs = %{"email" => email, "password" => valid_user_password(), "invite_code" => "secret123"}
+
+      attrs = %{
+        "email" => email,
+        "password" => valid_user_password(),
+        "invite_code" => "secret123"
+      }
+
       {:ok, user} = Accounts.register_user(attrs)
       assert user.email == email
       assert is_binary(user.hashed_password)
@@ -97,7 +103,13 @@ defmodule InboxCoach.AccountsTest do
 
     test "requires valid invite code" do
       Accounts.set_invite_code("secret123")
-      attrs = %{"email" => unique_user_email(), "password" => valid_user_password(), "invite_code" => "wrong_code"}
+
+      attrs = %{
+        "email" => unique_user_email(),
+        "password" => valid_user_password(),
+        "invite_code" => "wrong_code"
+      }
+
       {:error, changeset} = Accounts.register_user(attrs)
 
       assert %{invite_code: ["Invalid invite code"]} = errors_on(changeset)
@@ -535,6 +547,7 @@ defmodule InboxCoach.AccountsTest do
 
     test "raises when INVITE_CODE environment variable is not set" do
       System.delete_env("INVITE_CODE")
+
       assert_raise RuntimeError, "INVITE_CODE environment variable not set", fn ->
         Accounts.get_invite_code()
       end

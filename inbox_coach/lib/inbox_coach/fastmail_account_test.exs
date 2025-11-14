@@ -24,7 +24,9 @@ defmodule FastmailAccountTest do
         collect_states_until_match(expected_mailbox_emails, [state | collected], timeout)
     after
       timeout ->
-        flunk("Did not receive expected mailbox_emails #{inspect(expected_mailbox_emails)}. Received: #{inspect(collected)}")
+        flunk(
+          "Did not receive expected mailbox_emails #{inspect(expected_mailbox_emails)}. Received: #{inspect(collected)}"
+        )
     end
   end
 

@@ -22,11 +22,13 @@ defmodule Fastmail.Jmap.ReplTest do
     test "executes a JMAP method call using the session" do
       {:ok, pid} = Repl.start_link()
 
-      session = Fastmail.Jmap.Session.null(
-        execute: [
-          {{"Mailbox/get", [ids: nil]}, [["Mailbox/get", %{"list" => []}, "0"]]}
-        ]
-      )
+      session =
+        Fastmail.Jmap.Session.null(
+          execute: [
+            {{"Mailbox/get", [ids: nil]}, [["Mailbox/get", %{"list" => []}, "0"]]}
+          ]
+        )
+
       Repl.login(pid, session)
 
       assert [["Mailbox/get", %{"list" => []}, "0"]] = Repl.exec(pid, "Mailbox/get", ids: nil)

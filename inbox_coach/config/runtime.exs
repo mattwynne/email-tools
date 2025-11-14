@@ -122,8 +122,6 @@ end
 if cloak_key = System.get_env("CLOAK_KEY") do
   config :inbox_coach, InboxCoach.Vault,
     ciphers: [
-      default:
-        {Cloak.Ciphers.AES.GCM,
-         tag: "AES.GCM.V1", key: Base.decode64!(cloak_key)}
+      default: {Cloak.Ciphers.AES.GCM, tag: "AES.GCM.V1", key: Base.decode64!(cloak_key)}
     ]
 end

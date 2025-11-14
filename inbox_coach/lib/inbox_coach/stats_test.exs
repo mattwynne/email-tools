@@ -14,7 +14,14 @@ defmodule InboxCoach.StatsTest do
       inbox_mailbox = %Mailbox{id: "inbox-id", name: "Inbox", role: :inbox}
 
       state = %AccountState{
-        mailboxes: Collection.new("state1", [inbox_mailbox, archive_mailbox, junk_mailbox, sent_mailbox, trash_mailbox]),
+        mailboxes:
+          Collection.new("state1", [
+            inbox_mailbox,
+            archive_mailbox,
+            junk_mailbox,
+            sent_mailbox,
+            trash_mailbox
+          ]),
         mailbox_emails: %{
           "inbox-id" => ["e1", "e2"],
           "archive-id" => ["e2", "e3"],
@@ -36,7 +43,8 @@ defmodule InboxCoach.StatsTest do
       trash_mailbox = %Mailbox{id: "trash-id", name: "Trash", role: :trash}
 
       state = %AccountState{
-        mailboxes: Collection.new("state1", [archive_mailbox, junk_mailbox, sent_mailbox, trash_mailbox]),
+        mailboxes:
+          Collection.new("state1", [archive_mailbox, junk_mailbox, sent_mailbox, trash_mailbox]),
         mailbox_emails: %{
           "archive-id" => ["e1", "e2"],
           "junk-id" => ["e3"],

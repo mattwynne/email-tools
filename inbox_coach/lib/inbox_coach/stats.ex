@@ -1,7 +1,10 @@
 defmodule InboxCoach.Stats do
   alias Fastmail.Jmap.AccountState
 
-  def count_emails_not_in_archive(%AccountState{mailboxes: mailboxes, mailbox_emails: mailbox_emails}) do
+  def count_emails_not_in_archive(%AccountState{
+        mailboxes: mailboxes,
+        mailbox_emails: mailbox_emails
+      }) do
     excluded_mailbox_ids = find_excluded_mailbox_ids(mailboxes)
 
     excluded_emails =

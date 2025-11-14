@@ -62,11 +62,11 @@ defmodule Fastmail.Jmap.MethodCalls.QueryAllEmailsTest do
       new_state = QueryAllEmails.Response.apply_to(response, state)
 
       assert %AccountState{
-        mailbox_emails: %{
-          "inbox" => ["email-1", "email-2"],
-          "archive" => ["email-3", "email-4", "email-5"]
-        }
-      } = new_state
+               mailbox_emails: %{
+                 "inbox" => ["email-1", "email-2"],
+                 "archive" => ["email-3", "email-4", "email-5"]
+               }
+             } = new_state
     end
   end
 end

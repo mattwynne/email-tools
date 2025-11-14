@@ -4,11 +4,9 @@ defmodule InboxCoach.Vault do
   @impl GenServer
   def init(config) do
     config =
-      Keyword.put(config, :ciphers, [
-        default:
-          {Cloak.Ciphers.AES.GCM,
-           tag: "AES.GCM.V1", key: decode_env!("CLOAK_KEY", config)}
-      ])
+      Keyword.put(config, :ciphers,
+        default: {Cloak.Ciphers.AES.GCM, tag: "AES.GCM.V1", key: decode_env!("CLOAK_KEY", config)}
+      )
 
     {:ok, config}
   end
@@ -23,12 +21,15 @@ defmodule InboxCoach.Vault do
             Generate a key with: mix cloak.generate.key
             Then set the environment variable or add to config.
             """
+
           vault_config ->
             # Extract key from the already configured cipher in dev.exs
             case Keyword.get(vault_config, :ciphers) do
               [default: {Cloak.Ciphers.AES.GCM, cipher_config}] ->
                 Keyword.get(cipher_config, :key)
-              _ -> raise "Invalid cipher configuration"
+
+              _ ->
+                raise "Invalid cipher configuration"
             end
         end
 

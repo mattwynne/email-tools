@@ -84,25 +84,27 @@ defmodule InboxCoach.Accounts do
 
   defp validate_invite_code(%{"invite_code" => invite_code} = attrs) do
     expected_code = get_invite_code()
-    
+
     if invite_code == expected_code do
       {:ok, Map.delete(attrs, "invite_code")}
     else
-      changeset = 
+      changeset =
         %User{}
         |> User.registration_changeset(attrs)
         |> Ecto.Changeset.add_error(:invite_code, "Invalid invite code")
         |> Map.put(:action, :insert)
+
       {:error, changeset}
     end
   end
 
   defp validate_invite_code(attrs) do
-    changeset = 
+    changeset =
       %User{}
       |> User.registration_changeset(attrs)
       |> Ecto.Changeset.add_error(:invite_code, "Invite code is required")
       |> Map.put(:action, :insert)
+
     {:error, changeset}
   end
 
@@ -431,12 +433,12 @@ defmodule InboxCoach.Accounts do
 
   @doc """
   Sets the invite code environment variable for testing purposes.
-  
+
   ## Examples
-  
+
       iex> set_invite_code("secret123")
       :ok
-  
+
   """
   def set_invite_code(code) when is_binary(code) do
     System.put_env("INVITE_CODE", code)
@@ -444,12 +446,12 @@ defmodule InboxCoach.Accounts do
 
   @doc """
   Gets the invite code from the environment variable.
-  
+
   ## Examples
-  
+
       iex> get_invite_code()
       "secret123"
-  
+
   """
   def get_invite_code do
     System.get_env("INVITE_CODE") || raise "INVITE_CODE environment variable not set"

@@ -16,7 +16,7 @@ defmodule InboxCoach.AccountsFixtures do
 
   def user_fixture(attrs \\ %{}) do
     System.put_env("INVITE_CODE", "test_invite_code")
-    
+
     {:ok, user} =
       attrs
       |> valid_user_attributes()

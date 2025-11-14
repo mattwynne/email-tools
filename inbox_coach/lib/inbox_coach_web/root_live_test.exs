@@ -292,7 +292,6 @@ defmodule InboxCoachWeb.RootLiveTest do
       assert html =~ "Archive"
     end
 
-
     test "clicking active mailbox removes it from query", %{conn: conn} do
       user = user_fixture()
 
@@ -352,6 +351,7 @@ defmodule InboxCoachWeb.RootLiveTest do
 
       # Verify it's included (green) - check the li element's class
       html = render(view)
+
       [_, li_class] =
         Regex.run(~r/<li[^>]*id="sidebar-mailbox-inbox-id"[^>]*class="([^"]*)"/, html)
 
