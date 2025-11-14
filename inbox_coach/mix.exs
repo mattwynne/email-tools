@@ -37,6 +37,7 @@ defmodule InboxCoach.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:ansi_to_html, "~> 0.6.0"},
       {:bcrypt_elixir, "~> 3.0"},
       {:bandit, "~> 1.5"},
       {:cloak, "~> 1.1"},

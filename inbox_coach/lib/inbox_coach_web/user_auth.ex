@@ -179,7 +179,6 @@ defmodule InboxCoachWeb.UserAuth do
     end
   end
 
-
   def on_mount(:redirect_if_user_is_authenticated, _params, session, socket) do
     socket = mount_current_user(socket, session)
 

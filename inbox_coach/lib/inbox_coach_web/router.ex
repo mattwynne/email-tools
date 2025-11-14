@@ -65,6 +65,7 @@ defmodule InboxCoachWeb.Router do
 
     live "/", RootLive
     live "/events", EventsLive
+    live "/state", StateLive
     get "/users/settings", UserSettingsController, :edit
     put "/users/settings", UserSettingsController, :update
     get "/users/settings/confirm_email/:token", UserSettingsController, :confirm_email
