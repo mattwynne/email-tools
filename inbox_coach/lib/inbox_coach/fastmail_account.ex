@@ -132,6 +132,12 @@ defmodule InboxCoach.FastmailAccount do
   end
 
   @impl true
+  def handle_info({_task, :bad_response}, state) do
+    Logger.warning("Ignoring bad JMAP response (likely due to invalid state)")
+    {:noreply, state}
+  end
+
+  @impl true
   def handle_info({_task, response}, state = %{account_state: account_state}) do
     %response_mod{} = response
 

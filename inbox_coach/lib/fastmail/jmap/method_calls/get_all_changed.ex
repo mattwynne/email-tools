@@ -78,6 +78,14 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChanged do
       }
     end
 
+    def new([["error", _details, _] | _rest] = errors) do
+      Logger.error(
+        "JMAP error response: #{inspect(errors, pretty: true, syntax_colors: IO.ANSI.syntax_colors())}"
+      )
+
+      :bad_response
+    end
+
     def new(["error", details, _], _) do
       Logger.error(
         "bad response: #{inspect(details, pretty: true, syntax_colors: IO.ANSI.syntax_colors())}"
