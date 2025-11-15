@@ -20,7 +20,7 @@ defmodule Fastmail.Jmap do
       Map.merge(mailbox, updated_mailbox)
     end
 
-    defp role(role) when role in ["inbox", "archive", "drafts", "sent", "junk", "trash"] do
+    defp role(role) when role in ["inbox", "archive", "drafts", "sent", "junk", "trash", "scheduled", "snoozed"] do
       String.to_atom(role)
     end
 

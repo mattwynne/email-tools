@@ -15,8 +15,10 @@ defmodule InboxCoachWeb.EventsLive do
     )
 
     state =
-      FastmailAccounts.get_account_pid(current_user.id)
-      |> FastmailAccount.get_state()
+      case FastmailAccounts.get_account_pid(current_user.id) do
+        nil -> %Fastmail.Jmap.AccountState{}
+        pid -> FastmailAccount.get_state(pid)
+      end
 
     {
       :ok,
