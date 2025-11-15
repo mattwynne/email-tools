@@ -17,12 +17,9 @@ defmodule Fastmail.Jmap.Collection do
   def update(%__MODULE__{} = existing, %__MODULE__{state: new_state} = updated) do
     require Logger
 
-    updated_map = Map.new(updated, &{&1.id, &1})
-    existing_ids = MapSet.new(existing, & &1.id)
-
     updated_existing =
       Enum.map(existing, fn existing_item ->
-        if updated_item = Map.get(updated_map, existing_item.id) do
+        if updated_item = get(updated, existing_item.id) do
           %type{} = updated_item
           type.merge(existing_item, updated_item)
         else
@@ -30,16 +27,10 @@ defmodule Fastmail.Jmap.Collection do
         end
       end)
 
-    new_items =
-      Enum.filter(updated, fn item ->
-        not MapSet.member?(existing_ids, item.id)
-      end)
+    existing_ids = existing.by_id |> Map.keys()
+    new_items = Enum.filter(updated, &(not Enum.member?(existing_ids, &1.id)))
 
-    updated_list = updated_existing ++ new_items
-
-    by_id = Map.new(updated_list, fn item -> {item.id, item} end)
-
-    %__MODULE__{state: new_state, list: updated_list, by_id: by_id}
+    new(new_state, updated_existing ++ new_items)
   end
 
   def update(nil, %__MODULE__{} = updated) do
