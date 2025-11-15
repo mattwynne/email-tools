@@ -119,6 +119,48 @@ defmodule Fastmail.Jmap.CollectionTest do
              ]
     end
 
+    test "adds new items from the updated collection" do
+      alias Fastmail.Jmap.Email
+      alias Fastmail.Jmap.Contact
+
+      existing =
+        Collection.new("123", [
+          %Email{
+            id: "email-1",
+            mailbox_ids: ["inbox"],
+            from: [%Contact{email: "a@b.com"}],
+            thread_id: "a-thread"
+          }
+        ])
+
+      updated =
+        Collection.new("456", [
+          %Email{
+            id: "email-2",
+            mailbox_ids: ["inbox"],
+            from: [%Contact{email: "x@y.com"}],
+            thread_id: "b-thread"
+          }
+        ])
+
+      result = Collection.update(existing, updated)
+
+      assert result.list == [
+               %Email{
+                 id: "email-1",
+                 mailbox_ids: ["inbox"],
+                 from: [%Contact{email: "a@b.com"}],
+                 thread_id: "a-thread"
+               },
+               %Email{
+                 id: "email-2",
+                 mailbox_ids: ["inbox"],
+                 from: [%Contact{email: "x@y.com"}],
+                 thread_id: "b-thread"
+               }
+             ]
+    end
+
     test "works on an empty existing collection" do
       # TODO: consider using a null object for Collection
       existing = nil
