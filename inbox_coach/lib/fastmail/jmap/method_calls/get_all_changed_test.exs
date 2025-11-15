@@ -739,4 +739,21 @@ defmodule Fastmail.Jmap.MethodCalls.GetAllChangedTest do
                       %{type: :email_added_to_mailbox, email_id: "email-3", mailbox_id: "inbox"}}
     end
   end
+
+  @tag :capture_log
+  test "handles error response when JMAP returns cannotCalculateChanges" do
+    response =
+      Session.null(
+        execute: [
+          {{GetAllChanged, type: "Email", since_state: "J7100"},
+           [
+             ["error", %{"description" => "invalid sinceState", "type" => "cannotCalculateChanges"}, "changes"],
+             ["error", %{"type" => "invalidResultReference"}, "updated"]
+           ]}
+        ]
+      )
+      |> Session.execute(GetAllChanged, type: "Email", since_state: "J7100")
+
+    assert response == :bad_response
+  end
 end
