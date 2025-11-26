@@ -40,7 +40,7 @@ defmodule InboxCoachWeb.EventsLive do
       <ul class="space-y-2">
         <%= for event <- @event_stream do %>
           <li class="text-sm text-zinc-600 dark:text-zinc-400">
-            <%= format_event(event, @state) %>
+            <.event event={enrich(event, @state)} />
           </li>
         <% end %>
       </ul>
@@ -60,18 +60,7 @@ defmodule InboxCoachWeb.EventsLive do
     end
   end
 
-  defp get_email_subject(nil, email_id), do: email_id
-
-  defp get_email_subject(emails, email_id) do
-    case Fastmail.Jmap.Collection.get(emails, email_id) do
-      nil -> email_id
-      email -> email.subject || email.id
-    end
-  end
-
   def handle_info({:state, state}, socket) do
-    dbg([:state, Map.take(state, [:emails])])
-
     {
       :noreply,
       socket
@@ -82,7 +71,6 @@ defmodule InboxCoachWeb.EventsLive do
   end
 
   def handle_info({:email_added_to_mailbox, event}, socket) do
-    dbg(event)
     event_with_type = Map.put(event, :type, :email_added_to_mailbox)
 
     {
@@ -103,46 +91,29 @@ defmodule InboxCoachWeb.EventsLive do
     }
   end
 
-  defp format_event(
-         %{
-           type: :email_added_to_mailbox,
-           email_id: email_id,
-           mailbox_id: mailbox_id,
-           old_state: old_state,
-           new_state: new_state
-         },
-         state
-       ) do
-    mailbox_name = get_mailbox_name(state.mailboxes, mailbox_id)
-    email_subject = get_email_subject(state.emails, email_id)
-    "#{email_subject} added to #{mailbox_name} from #{old_state} to #{new_state}"
+  defp enrich(event, state) do
+    event
+    |> Map.put(:mailbox_name, get_mailbox_name(state.mailboxes, event.mailbox_id))
+    |> Map.put(:email, Fastmail.Jmap.Collection.get(state.emails, event.email_id))
   end
 
-  defp format_event(
-         %{
-           type: :email_added_to_mailbox,
-           email_id: email_id,
-           mailbox_id: mailbox_id
-         },
-         state
-       ) do
-    mailbox_name = get_mailbox_name(state.mailboxes, mailbox_id)
-    email_subject = get_email_subject(state.emails, email_id)
-    "#{email_subject} added to #{mailbox_name}"
+  defp event(%{event: %{type: :email_added_to_mailbox}} = assigns) do
+    ~H"""
+    <.email email={@event.email} /> added to <%= @event.mailbox_name %>
+    """
   end
 
-  defp format_event(
-         %{
-           type: :email_removed_from_mailbox,
-           email_id: email_id,
-           mailbox_id: mailbox_id,
-           old_state: old_state,
-           new_state: new_state
-         },
-         state
-       ) do
-    mailbox_name = get_mailbox_name(state.mailboxes, mailbox_id)
-    email_subject = get_email_subject(state.emails, email_id)
-    "#{email_subject} removed from #{mailbox_name} from #{old_state} to #{new_state}"
+  defp event(%{event: %{type: :email_removed_from_mailbox}} = assigns) do
+    ~H"""
+    <.email email={@event.email} /> removed from <%= @event.mailbox_name %>
+    """
+  end
+
+  defp email(assigns) do
+    ~H"""
+    <a href={"https://app.fastmail.com/mail/Archive/" <> @email.thread_id <> "." <> @email.id <> "?u=360641ae"}>
+      <%= @email.subject %>
+    </a>
+    """
   end
 end
