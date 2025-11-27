@@ -116,7 +116,9 @@ if config_env() == :prod do
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
 end
 
-config :logger, level: System.get_env("LOG_LEVEL", "debug") |> String.to_atom()
+log_level = System.get_env("LOG_LEVEL", "debug") |> String.to_atom()
+IO.puts("Log level: #{log_level}")
+config :logger, level: log_level
 
 # Configure Cloak encryption for all environments
 if cloak_key = System.get_env("CLOAK_KEY") do
