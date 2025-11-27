@@ -32,8 +32,12 @@ defmodule InboxCoach.FastmailEvents do
     #   into: :self,
     #   receive_timeout: :infinity
     # )
+    Logger.info("[FastmailEvents] Connecting to EventSource stream...")
+
     case state.session.event_source |> EventSource.stream() do
       {:ok, response} ->
+        Logger.info("[FastmailEvents] EventSource stream connected successfully")
+
         Enum.each(response.body, fn message ->
           Logger.debug(
             "[jmap-event] #{inspect(message, pretty: true, syntax_colors: IO.ANSI.syntax_colors())}"
@@ -46,8 +50,10 @@ defmodule InboxCoach.FastmailEvents do
           end
         end)
 
+        Logger.warning("[FastmailEvents] EventSource stream ended unexpectedly - no automatic reconnection implemented")
+
       {:error, error} ->
-        dbg(["EventSource connection failed: #{Exception.message(error)}, retrying"])
+        Logger.warning("[FastmailEvents] EventSource connection failed: #{Exception.message(error)}, retrying...")
         GenServer.cast(self(), :connect)
     end
 
