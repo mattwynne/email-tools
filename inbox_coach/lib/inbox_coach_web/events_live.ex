@@ -105,15 +105,29 @@ defmodule InboxCoachWeb.EventsLive do
 
   defp event(%{event: %{type: :email_removed_from_mailbox}} = assigns) do
     ~H"""
-    <.email email={@event.email} /> removed from <%= @event.mailbox_name %>
+    <div class="flex flex-row items-start gap-1">
+      <.email email={@event.email} /> removed from
+      <Heroicons.icon name="tag" type="outline" class="h-4 w-4" /> <%= @event.mailbox_name %>
+    </div>
     """
   end
 
   defp email(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :url,
+        "https://app.fastmail.com/mail/Archive/" <>
+          assigns.email.thread_id <> "." <> assigns.email.id <> "?u=360641ae"
+      )
+
     ~H"""
-    <a href={"https://app.fastmail.com/mail/Archive/" <> @email.thread_id <> "." <> @email.id <> "?u=360641ae"}>
+    <.link
+      navigate={@url}
+      class="text-sm font-semibold leading-6 dark:text-zinc-100 text-zinc-900 dark:hover:text-zinc-300 hover:text-zinc-700"
+    >
       <%= @email.subject %>
-    </a>
+    </.link>
     """
   end
 end
