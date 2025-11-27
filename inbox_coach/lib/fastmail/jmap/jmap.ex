@@ -1,7 +1,16 @@
 defmodule Fastmail.Jmap do
-
   defmodule AccountState do
+    alias Fastmail.Jmap.Collection
     defstruct [:emails, :mailboxes, :threads, :mailbox_emails]
+
+    def new do
+      %__MODULE__{
+        emails: Collection.empty(),
+        mailboxes: Collection.empty(),
+        threads: Collection.empty(),
+        mailbox_emails: %{}
+      }
+    end
   end
 
   defmodule Mailbox do
@@ -20,7 +29,17 @@ defmodule Fastmail.Jmap do
       Map.merge(mailbox, updated_mailbox)
     end
 
-    defp role(role) when role in ["inbox", "archive", "drafts", "sent", "junk", "trash", "scheduled", "snoozed"] do
+    defp role(role)
+         when role in [
+                "inbox",
+                "archive",
+                "drafts",
+                "sent",
+                "junk",
+                "trash",
+                "scheduled",
+                "snoozed"
+              ] do
       String.to_atom(role)
     end
 

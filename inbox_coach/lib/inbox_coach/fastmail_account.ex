@@ -47,7 +47,7 @@ defmodule InboxCoach.FastmailAccount do
         %{
           pubsub_topic: pubsub_topic,
           session: session,
-          account_state: %AccountState{}
+          account_state: AccountState.new()
         }
         |> emit()
         |> stream_events()

@@ -1,5 +1,6 @@
 defmodule FastmailAccountTest do
   use ExUnit.Case, async: true
+  alias Fastmail.Jmap.Collection
   alias Fastmail.Jmap.Requests.GetSession
   alias Fastmail.Jmap.EventSource
   alias Fastmail.Jmap.MethodCalls
@@ -72,7 +73,8 @@ defmodule FastmailAccountTest do
 
       {:ok, _account} = FastmailAccount.start_link(session: session, pubsub_topic: "test")
 
-      assert_receive({:state, %AccountState{mailboxes: nil}})
+      mailboxes = Collection.empty()
+      assert_receive({:state, %AccountState{mailboxes: ^mailboxes}})
 
       assert_receive(
         {:state,
@@ -230,7 +232,8 @@ defmodule FastmailAccountTest do
     {:ok, _account} = FastmailAccount.start_link(session: session, pubsub_topic: "test")
 
     assert_receive({:ready, events})
-    assert_receive({:state, %AccountState{mailboxes: nil}})
+    mailboxes = Collection.empty()
+    assert_receive({:state, %AccountState{mailboxes: ^mailboxes}})
 
     send(
       events,
@@ -420,7 +423,8 @@ defmodule FastmailAccountTest do
     {:ok, _account} = FastmailAccount.start_link(session: session, pubsub_topic: "test")
 
     assert_receive({:ready, events})
-    assert_receive({:state, %AccountState{mailboxes: nil}})
+    mailboxes = Collection.empty()
+    assert_receive({:state, %AccountState{mailboxes: ^mailboxes}})
 
     send(
       events,

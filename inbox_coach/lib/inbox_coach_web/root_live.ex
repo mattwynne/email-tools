@@ -13,16 +13,16 @@ defmodule InboxCoachWeb.RootLive do
       FastmailAccount.pubsub_topic_for(current_user)
     )
 
-    initial_account_state =
+    state =
       FastmailAccounts.get_account_pid(current_user.id)
       |> FastmailAccount.get_state()
 
     {
       :ok,
       socket
-      |> assign(:state, initial_account_state)
-      |> assign(:mailboxes, initial_account_state.mailboxes)
-      |> assign(:mailbox_emails, initial_account_state.mailbox_emails)
+      |> assign(:state, state)
+      |> assign(:mailboxes, state.mailboxes)
+      |> assign(:mailbox_emails, state.mailbox_emails)
       |> assign(:event_stream, [])
       |> assign(:included_mailbox_ids, MapSet.new())
       |> assign(:excluded_mailbox_ids, MapSet.new())

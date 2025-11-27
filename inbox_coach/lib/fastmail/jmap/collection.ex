@@ -1,6 +1,10 @@
 defmodule Fastmail.Jmap.Collection do
   defstruct [:state, :list, :by_id]
 
+  def empty() do
+    new(:unknown, [])
+  end
+
   def new(state, []) do
     %__MODULE__{state: state, list: [], by_id: %{}}
   end
