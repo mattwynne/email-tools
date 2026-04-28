@@ -6,15 +6,19 @@
 
 A CLI script that takes a PDF receipt, extracts claim details via Claude API, asks the user to confirm, then submits the claim to the Manulife GroupNet portal via Playwright.
 
+## Project Location
+
+Standalone repository at `~/git/mattwynne/manulife-claims` — not part of email-tools or any other existing project. Own `package.json`, own git repo.
+
 ## Usage
 
 ```
-npx ts-node scripts/manulife-claim.ts receipt.pdf
+npx ts-node src/index.ts receipt.pdf
 ```
 
 ## Architecture
 
-Single TypeScript script (`scripts/manulife-claim.ts`) with three sequential stages:
+Single TypeScript script (`src/index.ts`) with three sequential stages:
 
 1. **Extract** — read the PDF, send to Claude API, get back structured claim data
 2. **Confirm** — print extracted fields, allow inline corrections, press Enter to proceed
