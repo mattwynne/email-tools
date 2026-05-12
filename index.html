@@ -30,6 +30,34 @@
     return stats.filter((stat) => stat.date > since)
   }
 
+  const hasMailboxCounts = (stat) =>
+    ["Inbox", "Feed", "Paperwork", "Screener"].every((name) =>
+      stat.mailboxes.some((mailbox) => mailbox.name === name)
+    )
+
+  const chartData = (stats) =>
+    stats.flatMap((stat, index) => {
+      const previous = stats[index - 1]
+      const points = []
+
+      if (previous) {
+        const daysSincePrevious =
+          (stat.date.getTime() - previous.date.getTime()) / (24 * 60 * 60 * 1000)
+        if (daysSincePrevious > 1.5) {
+          points.push({
+            x: new Date(previous.date.getTime() + 24 * 60 * 60 * 1000),
+            y: null,
+          })
+        }
+      }
+
+      points.push({
+        x: stat.date,
+        y: hasMailboxCounts(stat) ? stat.totals.messages : null,
+      })
+      return points
+    })
+
   const run = async () => {
     const daysToShow =
       new URLSearchParams(window.location.search).get("days") || 90
@@ -43,10 +71,8 @@
         datasets: [
           {
             label: `total (over ${daysToShow} days)`,
-            data: stats.map((stat) => ({
-              x: stat.date,
-              y: stat.totals.messages,
-            })),
+            data: chartData(stats),
+            spanGaps: false,
             borderWidth: 1,
           },
         ],
