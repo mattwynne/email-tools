@@ -86,7 +86,9 @@ export class FastmailSession {
       throw new Error(await response.text())
     }
     const result = await response.json()
-    fs.appendFileSync("log", JSON.stringify(result))
+    if (process.env.JMAP_LOG_FILE) {
+      fs.appendFileSync(process.env.JMAP_LOG_FILE, JSON.stringify(result))
+    }
     debug(
       util.inspect(result, { showHidden: false, depth: null, colors: true })
     )

@@ -41,7 +41,9 @@ const subscribe = async (
   new Promise((resolve) => {
     const source = new EventSource(url + "types=*", { headers })
     source.addEventListener("state", (e) => {
-      fs.appendFileSync("log", JSON.stringify(e.data))
+      if (process.env.JMAP_LOG_FILE) {
+        fs.appendFileSync(process.env.JMAP_LOG_FILE, JSON.stringify(e.data))
+      }
       const changes: StateChange = JSON.parse(e.data).changed
       for (const accountId in changes) {
         onChange(accountId, changes[accountId])
@@ -75,7 +77,9 @@ const methodCall = async (
   })
   const data = await response.json()
   const result = data["methodResponses"][0][1]
-  fs.appendFileSync("log", JSON.stringify(data))
+  if (process.env.JMAP_LOG_FILE) {
+    fs.appendFileSync(process.env.JMAP_LOG_FILE, JSON.stringify(data))
+  }
   console.log(
     method,
     "params:",
