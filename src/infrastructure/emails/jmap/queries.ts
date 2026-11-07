@@ -144,18 +144,24 @@ export const getEmailsInMailboxes = async (
     ])
   )
   debug(emails)
-  return emails.map(
-    (response: [string, JmapEmailQueryResult]) =>
-      response[1] as JmapEmailQueryResult
-  )
+  return emails.map(([method, result, mailboxId]: JmapEmailQueryResponse) => {
+    if (method !== "Email/query") {
+      throw new Error(
+        `Email/query failed for mailbox ${mailboxId}: ${result.type} ${result.description || ""}`
+      )
+    }
+    return { mailboxId, ids: result.ids, queryState: result.queryState }
+  })
 }
 
+type JmapEmailQueryResponse =
+  | ["Email/query", Omit<JmapEmailQueryResult, "mailboxId">, JmapMailboxId]
+  | ["error", { type: string; description?: string }, JmapMailboxId]
+
 type JmapEmailQueryResult = {
+  mailboxId: JmapMailboxId
   ids: JmapEmailId[]
   queryState: string
-  filter: {
-    inMailbox: JmapMailboxId
-  }
 }
 
 type JmapEmailQueryChangesResult = {}

@@ -126,7 +126,7 @@ export class FastmailAccount {
         .withId(UniqueIdentifier.of(mailbox.id))
         .withEmailIds(
           emails
-            .find((queryResult) => queryResult.filter.inMailbox === mailbox.id)
+            .find((queryResult) => queryResult.mailboxId === mailbox.id)
             ?.ids.map((id) => UniqueIdentifier.of(id)) || []
         )
     )
